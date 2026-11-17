@@ -64,7 +64,10 @@ export function HeroShatterCollage({
         const row = Math.floor(i / cols);
         const posX = cols === 1 ? 50 : (col / (cols - 1)) * 100;
         const posY = rows === 1 ? 50 : (row / (rows - 1)) * 100;
-        return { i, col, row, posX, posY };
+        const restX = ((i % 3) - 1) * 10 + (col === 0 ? -8 : 6);
+        const restY = ((i % 2) * 2 - 1) * (6 + row * 2);
+        const restRot = (i % 2 === 0 ? -1 : 1) * (2.4 + i * 0.55);
+        return { i, col, row, posX, posY, restX, restY, restRot };
       }),
     [cols, rows, count],
   );
@@ -101,6 +104,9 @@ export function HeroShatterCollage({
               ["--dx"]: `${(cell.col - (cols - 1) / 2) * 28}px`,
               ["--dy"]: `${(cell.row - (rows - 1) / 2) * 36 - 20}px`,
               ["--rot"]: `${(cell.i % 2 === 0 ? -1 : 1) * (8 + cell.i * 2)}deg`,
+              ["--rest-x"]: `${cell.restX}px`,
+              ["--rest-y"]: `${cell.restY}px`,
+              ["--rest-rot"]: `${cell.restRot}deg`,
             } as CSSProperties
           }
           data-testid="hero-shatter-cell"

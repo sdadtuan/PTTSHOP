@@ -103,28 +103,31 @@ export function Footer() {
   return (
     <footer className="relative mt-auto overflow-hidden border-t border-black/5 bg-white text-neutral-700">
       <div
-        className="pointer-events-none absolute top-6 right-[18%] h-16 w-16 rotate-[22deg] rounded-2xl bg-[var(--accent)]/85"
+        className="pointer-events-none absolute top-4 right-[16%] h-24 w-24 rotate-[22deg] rounded-3xl bg-[var(--accent)]/90 md:h-28 md:w-28"
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute top-16 right-[10%] h-12 w-12 -rotate-[14deg] rounded-xl bg-neutral-300/90"
+        className="pointer-events-none absolute top-20 right-[8%] h-16 w-16 -rotate-[14deg] rounded-2xl bg-neutral-300 md:h-20 md:w-20"
         aria-hidden
       />
 
-      <div className="relative mx-auto max-w-7xl px-4 pt-14 pb-10 md:px-6">
-        <div className="flex flex-col gap-8 border-b border-black/5 pb-10 md:flex-row md:items-start md:justify-between">
+      <div className="relative mx-auto max-w-7xl px-4 pt-16 pb-12 md:px-6">
+        <div className="flex flex-col gap-8 border-b border-black/5 pb-12 md:flex-row md:items-start md:justify-between">
           <div className="max-w-xl">
-            <div className="flex items-center gap-2.5">
-              <SparkLogo className="h-8 w-8 text-[var(--accent)] md:h-9 md:w-9" />
-              <p className="font-[family-name:var(--font-display)] text-4xl font-black tracking-[0.12em] text-neutral-900 md:text-5xl">
+            <div className="flex items-center gap-3">
+              <SparkLogo className="h-10 w-10 text-[var(--accent)] md:h-12 md:w-12" />
+              <p
+                className="font-[family-name:var(--font-display)] font-black tracking-[0.12em] text-neutral-900"
+                style={{ fontSize: "clamp(2.5rem, 5vw, 4rem)" }}
+              >
                 VIZFAS
               </p>
             </div>
-            <p className="mt-4 text-sm leading-relaxed text-neutral-600 md:text-[15px]">
+            <p className="mt-5 text-base leading-relaxed text-neutral-600 md:text-lg">
               Thời trang hiện đại, tối giản và khác biệt cho thế hệ trẻ tự tin
               thể hiện phong cách mỗi ngày.
             </p>
-            <div className="mt-5 flex items-center gap-3">
+            <div className="mt-6 flex items-center gap-3">
               {social.map(({ href, label, Icon }) => (
                 <a
                   key={label}
@@ -132,9 +135,9 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={label}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-neutral-900 text-white transition hover:bg-[var(--accent)]"
+                  className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-neutral-900 text-white transition hover:bg-[var(--accent)]"
                 >
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-5 w-5" />
                 </a>
               ))}
             </div>

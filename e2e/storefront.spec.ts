@@ -6,7 +6,8 @@ test.describe("Storefront", () => {
     await expect(page.getByRole("link", { name: "VIZFAS" }).first()).toBeVisible();
     await expect(page.getByRole("heading", { name: /Mặc Đơn Giản/i })).toBeVisible();
     await expect(page.getByText(/Vẫn Nổi Bật/i).first()).toBeVisible();
-    await expect(page.getByText(/Bộ sưu tập mới 2026/i).first()).toBeVisible();
+    await expect(page.getByTestId("hero-badge")).toBeVisible();
+    await expect(page.getByTestId("hero-badge")).toContainText(/2026/i);
     await expect(page.getByText(/Phong Cách Đơn Giản/i).first()).toBeVisible();
     await expect(page.getByText(/Khám Phá Các/i).first()).toBeVisible();
     await expect(page.getByText(/Đa Dạng Kiểu Dáng/i).first()).toBeVisible();
