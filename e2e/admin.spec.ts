@@ -16,7 +16,13 @@ test.describe("Admin redesign", () => {
   test("admin can open dashboard, products, orders", async ({ page }) => {
     await loginAdmin(page);
     await expect(page.getByRole("heading", { name: /Dashboard/i })).toBeVisible();
-    await expect(page.getByRole("navigation", { name: /Menu quản trị/i })).toBeVisible();
+    const desktopNav = page.getByRole("navigation", { name: /Menu quản trị/i });
+    if (await desktopNav.isVisible().catch(() => false)) {
+      await expect(desktopNav).toBeVisible();
+    } else {
+      await page.getByRole("button", { name: /Mở menu|Menu/i }).click();
+      await expect(page.getByRole("navigation", { name: /Menu quản trị/i })).toBeVisible();
+    }
     await expect(page.getByText(/Doanh thu/i).first()).toBeVisible();
 
     await page.goto("/admin/products");

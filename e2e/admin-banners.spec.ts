@@ -1,11 +1,15 @@
 import { expect, test } from "@playwright/test";
 
 async function loginAdmin(page: import("@playwright/test").Page) {
-  await page.goto("/dang-nhap");
+  await page.goto("/api/auth/csrf");
+  await page.goto("/dang-nhap?callbackUrl=/admin");
   await page.getByLabel(/^Email$/i).fill("admin@vizfas.vn");
   await page.getByLabel(/Mật khẩu/i).fill("admin123");
   await page.getByRole("button", { name: /Đăng nhập/i }).click();
-  await page.waitForURL(/\/admin/);
+  await page.waitForURL(
+    (url) => url.pathname === "/admin" || url.pathname.startsWith("/admin/"),
+    { timeout: 25_000 },
+  );
 }
 
 test.describe("Admin Hero Banners", () => {
@@ -20,13 +24,10 @@ test.describe("Admin Hero Banners", () => {
     await expect(page.getByTestId("admin-banner-create")).toBeDisabled();
   });
 
-  test("upload hero image enables create and shows preview grid", async ({
-    page,
-  }) => {
+  test("creating banner via API shows preview grid", async ({ page }) => {
     await loginAdmin(page);
     await page.goto("/admin/banners");
 
-    // Seed draft via API then reload — upload route needs multipart; use create API with known asset
     const res = await page.request.post("/api/admin/hero-banners", {
       data: {
         imageUrl: "/images/home-v2/hero-main.jpg",
@@ -43,7 +44,8 @@ test.describe("Admin Hero Banners", () => {
     expect(res.ok()).toBeTruthy();
 
     await page.reload();
-    const preview = page.getByTestId("admin-banner-preview-grid");
-    await expect(preview.first()).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("admin-banner-preview-grid").first()).toBeVisible({
+      timeout: 15000,
+    });
   });
 });
