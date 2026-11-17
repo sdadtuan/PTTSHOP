@@ -2,16 +2,26 @@ import { MessageCircle, Phone } from "lucide-react";
 
 const items = [
   {
-    href: "https://zalo.me/0901234567",
-    label: "Zalo",
-    className: "bg-[#0068FF] text-white",
-    icon: <span className="text-[10px] font-bold tracking-tight">Zalo</span>,
+    href: "https://facebook.com",
+    label: "Facebook",
+    className: "bg-[#1877F2] text-white",
+    icon: (
+      <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden>
+        <path d="M14 9h3V6h-3c-1.7 0-3 1.3-3 3v2H8v3h3v7h3v-7h3l1-3h-4V9c0-.6.4-1 1-1z" />
+      </svg>
+    ),
   },
   {
     href: "https://m.me/vizfas",
     label: "Messenger",
     className: "bg-[#0084FF] text-white",
     icon: <MessageCircle className="h-4 w-4" />,
+  },
+  {
+    href: "https://zalo.me/0901234567",
+    label: "Zalo",
+    className: "bg-[#0068FF] text-white",
+    icon: <span className="text-[10px] font-bold tracking-tight">Zalo</span>,
   },
   {
     href: "tel:0901234567",
@@ -24,7 +34,7 @@ const items = [
 export function FloatingSocial() {
   return (
     <div
-      className="pointer-events-none fixed right-3 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 flex flex-col gap-2 md:right-5 md:bottom-6"
+      className="pointer-events-none fixed top-1/2 right-3 z-40 hidden -translate-y-1/2 flex-col gap-2 md:right-4 lg:flex"
       aria-label="Liên hệ nhanh"
     >
       {items.map((item) => (
@@ -34,7 +44,7 @@ export function FloatingSocial() {
           target={item.href.startsWith("tel:") ? undefined : "_blank"}
           rel={item.href.startsWith("tel:") ? undefined : "noopener noreferrer"}
           aria-label={item.label}
-          className={`pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full shadow-lg transition hover:scale-105 md:h-11 md:w-11 ${item.className}`}
+          className={`pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full shadow-md transition hover:scale-105 ${item.className}`}
         >
           {item.icon}
         </a>

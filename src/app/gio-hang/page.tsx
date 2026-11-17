@@ -7,7 +7,18 @@ import { useCart } from "@/components/cart/cart-context";
 import { formatVnd } from "@/lib/format";
 
 export default function CartPage() {
-  const { items, subtotal, updateQuantity, removeItem } = useCart();
+  const { items, subtotal, updateQuantity, removeItem, loading } = useCart();
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-24 text-center">
+        <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold">
+          Giỏ hàng
+        </h1>
+        <p className="mt-3 text-neutral-500">Đang tải…</p>
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (

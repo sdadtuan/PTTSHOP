@@ -43,14 +43,31 @@ export default function AdminProductsPage() {
   async function onCreate(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
-    const form = new FormData(e.currentTarget);
+    const formEl = e.currentTarget;
+    const form = new FormData(formEl);
     const name = String(form.get("name") || "");
     const slug = String(form.get("slug") || "")
       .toLowerCase()
       .replace(/\s+/g, "-");
     const price = Number(form.get("price") || 0);
     const stock = Number(form.get("stock") || 0);
-    const imageUrl = String(form.get("imageUrl") || "");
+    let imageUrl = String(form.get("imageUrl") || "").trim();
+    const file = form.get("imageFile");
+    if (file instanceof File && file.size > 0) {
+      const upload = new FormData();
+      upload.set("file", file);
+      const upRes = await fetch("/api/upload", { method: "POST", body: upload });
+      const upData = await upRes.json();
+      if (!upRes.ok) {
+        setError(upData.error || "Upload thất bại");
+        return;
+      }
+      imageUrl = upData.url as string;
+    }
+    if (!imageUrl) {
+      setError("Cần URL ảnh hoặc upload file");
+      return;
+    }
     const payload = {
       name,
       slug,
@@ -81,7 +98,7 @@ export default function AdminProductsPage() {
       return;
     }
     setShowForm(false);
-    e.currentTarget.reset();
+    formEl.reset();
     await load();
   }
 
@@ -128,7 +145,8 @@ export default function AdminProductsPage() {
         >
           <input name="name" required placeholder="Tên" className="rounded border px-3 py-2 text-sm" />
           <input name="slug" required placeholder="slug" className="rounded border px-3 py-2 text-sm" />
-          <input name="imageUrl" required type="url" placeholder="URL ảnh" className="rounded border px-3 py-2 text-sm sm:col-span-2" />
+          <input name="imageUrl" type="url" placeholder="URL ảnh (hoặc upload bên dưới)" className="rounded border px-3 py-2 text-sm sm:col-span-2" />
+          <input name="imageFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="text-sm sm:col-span-2" />
           <textarea name="description" placeholder="Mô tả" className="rounded border px-3 py-2 text-sm sm:col-span-2" />
           <select name="categoryId" className="rounded border px-3 py-2 text-sm">
             <option value="">— Danh mục —</option>

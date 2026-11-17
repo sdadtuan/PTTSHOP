@@ -13,6 +13,7 @@ type Order = {
   customerPhone: string;
   total: number;
   paymentMethod: string;
+  paymentStatus: string;
   status: keyof typeof ORDER_STATUS_LABELS;
   createdAt: string;
 };
@@ -49,6 +50,21 @@ export default function AdminOrdersPage() {
     await load();
   }
 
+  async function confirmPaid(id: string) {
+    if (!confirm("Xác nhận đã nhận tiền / chuyển khoản cho đơn này?")) return;
+    const res = await fetch("/api/admin/orders", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, paymentStatus: "PAID", confirmPaid: true }),
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      setError(data.error || "Không cập nhật được thanh toán");
+      return;
+    }
+    await load();
+  }
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 md:px-6">
       <div className="flex items-end justify-between">
@@ -69,6 +85,7 @@ export default function AdminOrdersPage() {
               <th className="px-4 py-3">Khách</th>
               <th className="px-4 py-3">Tổng</th>
               <th className="px-4 py-3">TT</th>
+              <th className="px-4 py-3">Thanh toán</th>
               <th className="px-4 py-3">Trạng thái</th>
             </tr>
           </thead>
@@ -82,6 +99,18 @@ export default function AdminOrdersPage() {
                 </td>
                 <td className="px-4 py-3">{formatVnd(o.total)}</td>
                 <td className="px-4 py-3">{o.paymentMethod}</td>
+                <td className="px-4 py-3">
+                  <div className="text-xs">{o.paymentStatus}</div>
+                  {o.paymentStatus !== "PAID" ? (
+                    <button
+                      type="button"
+                      onClick={() => void confirmPaid(o.id)}
+                      className="mt-1 text-[11px] font-semibold text-[var(--accent)] underline"
+                    >
+                      Xác nhận đã nhận tiền
+                    </button>
+                  ) : null}
+                </td>
                 <td className="px-4 py-3">
                   <select
                     value={o.status}

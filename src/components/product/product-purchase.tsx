@@ -1,7 +1,16 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Heart, Minus, Plus, ShoppingBag, Truck, ShieldCheck, RefreshCw } from "lucide-react";
+import {
+  Heart,
+  Minus,
+  Plus,
+  Ruler,
+  ShoppingBag,
+  Truck,
+  ShieldCheck,
+  RefreshCw,
+} from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useCart, WISHLIST_GUEST_KEY } from "@/components/cart/cart-context";
 import { discountPercent, formatVnd } from "@/lib/format";
@@ -23,14 +32,17 @@ type Props = {
     name: string;
     slug: string;
     description: string | null;
+    isNew?: boolean;
     rating: number;
     reviewCount: number;
-    images: { url: string }[];
+    images: { url: string; color?: string | null }[];
     variants: Variant[];
   };
+  color: string;
+  onColorChange: (color: string) => void;
 };
 
-export function ProductPurchase({ product }: Props) {
+export function ProductPurchase({ product, color, onColorChange }: Props) {
   const { addItem } = useCart();
   const { status } = useSession();
   const [wishSaved, setWishSaved] = useState(false);
@@ -42,7 +54,6 @@ export function ProductPurchase({ product }: Props) {
     return [...map.values()];
   }, [product.variants]);
 
-  const [color, setColor] = useState(colors[0]?.name ?? "");
   const sizesForColor = useMemo(
     () => product.variants.filter((v) => v.color === color),
     [product.variants, color],
@@ -50,6 +61,7 @@ export function ProductPurchase({ product }: Props) {
   const [size, setSize] = useState(sizesForColor[0]?.size ?? "");
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
+  const [showChart, setShowChart] = useState(false);
 
   const selected =
     product.variants.find((v) => v.color === color && v.size === size) ??
@@ -58,6 +70,11 @@ export function ProductPurchase({ product }: Props) {
   const percent = selected
     ? discountPercent(selected.price, selected.compareAt)
     : null;
+
+  const imageForCart =
+    product.images.find((img) => img.color === color)?.url ||
+    product.images[0]?.url ||
+    "";
 
   function handleAdd() {
     if (!selected) return;
@@ -71,7 +88,7 @@ export function ProductPurchase({ product }: Props) {
         size: selected.size,
         price: selected.price,
         compareAt: selected.compareAt,
-        image: product.images[0]?.url ?? "",
+        image: imageForCart,
       },
       qty,
     );
@@ -89,7 +106,7 @@ export function ProductPurchase({ product }: Props) {
       color: selected.color,
       size: selected.size,
       price: selected.price,
-      image: product.images[0]?.url ?? "",
+      image: imageForCart,
     };
     if (status === "authenticated") {
       await fetch("/api/wishlist", {
@@ -116,32 +133,37 @@ export function ProductPurchase({ product }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <div className="flex items-center gap-2 text-sm text-neutral-500">
-          <span className="text-amber-500">★ {product.rating.toFixed(1)}</span>
-          <span>({product.reviewCount} đánh giá)</span>
-        </div>
-        <h1 className="mt-2 font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight text-neutral-900 md:text-4xl">
+        {product.isNew ? (
+          <span className="inline-flex rounded bg-neutral-900 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-white uppercase">
+            Mới về
+          </span>
+        ) : null}
+        <h1 className="mt-3 font-[family-name:var(--font-display)] text-3xl font-extrabold tracking-tight text-neutral-900 md:text-4xl">
           {product.name}
         </h1>
-        {product.description ? (
-          <p className="mt-3 text-sm leading-relaxed text-neutral-600 md:text-[15px]">
-            {product.description}
-          </p>
-        ) : null}
+        <div className="mt-3 flex items-center gap-2 text-sm text-neutral-500">
+          <span className="text-amber-500">
+            {"★".repeat(Math.round(Math.min(5, product.rating || 5)))}
+          </span>
+          <span className="font-medium text-neutral-800">
+            {product.rating > 0 ? product.rating.toFixed(1) : "5.0"}
+          </span>
+          <span>({product.reviewCount} đánh giá)</span>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-end gap-3">
-        <p className="text-2xl font-bold text-neutral-900">
+        <p className="text-3xl font-extrabold text-[var(--accent)]">
           {selected ? formatVnd(selected.price) : "—"}
         </p>
         {selected?.compareAt && selected.compareAt > selected.price ? (
           <>
-            <p className="text-base text-neutral-400 line-through">
+            <p className="pb-1 text-base text-neutral-400 line-through">
               {formatVnd(selected.compareAt)}
             </p>
             {percent ? (
-              <span className="rounded bg-red-500 px-2 py-0.5 text-xs font-semibold text-white">
-                {percent}% Giảm
+              <span className="rounded bg-[var(--accent)] px-2 py-0.5 text-xs font-bold text-white">
+                {percent}% GIẢM
               </span>
             ) : null}
           </>
@@ -158,7 +180,7 @@ export function ProductPurchase({ product }: Props) {
               key={c.name}
               type="button"
               onClick={() => {
-                setColor(c.name);
+                onColorChange(c.name);
                 const next = product.variants.find((v) => v.color === c.name);
                 if (next) setSize(next.size);
               }}
@@ -176,11 +198,47 @@ export function ProductPurchase({ product }: Props) {
 
       <div>
         <div className="mb-2 flex items-center justify-between">
-          <p className="text-sm font-medium text-neutral-800">Size</p>
-          <a href="#bang-size" className="text-xs text-neutral-500 underline">
+          <p className="text-sm font-medium text-neutral-800">Kích thước:</p>
+          <button
+            type="button"
+            onClick={() => setShowChart((v) => !v)}
+            className="inline-flex items-center gap-1 text-xs text-neutral-500 underline"
+          >
+            <Ruler className="h-3.5 w-3.5" />
             Bảng size
-          </a>
+          </button>
         </div>
+        {showChart ? (
+          <div className="mb-3 overflow-x-auto border border-neutral-100 bg-white p-3 text-xs text-neutral-600">
+            <table className="min-w-full text-left" id="bang-size">
+              <thead>
+                <tr className="border-b border-neutral-100">
+                  <th className="py-1 pr-4">Size</th>
+                  <th className="py-1 pr-4">Ngực (cm)</th>
+                  <th className="py-1 pr-4">Dài áo (cm)</th>
+                  <th className="py-1">Vai (cm)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ["S", "96", "68", "44"],
+                  ["M", "100", "70", "46"],
+                  ["L", "104", "72", "48"],
+                  ["XL", "108", "74", "50"],
+                  ["XXL", "112", "76", "52"],
+                ].map((row) => (
+                  <tr key={row[0]} className="border-b border-neutral-50">
+                    {row.map((cell) => (
+                      <td key={cell} className="py-1 pr-4">
+                        {cell}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
         <div className="flex flex-wrap gap-2">
           {sizesForColor.map((v) => (
             <button
@@ -203,10 +261,10 @@ export function ProductPurchase({ product }: Props) {
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="flex items-center rounded border border-neutral-200">
+        <div className="flex items-center rounded border border-neutral-200 bg-white">
           <button
             type="button"
-            className="px-3 py-2.5"
+            className="px-3 py-3"
             onClick={() => setQty((q) => Math.max(1, q - 1))}
             aria-label="Giảm"
           >
@@ -215,7 +273,7 @@ export function ProductPurchase({ product }: Props) {
           <span className="min-w-8 text-center text-sm font-medium">{qty}</span>
           <button
             type="button"
-            className="px-3 py-2.5"
+            className="px-3 py-3"
             onClick={() => setQty((q) => q + 1)}
             aria-label="Tăng"
           >
@@ -227,17 +285,17 @@ export function ProductPurchase({ product }: Props) {
           type="button"
           onClick={handleAdd}
           disabled={!selected || selected.stock <= 0}
-          className="flex flex-1 items-center justify-center gap-2 rounded bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-50"
+          className="flex flex-1 items-center justify-center gap-2 rounded bg-neutral-900 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-[var(--accent)] disabled:opacity-50"
         >
           <ShoppingBag className="h-4 w-4" />
-          {added ? "Đã thêm!" : "Thêm vào giỏ"}
+          {added ? "Đã thêm!" : "Thêm vào giỏ hàng"}
         </button>
 
         <button
           type="button"
           onClick={() => void handleWish()}
           className={cn(
-            "rounded border border-neutral-200 p-3 transition hover:border-neutral-400",
+            "rounded border border-neutral-200 p-3.5 transition hover:border-neutral-400",
             wishSaved && "border-[var(--accent)] text-[var(--accent)]",
           )}
           aria-label="Yêu thích"
@@ -249,11 +307,11 @@ export function ProductPurchase({ product }: Props) {
       <div className="grid grid-cols-3 gap-3 border-t border-neutral-100 pt-5 text-center text-[11px] text-neutral-500 sm:text-xs">
         <div className="flex flex-col items-center gap-1.5">
           <Truck className="h-4 w-4" />
-          Miễn phí vận chuyển*
+          Free Shipping
         </div>
         <div className="flex flex-col items-center gap-1.5">
           <RefreshCw className="h-4 w-4" />
-          Đổi trả 7 ngày
+          Đổi trả 30 ngày
         </div>
         <div className="flex flex-col items-center gap-1.5">
           <ShieldCheck className="h-4 w-4" />

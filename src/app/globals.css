@@ -1,12 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --background: #faf9f7;
+  --background: #fdfcf8;
   --foreground: #171717;
-  --accent: #e85d04;
-  --accent-soft: #fff1e6;
+  --accent: #f97316;
+  --accent-soft: #fff7ed;
   --surface: #ffffff;
   --muted: #737373;
+  --tile-gap: 0.5rem;
 }
 
 @theme inline {
@@ -44,12 +45,13 @@ body {
   }
 }
 
-@keyframes hero-ken {
-  from {
-    transform: scale(1.06);
+@keyframes float-soft {
+  0%,
+  100% {
+    transform: translateY(0);
   }
-  to {
-    transform: scale(1);
+  50% {
+    transform: translateY(-8px);
   }
 }
 
@@ -57,6 +59,19 @@ body {
   animation: fade-up 0.7s ease-out both;
 }
 
-.animate-hero-ken {
-  animation: hero-ken 8s ease-out both;
+.animate-float-soft {
+  animation: float-soft 5s ease-in-out infinite;
+}
+
+.hero-mosaic {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: var(--tile-gap);
+}
+
+.decor-dot {
+  position: absolute;
+  border-radius: 0.85rem;
+  pointer-events: none;
 }

@@ -10,9 +10,11 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
+    "db:upsert-hoodies": "tsx prisma/upsert-hoodies.ts",
     "db:setup": "prisma migrate deploy && tsx prisma/seed.ts",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
     "postinstall": "prisma generate"
   },
   "prisma": {
@@ -33,6 +35,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
     "@tailwindcss/turbopack": "4.3.3",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",

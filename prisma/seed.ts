@@ -135,7 +135,10 @@ async function main() {
     isFeatured?: boolean;
     isNew?: boolean;
     isBestSeller?: boolean;
+    /** Product-level fallback images (no colour scope). */
     images: string[];
+    /** Optional per-colour galleries (Unsplash placeholders OK). */
+    colorImages?: Record<string, string[]>;
     colors: { name: string; hex: string }[];
     sizes: string[];
     price: number;
@@ -236,12 +239,62 @@ async function main() {
         { name: "Kem", hex: "#E8DCC8" },
         { name: "Đen", hex: "#111111" },
         { name: "Nâu", hex: "#6B4423" },
-        { name: "Xám", hex: "#9A9A9A" },
-        { name: "Hồng", hex: "#E8A0BF" },
       ],
+      colorImages: {
+        Kem: [
+          img("photo-1556821840-3a63f95609a7"),
+          img("photo-1578587018452-892bacefd3f2"),
+          img("photo-1620799140408-edc6dcb6d633"),
+        ],
+        Đen: [
+          img("photo-1556821840-3a63f95609a7"),
+          img("photo-1503342217505-b0a15ec3261c"),
+          img("photo-1520975916090-3105956dac38"),
+        ],
+        Nâu: [
+          img("photo-1578587018452-892bacefd3f2"),
+          img("photo-1489987707025-afc232f7ea0f"),
+          img("photo-1552374196-1ab2a1c593e8"),
+        ],
+      },
       sizes: ["S", "M", "L", "XL", "XXL"],
       price: 599000,
       compareAt: 899000,
+    },
+    {
+      name: "Áo Hoodie Nữ Form Rộng VIZFAS Essential",
+      slug: "ao-hoodie-nu-essential",
+      description:
+        "Hoodie nữ form rộng — ảnh Unsplash là placeholder theo màu Xám nhạt / Hồng / Đen.",
+      material: "Nỉ cotton",
+      fit: "Oversize",
+      gender: "FEMALE",
+      categoryId: hoodie.id,
+      isFeatured: true,
+      isNew: true,
+      images: [img("photo-1515886657613-9f3515b0c78f")],
+      colors: [
+        { name: "Xám nhạt", hex: "#C8C8C8" },
+        { name: "Hồng", hex: "#E8A0BF" },
+        { name: "Đen", hex: "#111111" },
+      ],
+      colorImages: {
+        "Xám nhạt": [
+          img("photo-1515886657613-9f3515b0c78f"),
+          img("photo-1434389677669-e08b4cac3105"),
+        ],
+        Hồng: [
+          img("photo-1487412720507-e7ab37603c6f"),
+          img("photo-1469334031218-e382a71b716b"),
+        ],
+        Đen: [
+          img("photo-1503342217505-b0a15ec3261c"),
+          img("photo-1483985988355-763728e1935b"),
+        ],
+      },
+      sizes: ["S", "M", "L", "XL", "XXL"],
+      price: 579000,
+      compareAt: 849000,
     },
     {
       name: "Áo Khoác Bomber",
@@ -416,11 +469,33 @@ async function main() {
         rating: 0,
         reviewCount: 0,
         images: {
-          create: p.images.map((url, i) => ({
-            url,
-            alt: p.name,
-            sortOrder: i,
-          })),
+          create: (() => {
+            if (p.colorImages) {
+              const rows: {
+                url: string;
+                alt: string;
+                color: string;
+                sortOrder: number;
+              }[] = [];
+              let i = 0;
+              for (const [color, urls] of Object.entries(p.colorImages)) {
+                for (const url of urls) {
+                  rows.push({
+                    url,
+                    alt: `${p.name} - ${color}`,
+                    color,
+                    sortOrder: i++,
+                  });
+                }
+              }
+              return rows;
+            }
+            return p.images.map((url, i) => ({
+              url,
+              alt: p.name,
+              sortOrder: i,
+            }));
+          })(),
         },
         collections: {
           create: [{ collectionId: essentials.id }],

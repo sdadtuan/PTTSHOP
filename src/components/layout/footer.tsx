@@ -7,16 +7,18 @@ const columns = [
       { href: "/san-pham?category=ao-thun", label: "Áo thun" },
       { href: "/san-pham?category=ao-khoac", label: "Áo khoác" },
       { href: "/san-pham?category=quan", label: "Quần" },
+      { href: "/san-pham?category=hoodie", label: "Hoodie" },
       { href: "/san-pham?category=phu-kien", label: "Phụ kiện" },
     ],
   },
   {
     title: "Hỗ trợ",
     links: [
-      { href: "/ho-tro/van-chuyen", label: "Vận chuyển" },
+      { href: "/tai-khoan/don-hang", label: "Theo dõi đơn hàng" },
       { href: "/ho-tro/doi-tra", label: "Đổi trả" },
       { href: "/ho-tro/bang-size", label: "Bảng size" },
-      { href: "/ho-tro/bao-hanh", label: "Bảo hành" },
+      { href: "/ho-tro/van-chuyen", label: "Vận chuyển" },
+      { href: "/ho-tro/cau-hoi", label: "Câu hỏi thường gặp" },
     ],
   },
   {
@@ -24,42 +26,59 @@ const columns = [
     links: [
       { href: "/ve-chung-toi", label: "Câu chuyện thương hiệu" },
       { href: "/bo-suu-tap", label: "Bộ sưu tập" },
-      { href: "/lien-he", label: "Liên hệ" },
+      { href: "/lien-he", label: "Tuyển dụng / Liên hệ" },
     ],
   },
 ];
 
 export function Footer() {
   return (
-    <footer className="mt-auto border-t border-black/5 bg-neutral-950 text-neutral-300">
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 md:grid-cols-[1.4fr_2fr] md:px-6">
-        <div>
-          <p className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-[0.2em] text-white">
-            VIZFAS
-          </p>
-          <p className="mt-3 max-w-sm text-sm leading-relaxed text-neutral-400">
-            Thời trang cho tất cả — mỗi ngày đều chất. Chất liệu bền, form hiện đại,
-            dễ phối cho Nam, Nữ và phụ kiện.
-          </p>
-          <form className="mt-6 flex max-w-md gap-2">
-            <input
-              type="email"
-              placeholder="Email nhận tin mới"
-              className="min-w-0 flex-1 rounded-full border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white outline-none placeholder:text-neutral-500 focus:border-[var(--accent)]"
-            />
-            <button
-              type="submit"
-              className="rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-white transition hover:brightness-110"
+    <footer className="mt-auto border-t border-black/5 bg-[var(--background)] text-neutral-700">
+      <div className="mx-auto max-w-7xl px-4 pt-14 pb-10 md:px-6">
+        <div className="flex flex-col gap-6 border-b border-black/5 pb-10 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="font-[family-name:var(--font-display)] text-3xl font-extrabold tracking-[0.2em] text-neutral-900">
+              VIZFAS
+              <span className="ml-1 inline-block text-[var(--accent)]" aria-hidden>
+                ✦
+              </span>
+            </p>
+            <p className="mt-2 max-w-sm text-sm text-neutral-500">
+              Thời trang đơn giản, vẫn nổi bật — form hiện đại, dễ phối mỗi ngày.
+            </p>
+          </div>
+          <div className="flex items-center gap-3 text-xs font-semibold tracking-wide text-neutral-600">
+            <a
+              href="https://facebook.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-full border border-neutral-200 px-3 py-2 transition hover:border-neutral-900"
             >
-              Đăng ký
-            </button>
-          </form>
+              FB
+            </a>
+            <a
+              href="https://instagram.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-full border border-neutral-200 px-3 py-2 transition hover:border-neutral-900"
+            >
+              IG
+            </a>
+            <a
+              href="https://youtube.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-full border border-neutral-200 px-3 py-2 transition hover:border-neutral-900"
+            >
+              YT
+            </a>
+          </div>
         </div>
 
-        <div className="grid gap-8 sm:grid-cols-3">
+        <div className="grid gap-10 pt-10 sm:grid-cols-2 lg:grid-cols-4">
           {columns.map((col) => (
             <div key={col.title}>
-              <p className="text-sm font-semibold tracking-wide text-white uppercase">
+              <p className="text-sm font-semibold tracking-wide text-neutral-900">
                 {col.title}
               </p>
               <ul className="mt-4 space-y-2.5">
@@ -67,7 +86,7 @@ export function Footer() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm text-neutral-400 transition hover:text-white"
+                      className="text-sm text-neutral-500 transition hover:text-[var(--accent)]"
                     >
                       {link.label}
                     </Link>
@@ -76,13 +95,43 @@ export function Footer() {
               </ul>
             </div>
           ))}
+
+          <div>
+            <p className="text-sm font-semibold tracking-wide text-neutral-900">
+              Liên hệ
+            </p>
+            <ul className="mt-4 space-y-2.5 text-sm text-neutral-500">
+              <li>123 Nguyễn Huệ, Quận 1, TP.HCM</li>
+              <li>
+                <a href="mailto:hello@vizfas.vn" className="hover:text-[var(--accent)]">
+                  hello@vizfas.vn
+                </a>
+              </li>
+              <li>
+                <a href="tel:0901234567" className="hover:text-[var(--accent)]">
+                  0901 234 567
+                </a>
+              </li>
+              <li>Giờ làm việc: 9:00 – 21:00</li>
+            </ul>
+          </div>
         </div>
       </div>
 
-      <div className="border-t border-white/10">
+      <div className="border-t border-black/5">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-3 px-4 py-5 text-xs text-neutral-500 md:flex-row md:items-center md:px-6">
           <p>© {new Date().getFullYear()} VIZFAS. All rights reserved.</p>
-          <p>Liên hệ: hello@vizfas.vn · 0901 234 567</p>
+          <div className="flex flex-wrap gap-4">
+            <Link href="/chinh-sach/dieu-khoan" className="hover:text-neutral-800">
+              Điều khoản
+            </Link>
+            <Link href="/chinh-sach/bao-mat" className="hover:text-neutral-800">
+              Bảo mật
+            </Link>
+            <Link href="/chinh-sach/van-chuyen" className="hover:text-neutral-800">
+              Vận chuyển
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

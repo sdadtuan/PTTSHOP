@@ -25,6 +25,7 @@ export default async function AdminPage() {
     revenue,
     recentOrders,
     dayOrders,
+    bestSellerRows,
   ] = await Promise.all([
     prisma.product.count(),
     prisma.order.count(),
@@ -43,6 +44,12 @@ export default async function AdminPage() {
       where: { createdAt: { gte: since }, status: { not: "CANCELLED" } },
       select: { createdAt: true, total: true },
     }),
+    prisma.orderItem.groupBy({
+      by: ["name"],
+      _sum: { quantity: true },
+      orderBy: { _sum: { quantity: "desc" } },
+      take: 5,
+    }),
   ]);
 
   const byDay = new Map<string, { orders: number; revenue: number }>();
@@ -59,6 +66,7 @@ export default async function AdminPage() {
     byDay.set(key, cur);
   }
   const daily = [...byDay.entries()].map(([date, v]) => ({ date, ...v }));
+  const maxDayRevenue = Math.max(1, ...daily.map((d) => d.revenue));
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 md:px-6">
@@ -85,31 +93,65 @@ export default async function AdminPage() {
         <Stat label="Doanh thu" value={formatVnd(revenue._sum.total ?? 0)} />
       </div>
 
-      <section className="mt-10">
-        <h2 className="mb-3 font-semibold">Doanh thu 14 ngày</h2>
-        <div className="overflow-x-auto border border-neutral-100 bg-white">
-          <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-neutral-100 bg-neutral-50 text-neutral-500">
-              <tr>
-                <th className="px-4 py-2 font-medium">Ngày</th>
-                <th className="px-4 py-2 font-medium">Đơn</th>
-                <th className="px-4 py-2 font-medium">Doanh thu</th>
-              </tr>
-            </thead>
-            <tbody>
-              {daily.map((d) => (
-                <tr key={d.date} className="border-b border-neutral-50">
-                  <td className="px-4 py-2">{d.date}</td>
-                  <td className="px-4 py-2">{d.orders}</td>
-                  <td className="px-4 py-2">{formatVnd(d.revenue)}</td>
+      <section className="mt-10 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+        <div>
+          <h2 className="mb-3 font-semibold">Doanh thu 14 ngày</h2>
+          <div className="flex h-48 items-end gap-1 border border-neutral-100 bg-white p-4">
+            {daily.map((d) => (
+              <div
+                key={d.date}
+                className="flex flex-1 flex-col items-center justify-end gap-1"
+                title={`${d.date}: ${formatVnd(d.revenue)}`}
+              >
+                <div
+                  className="w-full rounded-t bg-[var(--accent)]"
+                  style={{
+                    height: `${Math.max(4, (d.revenue / maxDayRevenue) * 100)}%`,
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 overflow-x-auto border border-neutral-100 bg-white">
+            <table className="min-w-full text-left text-sm">
+              <thead className="border-b border-neutral-100 bg-neutral-50 text-neutral-500">
+                <tr>
+                  <th className="px-4 py-2 font-medium">Ngày</th>
+                  <th className="px-4 py-2 font-medium">Đơn</th>
+                  <th className="px-4 py-2 font-medium">Doanh thu</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {daily.map((d) => (
+                  <tr key={d.date} className="border-b border-neutral-50">
+                    <td className="px-4 py-2">{d.date}</td>
+                    <td className="px-4 py-2">{d.orders}</td>
+                    <td className="px-4 py-2">{formatVnd(d.revenue)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-2 text-xs text-neutral-500">
+            Khách hàng: {customerCount}
+          </p>
         </div>
-        <p className="mt-2 text-xs text-neutral-500">
-          Khách hàng: {customerCount}
-        </p>
+        <div>
+          <h2 className="mb-3 font-semibold">Bán chạy</h2>
+          <ul className="space-y-2 border border-neutral-100 bg-white p-4 text-sm">
+            {bestSellerRows.map((row) => (
+              <li key={row.name} className="flex justify-between gap-3">
+                <span className="min-w-0 truncate">{row.name}</span>
+                <span className="shrink-0 font-semibold">
+                  {row._sum.quantity ?? 0}
+                </span>
+              </li>
+            ))}
+            {bestSellerRows.length === 0 ? (
+              <li className="text-neutral-500">Chưa có dữ liệu bán</li>
+            ) : null}
+          </ul>
+        </div>
       </section>
 
       <section className="mt-10 overflow-x-auto border border-neutral-100 bg-white">

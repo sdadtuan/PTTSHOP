@@ -12,6 +12,9 @@
 
 # testing
 /coverage
+/test-results
+/playwright-report
+/blob-report
 
 # next.js
 /.next/
@@ -52,3 +55,7 @@ prisma/test.db
 prisma/test.db-journal
 /test.db
 /test.db-journal
+
+# local uploads (keep folder)
+/public/uploads/*
+!/public/uploads/.gitkeep
