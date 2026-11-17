@@ -1,7 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { AdminNav } from "@/components/admin/admin-nav";
+import { useEffect, useMemo, useState } from "react";
+import {
+  AdminCard,
+  AdminEmptyState,
+  AdminInput,
+  AdminPageHeader,
+  AdminPagination,
+  AdminTable,
+  AdminTableSkeleton,
+  AdminTd,
+  AdminTh,
+  AdminTr,
+  paginate,
+} from "@/components/admin/ui";
 
 type Customer = {
   id: string;
@@ -15,45 +27,112 @@ type Customer = {
 export default function AdminCustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [q, setQ] = useState("");
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     void (async () => {
+      setLoading(true);
       const res = await fetch("/api/admin/customers");
       const data = await res.json();
-      if (!res.ok) setError(data.error || "Lỗi");
-      else setCustomers(data.customers || []);
+      if (!res.ok) setError(data.error || "Không tải được khách hàng");
+      else {
+        setError("");
+        setCustomers(data.customers || []);
+      }
+      setLoading(false);
     })();
   }, []);
 
+  const filtered = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    if (!query) return customers;
+    return customers.filter(
+      (c) =>
+        (c.name || "").toLowerCase().includes(query) ||
+        c.email.toLowerCase().includes(query) ||
+        (c.phone || "").toLowerCase().includes(query),
+    );
+  }, [customers, q]);
+
+  const paged = paginate(filtered, page, 10);
+
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 md:px-6">
-      <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold">
-        Khách hàng
-      </h1>
-      <AdminNav current="/admin/customers" />
-      {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
-      <div className="mt-6 overflow-x-auto border border-neutral-100 bg-white">
-        <table className="min-w-full text-left text-sm">
-          <thead className="border-b bg-neutral-50 text-neutral-500">
-            <tr>
-              <th className="px-4 py-3">Tên</th>
-              <th className="px-4 py-3">Email</th>
-              <th className="px-4 py-3">SĐT</th>
-              <th className="px-4 py-3">Đơn</th>
-            </tr>
-          </thead>
-          <tbody>
-            {customers.map((c) => (
-              <tr key={c.id} className="border-b border-neutral-50">
-                <td className="px-4 py-3">{c.name || "—"}</td>
-                <td className="px-4 py-3">{c.email}</td>
-                <td className="px-4 py-3">{c.phone || "—"}</td>
-                <td className="px-4 py-3">{c._count.orders}</td>
+    <div>
+      <AdminPageHeader
+        title="Khách hàng"
+        description="Danh sách tài khoản khách đã đăng ký"
+        breadcrumbs={[
+          { href: "/admin", label: "Admin" },
+          { label: "Khách hàng" },
+        ]}
+      />
+
+      <AdminCard className="mb-4">
+        <AdminInput
+          label="Tìm kiếm"
+          value={q}
+          onChange={(e) => {
+            setQ(e.target.value);
+            setPage(1);
+          }}
+          placeholder="Tên, email, SĐT…"
+        />
+      </AdminCard>
+
+      {error ? (
+        <p
+          className="mb-4 rounded-[var(--admin-radius-md)] border border-red-200 bg-[var(--admin-danger-soft)] px-4 py-3 text-sm text-[var(--admin-danger)]"
+          role="alert"
+        >
+          {error}
+        </p>
+      ) : null}
+
+      {loading ? (
+        <AdminTableSkeleton />
+      ) : paged.items.length === 0 ? (
+        <AdminEmptyState
+          title="Chưa có khách hàng"
+          description="Khi có tài khoản mới, danh sách sẽ hiện tại đây."
+        />
+      ) : (
+        <>
+          <AdminTable>
+            <thead>
+              <tr>
+                <AdminTh>Tên</AdminTh>
+                <AdminTh>Email</AdminTh>
+                <AdminTh>SĐT</AdminTh>
+                <AdminTh>Đơn</AdminTh>
+                <AdminTh>Tham gia</AdminTh>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {paged.items.map((c) => (
+                <AdminTr key={c.id}>
+                  <AdminTd className="font-medium">{c.name || "—"}</AdminTd>
+                  <AdminTd>{c.email}</AdminTd>
+                  <AdminTd>{c.phone || "—"}</AdminTd>
+                  <AdminTd>{c._count.orders}</AdminTd>
+                  <AdminTd className="text-[var(--admin-text-muted)]">
+                    {new Date(c.createdAt).toLocaleDateString("vi-VN")}
+                  </AdminTd>
+                </AdminTr>
+              ))}
+            </tbody>
+          </AdminTable>
+          <div className="mt-4">
+            <AdminPagination
+              page={paged.page}
+              totalPages={paged.totalPages}
+              total={paged.total}
+              onChange={setPage}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -1,7 +1,24 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
-import { AdminNav } from "@/components/admin/admin-nav";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import {
+  AdminBadge,
+  AdminButton,
+  AdminCard,
+  AdminConfirmDialog,
+  AdminEmptyState,
+  AdminInput,
+  AdminPageHeader,
+  AdminPagination,
+  AdminSelect,
+  AdminTable,
+  AdminTableSkeleton,
+  AdminTd,
+  AdminTh,
+  AdminTr,
+  paginate,
+  useAdminToast,
+} from "@/components/admin/ui";
 
 type Coupon = {
   id: string;
@@ -16,19 +33,42 @@ type Coupon = {
 };
 
 export default function AdminCouponsPage() {
+  const { toast } = useAdminToast();
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [q, setQ] = useState("");
+  const [page, setPage] = useState(1);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   async function load() {
+    setLoading(true);
     const res = await fetch("/api/admin/coupons");
     const data = await res.json();
-    if (!res.ok) setError(data.error || "Lỗi");
-    else setCoupons(data.coupons || []);
+    if (!res.ok) setError(data.error || "Không tải được mã giảm");
+    else {
+      setError("");
+      setCoupons(data.coupons || []);
+    }
+    setLoading(false);
   }
 
   useEffect(() => {
     void load();
   }, []);
+
+  const filtered = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    if (!query) return coupons;
+    return coupons.filter(
+      (c) =>
+        c.code.toLowerCase().includes(query) ||
+        (c.description || "").toLowerCase().includes(query),
+    );
+  }, [coupons, q]);
+
+  const paged = paginate(filtered, page, 10);
 
   async function onCreate(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -42,18 +82,18 @@ export default function AdminCouponsPage() {
         discountType: String(form.get("discountType") || "PERCENT"),
         discountValue: Number(form.get("discountValue") || 0),
         minOrder: Number(form.get("minOrder") || 0),
-        maxUses: form.get("maxUses")
-          ? Number(form.get("maxUses"))
-          : null,
+        maxUses: form.get("maxUses") ? Number(form.get("maxUses")) : null,
         isActive: true,
       }),
     });
     const data = await res.json();
     if (!res.ok) {
       setError(data.error || "Tạo thất bại");
+      toast(data.error || "Tạo thất bại", "error");
       return;
     }
     e.currentTarget.reset();
+    toast("Đã thêm mã giảm");
     await load();
   }
 
@@ -63,75 +103,160 @@ export default function AdminCouponsPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, isActive }),
     });
+    toast(isActive ? "Đã bật mã" : "Đã tắt mã");
     await load();
   }
 
-  async function remove(id: string) {
-    if (!confirm("Xóa mã?")) return;
-    await fetch("/api/admin/coupons", {
+  async function confirmDelete() {
+    if (!deleteId) return;
+    setDeleting(true);
+    const res = await fetch("/api/admin/coupons", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
+      body: JSON.stringify({ id: deleteId }),
     });
+    setDeleting(false);
+    setDeleteId(null);
+    if (!res.ok) {
+      const data = await res.json();
+      setError(data.error || "Xóa thất bại");
+      toast(data.error || "Xóa thất bại", "error");
+      return;
+    }
+    toast("Đã xóa mã");
     await load();
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 md:px-6">
-      <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold">
-        Mã giảm giá
-      </h1>
-      <AdminNav current="/admin/coupons" />
-      {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
-      <form onSubmit={onCreate} className="mt-6 grid gap-2 sm:grid-cols-3">
-        <input name="code" required placeholder="CODE" className="rounded border px-3 py-2 text-sm" />
-        <input name="description" placeholder="Mô tả" className="rounded border px-3 py-2 text-sm" />
-        <select name="discountType" className="rounded border px-3 py-2 text-sm">
-          <option value="PERCENT">PERCENT</option>
-          <option value="FIXED">FIXED</option>
-        </select>
-        <input name="discountValue" type="number" required placeholder="Giá trị" className="rounded border px-3 py-2 text-sm" />
-        <input name="minOrder" type="number" defaultValue={0} placeholder="Đơn tối thiểu" className="rounded border px-3 py-2 text-sm" />
-        <input name="maxUses" type="number" placeholder="Max uses" className="rounded border px-3 py-2 text-sm" />
-        <button type="submit" className="rounded bg-neutral-900 px-4 py-2 text-sm text-white sm:col-span-3">
-          Thêm mã
-        </button>
-      </form>
-      <ul className="mt-6 divide-y border border-neutral-100 bg-white">
-        {coupons.map((c) => (
-          <li key={c.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm">
-            <div>
-              <p className="font-medium">
-                {c.code}{" "}
-                <span className="text-neutral-500">
-                  ({c.discountType} {c.discountValue})
-                </span>
-              </p>
-              <p className="text-xs text-neutral-500">
-                Đã dùng {c.usedCount}
-                {c.maxUses != null ? `/${c.maxUses}` : ""} · min {c.minOrder}đ
-                {!c.isActive ? " · OFF" : ""}
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => void toggle(c.id, !c.isActive)}
-                className="text-xs text-[var(--accent)]"
-              >
-                {c.isActive ? "Tắt" : "Bật"}
-              </button>
-              <button
-                type="button"
-                onClick={() => void remove(c.id)}
-                className="text-xs text-red-600"
-              >
-                Xóa
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
+    <div>
+      <AdminPageHeader
+        title="Mã giảm giá"
+        description="Tạo và quản lý coupon cửa hàng"
+        breadcrumbs={[
+          { href: "/admin", label: "Admin" },
+          { label: "Mã giảm" },
+        ]}
+      />
+
+      <AdminCard className="mb-4">
+        <form onSubmit={onCreate} className="grid gap-3 sm:grid-cols-3">
+          <AdminInput name="code" required label="Mã" placeholder="SALE10" />
+          <AdminInput name="description" label="Mô tả" />
+          <AdminSelect name="discountType" label="Loại">
+            <option value="PERCENT">PERCENT</option>
+            <option value="FIXED">FIXED</option>
+          </AdminSelect>
+          <AdminInput name="discountValue" type="number" required label="Giá trị" />
+          <AdminInput name="minOrder" type="number" label="Đơn tối thiểu" defaultValue={0} />
+          <AdminInput name="maxUses" type="number" label="Giới hạn lượt" />
+          <div className="sm:col-span-3">
+            <AdminButton type="submit" variant="accent">
+              Thêm mã
+            </AdminButton>
+          </div>
+        </form>
+      </AdminCard>
+
+      <AdminCard className="mb-4">
+        <AdminInput
+          label="Tìm kiếm"
+          value={q}
+          onChange={(e) => {
+            setQ(e.target.value);
+            setPage(1);
+          }}
+          placeholder="Mã hoặc mô tả…"
+        />
+      </AdminCard>
+
+      {error ? (
+        <p
+          className="mb-4 rounded-[var(--admin-radius-md)] border border-red-200 bg-[var(--admin-danger-soft)] px-4 py-3 text-sm text-[var(--admin-danger)]"
+          role="alert"
+        >
+          {error}
+        </p>
+      ) : null}
+
+      {loading ? (
+        <AdminTableSkeleton />
+      ) : paged.items.length === 0 ? (
+        <AdminEmptyState title="Chưa có mã giảm" description="Thêm mã mới ở form phía trên." />
+      ) : (
+        <>
+          <AdminTable>
+            <thead>
+              <tr>
+                <AdminTh>Mã</AdminTh>
+                <AdminTh>Giảm</AdminTh>
+                <AdminTh>Đã dùng</AdminTh>
+                <AdminTh>Trạng thái</AdminTh>
+                <AdminTh />
+              </tr>
+            </thead>
+            <tbody>
+              {paged.items.map((c) => (
+                <AdminTr key={c.id}>
+                  <AdminTd>
+                    <div className="font-medium">{c.code}</div>
+                    <div className="text-xs text-[var(--admin-text-muted)]">
+                      {c.description || "—"} · min {c.minOrder}đ
+                    </div>
+                  </AdminTd>
+                  <AdminTd>
+                    {c.discountType} {c.discountValue}
+                  </AdminTd>
+                  <AdminTd>
+                    {c.usedCount}
+                    {c.maxUses != null ? `/${c.maxUses}` : ""}
+                  </AdminTd>
+                  <AdminTd>
+                    <AdminBadge tone={c.isActive ? "success" : "neutral"}>
+                      {c.isActive ? "Đang bật" : "Đã tắt"}
+                    </AdminBadge>
+                  </AdminTd>
+                  <AdminTd>
+                    <div className="flex gap-2">
+                      <AdminButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => void toggle(c.id, !c.isActive)}
+                      >
+                        {c.isActive ? "Tắt" : "Bật"}
+                      </AdminButton>
+                      <AdminButton
+                        variant="ghost"
+                        size="sm"
+                        className="text-[var(--admin-danger)]"
+                        onClick={() => setDeleteId(c.id)}
+                      >
+                        Xóa
+                      </AdminButton>
+                    </div>
+                  </AdminTd>
+                </AdminTr>
+              ))}
+            </tbody>
+          </AdminTable>
+          <div className="mt-4">
+            <AdminPagination
+              page={paged.page}
+              totalPages={paged.totalPages}
+              total={paged.total}
+              onChange={setPage}
+            />
+          </div>
+        </>
+      )}
+
+      <AdminConfirmDialog
+        open={Boolean(deleteId)}
+        onClose={() => setDeleteId(null)}
+        onConfirm={confirmDelete}
+        title="Xóa mã giảm?"
+        description="Mã sẽ không còn dùng được cho đơn mới."
+        loading={deleting}
+      />
     </div>
   );
 }

@@ -1,8 +1,28 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { AdminNav } from "@/components/admin/admin-nav";
+import { Plus, Pencil, Trash2 } from "lucide-react";
+import {
+  AdminBadge,
+  AdminButton,
+  AdminCard,
+  AdminConfirmDialog,
+  AdminEmptyState,
+  AdminInput,
+  AdminPageHeader,
+  AdminPagination,
+  AdminSelect,
+  AdminTable,
+  AdminTableSkeleton,
+  AdminTd,
+  AdminTextarea,
+  AdminTh,
+  AdminTr,
+  paginate,
+  useAdminToast,
+} from "@/components/admin/ui";
 import { formatVnd } from "@/lib/format";
 
 type Product = {
@@ -13,32 +33,71 @@ type Product = {
   isNew: boolean;
   isBestSeller: boolean;
   category?: { name: string } | null;
-  variants: { id: string; sku: string; stock: number; price: number; color: string; size: string }[];
+  images?: { url: string; alt?: string | null }[];
+  variants: {
+    id: string;
+    sku: string;
+    stock: number;
+    price: number;
+    color: string;
+    size: string;
+  }[];
 };
 
 type Category = { id: string; name: string };
 
 export default function AdminProductsPage() {
+  const { toast } = useAdminToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [q, setQ] = useState("");
+  const [page, setPage] = useState(1);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [previews, setPreviews] = useState<string[]>([]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const initial = params.get("q");
+    if (initial) setQ(initial);
+  }, []);
 
   async function load() {
+    setLoading(true);
     const [pRes, cRes] = await Promise.all([
       fetch("/api/admin/products"),
       fetch("/api/admin/categories"),
     ]);
     const pData = await pRes.json();
     const cData = await cRes.json();
-    if (!pRes.ok) setError(pData.error || "Lỗi");
-    else setProducts(pData.products || []);
+    if (!pRes.ok) setError(pData.error || "Không tải được sản phẩm");
+    else {
+      setError("");
+      setProducts(pData.products || []);
+    }
     if (cRes.ok) setCategories(cData.categories || []);
+    setLoading(false);
   }
 
   useEffect(() => {
     void load();
   }, []);
+
+  const filtered = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    if (!query) return products;
+    return products.filter(
+      (p) =>
+        p.name.toLowerCase().includes(query) ||
+        p.slug.toLowerCase().includes(query) ||
+        (p.category?.name || "").toLowerCase().includes(query),
+    );
+  }, [products, q]);
+
+  const paged = paginate(filtered, page, 8);
 
   async function onCreate(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -60,12 +119,14 @@ export default function AdminProductsPage() {
       const upData = await upRes.json();
       if (!upRes.ok) {
         setError(upData.error || "Upload thất bại");
+        toast(upData.error || "Upload thất bại", "error");
         return;
       }
       imageUrl = upData.url as string;
     }
     if (!imageUrl) {
       setError("Cần URL ảnh hoặc upload file");
+      toast("Cần URL ảnh hoặc upload file", "error");
       return;
     }
     const payload = {
@@ -95,10 +156,13 @@ export default function AdminProductsPage() {
     const data = await res.json();
     if (!res.ok) {
       setError(data.error || "Tạo thất bại");
+      toast(data.error || "Tạo thất bại", "error");
       return;
     }
     setShowForm(false);
+    setPreviews([]);
     formEl.reset();
+    toast("Đã tạo sản phẩm");
     await load();
   }
 
@@ -111,123 +175,297 @@ export default function AdminProductsPage() {
     await load();
   }
 
-  async function remove(id: string) {
-    if (!confirm("Xóa sản phẩm?")) return;
-    await fetch("/api/admin/products", {
+  async function confirmDelete() {
+    if (!deleteId) return;
+    setDeleting(true);
+    const res = await fetch("/api/admin/products", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
+      body: JSON.stringify({ id: deleteId }),
     });
+    setDeleting(false);
+    setDeleteId(null);
+    if (!res.ok) {
+      const data = await res.json();
+      setError(data.error || "Xóa thất bại");
+      toast(data.error || "Xóa thất bại", "error");
+      return;
+    }
+    toast("Đã xóa sản phẩm");
     await load();
   }
 
+  function onFilesSelected(files: FileList | null) {
+    if (!files?.length) {
+      setPreviews([]);
+      return;
+    }
+    setPreviews([...files].slice(0, 6).map((f) => URL.createObjectURL(f)));
+  }
+
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 md:px-6">
-      <div className="flex items-end justify-between gap-4">
-        <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold">
-          Sản phẩm
-        </h1>
-        <button
-          type="button"
-          onClick={() => setShowForm((v) => !v)}
-          className="rounded bg-neutral-900 px-4 py-2 text-sm text-white"
+    <div>
+      <AdminPageHeader
+        title="Sản phẩm"
+        description="Quản lý danh mục hàng, biến thể và tồn kho"
+        breadcrumbs={[
+          { href: "/admin", label: "Admin" },
+          { label: "Sản phẩm" },
+        ]}
+        actions={
+          <AdminButton variant="accent" onClick={() => setShowForm((v) => !v)}>
+            <Plus className="h-4 w-4" />
+            {showForm ? "Đóng form" : "Thêm sản phẩm"}
+          </AdminButton>
+        }
+      />
+
+      <AdminCard className="mb-4">
+        <AdminInput
+          label="Tìm kiếm"
+          value={q}
+          onChange={(e) => {
+            setQ(e.target.value);
+            setPage(1);
+          }}
+          placeholder="Tên, slug, danh mục…"
+        />
+      </AdminCard>
+
+      {error ? (
+        <p
+          className="mb-4 rounded-[var(--admin-radius-md)] border border-red-200 bg-[var(--admin-danger-soft)] px-4 py-3 text-sm text-[var(--admin-danger)]"
+          role="alert"
         >
-          {showForm ? "Đóng" : "Thêm sản phẩm"}
-        </button>
-      </div>
-      <AdminNav current="/admin/products" />
-      {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
+          {error}
+        </p>
+      ) : null}
 
       {showForm ? (
-        <form
-          onSubmit={onCreate}
-          className="mt-6 grid gap-3 border border-neutral-100 bg-white p-4 sm:grid-cols-2"
-        >
-          <input name="name" required placeholder="Tên" className="rounded border px-3 py-2 text-sm" />
-          <input name="slug" required placeholder="slug" className="rounded border px-3 py-2 text-sm" />
-          <input name="imageUrl" type="url" placeholder="URL ảnh (hoặc upload bên dưới)" className="rounded border px-3 py-2 text-sm sm:col-span-2" />
-          <input name="imageFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="text-sm sm:col-span-2" />
-          <textarea name="description" placeholder="Mô tả" className="rounded border px-3 py-2 text-sm sm:col-span-2" />
-          <select name="categoryId" className="rounded border px-3 py-2 text-sm">
-            <option value="">— Danh mục —</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-          <select name="gender" className="rounded border px-3 py-2 text-sm" defaultValue="UNISEX">
-            <option value="UNISEX">Unisex</option>
-            <option value="MALE">Nam</option>
-            <option value="FEMALE">Nữ</option>
-          </select>
-          <input name="color" placeholder="Màu" defaultValue="Đen" className="rounded border px-3 py-2 text-sm" />
-          <input name="size" placeholder="Size" defaultValue="M" className="rounded border px-3 py-2 text-sm" />
-          <input name="price" type="number" required placeholder="Giá" className="rounded border px-3 py-2 text-sm" />
-          <input name="stock" type="number" required placeholder="Tồn" defaultValue={10} className="rounded border px-3 py-2 text-sm" />
-          <button type="submit" className="rounded bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white sm:col-span-2">
-            Tạo
-          </button>
+        <form onSubmit={onCreate} className="mb-6 space-y-4">
+          <AdminCard>
+            <h2 className="mb-4 font-semibold">Thông tin cơ bản</h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <AdminInput name="name" required label="Tên sản phẩm" />
+              <AdminInput name="slug" required label="Slug" />
+              <AdminSelect name="categoryId" label="Danh mục">
+                <option value="">— Danh mục —</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </AdminSelect>
+              <AdminSelect name="gender" label="Giới tính" defaultValue="UNISEX">
+                <option value="UNISEX">Unisex</option>
+                <option value="MALE">Nam</option>
+                <option value="FEMALE">Nữ</option>
+              </AdminSelect>
+              <div className="sm:col-span-2">
+                <AdminTextarea name="description" label="Mô tả" />
+              </div>
+            </div>
+          </AdminCard>
+
+          <AdminCard>
+            <h2 className="mb-4 font-semibold">Giá & tồn</h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <AdminInput name="price" type="number" required label="Giá (VND)" />
+              <AdminInput
+                name="stock"
+                type="number"
+                required
+                label="Tồn kho"
+                defaultValue={10}
+              />
+            </div>
+          </AdminCard>
+
+          <AdminCard>
+            <h2 className="mb-4 font-semibold">Biến thể màu / size</h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <AdminInput name="color" label="Màu" defaultValue="Đen" />
+              <AdminInput name="size" label="Size" defaultValue="M" />
+            </div>
+          </AdminCard>
+
+          <AdminCard>
+            <h2 className="mb-4 font-semibold">Ảnh sản phẩm</h2>
+            <div className="grid gap-3">
+              <AdminInput name="imageUrl" type="url" label="URL ảnh" />
+              <label className="block space-y-1.5 text-sm">
+                <span className="font-medium">Upload / kéo-thả</span>
+                <input
+                  name="imageFile"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="block w-full rounded-[var(--admin-radius-md)] border border-dashed border-[var(--admin-border-strong)] bg-[var(--admin-surface-muted)] px-4 py-8 text-sm file:mr-3 file:rounded file:border-0 file:bg-[var(--admin-accent)] file:px-3 file:py-1.5 file:text-white"
+                  onChange={(e) => onFilesSelected(e.target.files)}
+                />
+              </label>
+              {previews.length ? (
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  {previews.map((src) => (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      key={src}
+                      src={src}
+                      alt=""
+                      className="aspect-square rounded-[var(--admin-radius-md)] object-cover ring-1 ring-[var(--admin-border)]"
+                    />
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          </AdminCard>
+
+          <AdminButton type="submit" variant="accent">
+            Tạo sản phẩm
+          </AdminButton>
         </form>
       ) : null}
 
-      <div className="mt-6 overflow-x-auto border border-neutral-100 bg-white">
-        <table className="min-w-full text-left text-sm">
-          <thead className="border-b bg-neutral-50 text-neutral-500">
-            <tr>
-              <th className="px-4 py-3">Tên</th>
-              <th className="px-4 py-3">Danh mục</th>
-              <th className="px-4 py-3">Biến thể / tồn</th>
-              <th className="px-4 py-3" />
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((p) => (
-              <tr key={p.id} className="border-b border-neutral-50 align-top">
-                <td className="px-4 py-3">
-                  <Link href={`/san-pham/${p.slug}`} className="font-medium hover:text-[var(--accent)]">
-                    {p.name}
-                  </Link>
-                </td>
-                <td className="px-4 py-3">{p.category?.name ?? "—"}</td>
-                <td className="px-4 py-3">
-                  <ul className="space-y-1">
-                    {p.variants.slice(0, 6).map((v) => (
-                      <li key={v.id} className="flex items-center gap-2 text-xs">
-                        <span>
-                          {v.color}/{v.size} · {formatVnd(v.price)}
-                        </span>
-                        <input
-                          type="number"
-                          defaultValue={v.stock}
-                          className="w-16 rounded border px-1 py-0.5"
-                          onBlur={(e) =>
-                            void updateStock(v.id, Number(e.target.value))
-                          }
-                        />
-                      </li>
-                    ))}
-                    {p.variants.length > 6 ? (
-                      <li className="text-xs text-neutral-400">
-                        +{p.variants.length - 6} biến thể
-                      </li>
-                    ) : null}
-                  </ul>
-                </td>
-                <td className="px-4 py-3">
-                  <button
-                    type="button"
-                    onClick={() => void remove(p.id)}
-                    className="text-xs text-red-600"
-                  >
-                    Xóa
-                  </button>
-                </td>
+      {loading ? (
+        <AdminTableSkeleton rows={6} />
+      ) : paged.items.length === 0 ? (
+        <AdminEmptyState
+          title="Chưa có sản phẩm"
+          description="Thêm sản phẩm mới để bắt đầu bán."
+          action={
+            <AdminButton variant="accent" onClick={() => setShowForm(true)}>
+              Thêm sản phẩm
+            </AdminButton>
+          }
+        />
+      ) : (
+        <>
+          <AdminTable>
+            <thead>
+              <tr>
+                <AdminTh>Sản phẩm</AdminTh>
+                <AdminTh>Danh mục</AdminTh>
+                <AdminTh>Biến thể / tồn</AdminTh>
+                <AdminTh>Thẻ</AdminTh>
+                <AdminTh />
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {paged.items.map((p) => {
+                const thumb = p.images?.[0]?.url;
+                return (
+                  <AdminTr key={p.id}>
+                    <AdminTd>
+                      <div className="flex items-center gap-3">
+                        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-[var(--admin-radius-sm)] bg-[var(--admin-surface-muted)] ring-1 ring-[var(--admin-border)]">
+                          {thumb ? (
+                            <Image
+                              src={thumb}
+                              alt={p.name}
+                              fill
+                              className="object-cover"
+                              sizes="48px"
+                              unoptimized
+                            />
+                          ) : null}
+                        </div>
+                        <div className="min-w-0">
+                          <Link
+                            href={`/admin/products/${p.id}`}
+                            className="font-medium hover:text-[var(--admin-accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--admin-accent)]/30"
+                          >
+                            {p.name}
+                          </Link>
+                          <p className="truncate text-xs text-[var(--admin-text-muted)]">
+                            {p.slug}
+                          </p>
+                        </div>
+                      </div>
+                    </AdminTd>
+                    <AdminTd>{p.category?.name ?? "—"}</AdminTd>
+                    <AdminTd>
+                      <ul className="space-y-1">
+                        {p.variants.slice(0, 4).map((v) => (
+                          <li
+                            key={v.id}
+                            className="flex items-center gap-2 text-xs"
+                          >
+                            <span>
+                              {v.color}/{v.size} · {formatVnd(v.price)}
+                            </span>
+                            <input
+                              type="number"
+                              defaultValue={v.stock}
+                              aria-label={`Tồn ${v.color} ${v.size}`}
+                              className="w-16 rounded border border-[var(--admin-border)] px-1 py-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--admin-accent)]/25"
+                              onBlur={(e) =>
+                                void updateStock(v.id, Number(e.target.value))
+                              }
+                            />
+                          </li>
+                        ))}
+                        {p.variants.length > 4 ? (
+                          <li className="text-xs text-[var(--admin-text-subtle)]">
+                            +{p.variants.length - 4} biến thể
+                          </li>
+                        ) : null}
+                      </ul>
+                    </AdminTd>
+                    <AdminTd>
+                      <div className="flex flex-wrap gap-1">
+                        {p.isNew ? (
+                          <AdminBadge tone="accent">Mới</AdminBadge>
+                        ) : null}
+                        {p.isBestSeller ? (
+                          <AdminBadge tone="success">Bán chạy</AdminBadge>
+                        ) : null}
+                        {p.isFeatured ? (
+                          <AdminBadge tone="info">Nổi bật</AdminBadge>
+                        ) : null}
+                      </div>
+                    </AdminTd>
+                    <AdminTd>
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/admin/products/${p.id}`}
+                          className="inline-flex items-center gap-1 text-sm font-medium text-[var(--admin-text-muted)] hover:text-[var(--admin-accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--admin-accent)]/30"
+                        >
+                          <Pencil className="h-4 w-4" />
+                          Sửa
+                        </Link>
+                        <AdminButton
+                          variant="ghost"
+                          size="sm"
+                          aria-label="Xóa"
+                          onClick={() => setDeleteId(p.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-[var(--admin-danger)]" />
+                        </AdminButton>
+                      </div>
+                    </AdminTd>
+                  </AdminTr>
+                );
+              })}
+            </tbody>
+          </AdminTable>
+          <div className="mt-4">
+            <AdminPagination
+              page={paged.page}
+              totalPages={paged.totalPages}
+              total={paged.total}
+              onChange={setPage}
+            />
+          </div>
+        </>
+      )}
+
+      <AdminConfirmDialog
+        open={Boolean(deleteId)}
+        onClose={() => setDeleteId(null)}
+        onConfirm={confirmDelete}
+        title="Xóa sản phẩm?"
+        description="Hành động này không hoàn tác. Sản phẩm và biến thể liên quan sẽ bị xóa."
+        loading={deleting}
+      />
     </div>
   );
 }
