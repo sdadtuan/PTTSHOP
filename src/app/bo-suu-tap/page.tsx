@@ -33,7 +33,7 @@ export default async function CollectionsPage() {
         {collections.map((c) => (
           <Link
             key={c.id}
-            href={`/san-pham`}
+            href={`/san-pham?collection=${c.slug}`}
             className="group relative min-h-[360px] overflow-hidden bg-neutral-200"
           >
             <Image

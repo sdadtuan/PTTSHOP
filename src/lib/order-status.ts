@@ -1,0 +1,18 @@
+import type { OrderStatus } from "@prisma/client";
+
+/** UI labels — COMPLETED shown as “Đã giao”. */
+export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
+  PENDING: "Chờ xử lý",
+  CONFIRMED: "Đã xác nhận",
+  SHIPPING: "Đang giao",
+  COMPLETED: "Đã giao",
+  CANCELLED: "Đã hủy",
+};
+
+export const ORDER_STATUS_FLOW: OrderStatus[] = [
+  "PENDING",
+  "CONFIRMED",
+  "SHIPPING",
+  "COMPLETED",
+  "CANCELLED",
+];

@@ -1,6 +1,6 @@
 # VIZFAS (PTTSHOP)
 
-Hệ thống thương mại điện tử thời trang / phụ kiện (Nam · Nữ) — Next.js 16 + Prisma + SQLite.
+Hệ thống thương mại điện tử thời trang / phụ kiện (Nam · Nữ) — Next.js 16 + Prisma + SQLite + NextAuth v5.
 
 ## Chạy local
 
@@ -19,7 +19,7 @@ Mở [http://localhost:3000](http://localhost:3000).
 | Admin    | admin@vizfas.vn   | admin123  |
 | Khách    | khach@vizfas.vn   | khach123  |
 
-> **Bảo mật:** Đổi mật khẩu admin mặc định trước khi dùng môi trường chia sẻ / production. Xem `.env.example`.
+> **Bắt buộc:** Đổi mật khẩu admin mặc định (`admin@vizfas.vn` / `admin123`) trước khi dùng môi trường chia sẻ hoặc production. Seed sẽ in cảnh báo mỗi lần chạy.
 
 Admin: [/admin](http://localhost:3000/admin)
 
@@ -27,25 +27,43 @@ Admin: [/admin](http://localhost:3000/admin)
 
 - `npm run dev` — dev server
 - `npm run db:migrate` — chạy Prisma migrations
-- `npm run db:seed` — seed dữ liệu mẫu
+- `npm run db:seed` — seed dữ liệu mẫu (xóa & tạo lại)
 - `npm run db:setup` — migrate + seed
-- `npm run test` — Vitest (API)
+- `npm run test` — Vitest (register/login/cart/checkout/admin status)
 
 ## Biến môi trường
 
-Copy `.env.example` → `.env`. Bắt buộc: `DATABASE_URL`, `AUTH_SECRET`, `AUTH_URL`.  
-SMTP (`SMTP_*`, `EMAIL_FROM`) tùy chọn — khi trống, email được ghi log console.
+Copy `.env.example` → `.env`.
 
-## Đã có / đang mở rộng
+| Biến | Bắt buộc | Mô tả |
+|------|----------|--------|
+| `DATABASE_URL` | Có | SQLite local, ví dụ `file:./dev.db` |
+| `AUTH_SECRET` | Có | Secret dài ngẫu nhiên cho NextAuth |
+| `AUTH_URL` | Có | URL app, ví dụ `http://localhost:3000` |
+| `NEXT_PUBLIC_APP_NAME` | Không | Tên hiển thị |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | Không | SMTP generic — khi trống, email ghi log console |
+| `EMAIL_FROM` | Không | Địa chỉ gửi |
+| `TEST_DATABASE_URL` | Không | DB riêng cho Vitest (mặc định `file:./test.db`) |
 
-- Storefront: Home, Catalog, PDP, Cart, Checkout COD/CK
-- Auth credentials + role ADMIN/CUSTOMER
-- Prisma migrations (không chỉ `db push`)
-- Backend phases 0–8: accounts, cart DB, coupons, reviews, admin CRUD, email (xem plan)
+## Luồng khách → admin (manual checklist)
 
-## Ghi chú kỹ thuật
+1. Đăng ký `/dang-ky` hoặc đăng nhập khách demo
+2. Thêm sản phẩm vào giỏ (DB cart + cookie `vizfas_cart_sid`)
+3. Checkout COD hoặc chuyển khoản; thử mã `VIZFAS10` (đơn ≥ 500k)
+4. Admin `/admin` → Đơn hàng → đổi trạng thái (COMPLETED = “Đã giao”)
+5. Khách đánh giá sản phẩm đã mua trên PDP
+6. Admin quản lý sản phẩm / danh mục / coupon / review / doanh thu 14 ngày
 
-- SQLite local (PostgreSQL sau)
-- Cart source of truth: DB + cookie `sessionId` (không localStorage)
-- Payment: COD + chuyển khoản; chỗ gắn VNPay/MoMo sau
-- Ảnh admin: URL (chưa upload file)
+## Kiến trúc ngắn
+
+- **Auth:** NextAuth credentials + JWT; middleware bảo vệ `/admin`; rate-limit login sai (in-memory)
+- **Cart:** DB + cookie sessionId; merge guest → user khi đăng nhập; wishlist guest = localStorage
+- **Orders:** stock decrement điều kiện `stock >= qty`; coupon atomic; email xác nhận/status
+- **Payments:** `CodProvider` + `BankTransferProvider`; stub VNPay/MoMo trong `src/lib/payments`
+- **Reviews:** chỉ buyer có đơn không-hủy; recompute `Product.rating` / `reviewCount`
+- **DB:** SQLite local (PostgreSQL sau); Prisma migrations (không chỉ `db push`)
+- **Ảnh admin:** URL ngoài (chưa upload file/S3)
+
+## Thanh toán online sau này
+
+`src/lib/payments/` có `VnpayProviderStub` / `MomoProviderStub`. Gắn webhook qua `handleWebhook` khi có merchant keys — chưa tích hợp live.

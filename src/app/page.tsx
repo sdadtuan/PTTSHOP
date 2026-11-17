@@ -7,8 +7,11 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
+const HERO_IMAGE =
+  "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=2800&q=90";
+
 export default async function HomePage() {
-  const [categories, featured, bestSellers, newest, flashSale] =
+  const [categories, featured, bestSellers, newest, flashSale, ratingStats] =
     await Promise.all([
       prisma.category.findMany({ orderBy: { sortOrder: "asc" }, take: 4 }),
       prisma.product.findMany({
@@ -31,35 +34,45 @@ export default async function HomePage() {
         where: { isActive: true, endsAt: { gt: new Date() } },
         orderBy: { endsAt: "asc" },
       }),
+      prisma.product.aggregate({
+        _avg: { rating: true },
+        _sum: { reviewCount: true },
+        where: { reviewCount: { gt: 0 } },
+      }),
     ]);
 
+  const avgRating = ratingStats._avg.rating ?? 0;
+  const totalReviews = ratingStats._sum.reviewCount ?? 0;
+  const ratingLabel =
+    totalReviews > 0
+      ? `${avgRating.toFixed(1)} · ${totalReviews.toLocaleString("vi-VN")} đánh giá từ khách hàng`
+      : null;
+
   return (
-    <div>
+    <div className="overflow-x-hidden">
       {/* Hero */}
       <section className="relative min-h-[78vh] overflow-hidden bg-neutral-900 text-white md:min-h-[88vh]">
         <Image
-          src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1600&q=80"
-          alt="VIZFAS fashion"
+          src={HERO_IMAGE}
+          alt="Thời trang đường phố VIZFAS"
           fill
           priority
-          className="animate-hero-ken object-cover opacity-70"
+          quality={90}
+          className="animate-hero-ken object-cover object-[70%_center] md:object-center"
           sizes="100vw"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/35 to-transparent" />
-        <div className="relative mx-auto flex min-h-[78vh] max-w-7xl flex-col justify-end px-4 pb-16 md:min-h-[88vh] md:justify-center md:px-6 md:pb-0">
+        <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/40 to-black/15" />
+        <div className="relative mx-auto flex min-h-[78vh] max-w-7xl flex-col justify-end px-4 pb-16 pr-16 md:min-h-[88vh] md:justify-center md:px-6 md:pb-0 md:pr-6">
           <div className="animate-fade-up max-w-xl">
-            <p className="mb-3 text-xs tracking-[0.35em] text-white/70 uppercase">
-              VIZFAS
-            </p>
-            <h1 className="font-[family-name:var(--font-display)] text-4xl leading-[1.05] font-extrabold tracking-tight md:text-6xl">
+            <h1 className="font-[family-name:var(--font-display)] text-[2rem] leading-[1.1] font-extrabold tracking-tight break-words sm:text-4xl md:text-6xl">
               Thời trang cho tất cả,
               <span className="mt-1 block text-[var(--accent)]">
                 mỗi ngày đều chất
               </span>
             </h1>
-            <p className="mt-4 max-w-md text-sm text-white/80 md:text-base">
-              Khám phá phong cách mới cho chính bạn — chất liệu bền, form hiện đại,
-              phụ kiện dễ phối.
+            <p className="mt-4 max-w-md text-sm leading-relaxed text-white/85 md:text-base">
+              Chất liệu bền, form hiện đại, phụ kiện dễ phối — phong cách mới cho
+              Nam, Nữ mỗi ngày.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link
@@ -76,18 +89,20 @@ export default async function HomePage() {
                 Bộ sưu tập
               </Link>
             </div>
-            <div className="mt-8 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs backdrop-blur">
-              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-              <span>4.8 · Chất liệu cực tốt, vải siêu bền</span>
-            </div>
+            {ratingLabel ? (
+              <div className="mt-8 inline-flex max-w-full items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs backdrop-blur">
+                <Star className="h-3.5 w-3.5 shrink-0 fill-amber-400 text-amber-400" />
+                <span className="min-w-0 break-words">{ratingLabel}</span>
+              </div>
+            ) : null}
           </div>
         </div>
       </section>
 
       {/* Categories */}
-      <section className="mx-auto max-w-7xl px-4 py-16 md:px-6">
+      <section className="mx-auto max-w-7xl px-4 py-14 md:px-6 md:py-16">
         <div className="mb-8 flex items-end justify-between gap-4">
-          <div>
+          <div className="min-w-0">
             <h2 className="font-[family-name:var(--font-display)] text-2xl font-bold md:text-3xl">
               Khám phá danh mục
             </h2>
@@ -97,7 +112,7 @@ export default async function HomePage() {
           </div>
           <Link
             href="/san-pham"
-            className="hidden text-sm font-medium text-[var(--accent)] md:inline"
+            className="hidden shrink-0 text-sm font-medium text-[var(--accent)] md:inline"
           >
             Xem tất cả
           </Link>
@@ -107,7 +122,7 @@ export default async function HomePage() {
             <Link
               key={cat.id}
               href={`/san-pham?category=${cat.slug}`}
-              className="group relative aspect-[3/4] overflow-hidden bg-neutral-200"
+              className="group relative aspect-[3/4] min-w-0 overflow-hidden bg-neutral-200"
               style={{ animationDelay: `${i * 80}ms` }}
             >
               {cat.image ? (
@@ -115,12 +130,12 @@ export default async function HomePage() {
                   src={cat.image}
                   alt={cat.name}
                   fill
-                  sizes="25vw"
+                  sizes="(max-width:768px) 50vw, 25vw"
                   className="object-cover transition duration-500 group-hover:scale-105"
                 />
               ) : null}
               <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
-              <p className="absolute bottom-4 left-4 right-4 font-[family-name:var(--font-display)] text-lg font-semibold text-white">
+              <p className="absolute right-3 bottom-3 left-3 truncate font-[family-name:var(--font-display)] text-base font-semibold text-white sm:right-4 sm:bottom-4 sm:left-4 sm:text-lg">
                 {cat.name}
               </p>
             </Link>
@@ -129,10 +144,10 @@ export default async function HomePage() {
       </section>
 
       {/* Featured */}
-      <section className="bg-white py-16">
+      <section className="bg-white py-14 md:py-16">
         <div className="mx-auto max-w-7xl px-4 md:px-6">
           <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-            <div>
+            <div className="min-w-0">
               <h2 className="font-[family-name:var(--font-display)] text-2xl font-bold md:text-3xl">
                 Sản phẩm nổi bật
               </h2>
@@ -157,7 +172,7 @@ export default async function HomePage() {
               ))}
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4 md:gap-6">
             {featured.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}
@@ -170,17 +185,15 @@ export default async function HomePage() {
         <section className="border-y border-black/5 bg-[var(--accent-soft)] py-14">
           <div className="mx-auto max-w-7xl px-4 md:px-6">
             <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-              <div>
+              <div className="min-w-0">
                 <h2 className="font-[family-name:var(--font-display)] text-2xl font-bold md:text-3xl">
                   {flashSale.title}
                 </h2>
-                <p className="mt-1 text-sm text-neutral-600">
-                  Kết thúc sau
-                </p>
+                <p className="mt-1 text-sm text-neutral-600">Kết thúc sau</p>
               </div>
               <Countdown endsAt={flashSale.endsAt.toISOString()} />
             </div>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4 md:gap-6">
               {bestSellers.slice(0, 4).map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}
@@ -193,24 +206,25 @@ export default async function HomePage() {
       <section className="relative overflow-hidden py-20">
         <div className="absolute inset-0">
           <Image
-            src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1600&q=80"
+            src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2400&q=85"
             alt="Lookbook"
             fill
+            quality={85}
             className="object-cover"
             sizes="100vw"
           />
           <div className="absolute inset-0 bg-black/55" />
         </div>
-        <div className="relative mx-auto max-w-7xl px-4 text-white md:px-6">
-          <p className="text-xs tracking-[0.3em] uppercase text-white/70">
+        <div className="relative mx-auto max-w-7xl px-4 pr-16 text-white md:px-6 md:pr-6">
+          <p className="text-xs tracking-[0.3em] text-white/70 uppercase">
             Non-limit Style
           </p>
-          <h2 className="mt-3 max-w-lg font-[family-name:var(--font-display)] text-3xl font-bold md:text-5xl">
+          <h2 className="mt-3 max-w-lg font-[family-name:var(--font-display)] text-3xl font-bold break-words md:text-5xl">
             Mặc đơn giản vẫn nổi bật
           </h2>
           <p className="mt-4 max-w-md text-sm text-white/80">
-            Phong cách đơn giản mang đậm tính cá nhân — chất liệu cao cấp, giao hàng
-            tận nơi, đổi trả dễ dàng.
+            Phong cách đơn giản mang đậm tính cá nhân — chất liệu cao cấp, giao
+            hàng tận nơi, đổi trả dễ dàng.
           </p>
           <Link
             href="/bo-suu-tap"
@@ -223,9 +237,9 @@ export default async function HomePage() {
       </section>
 
       {/* New arrivals */}
-      <section className="mx-auto max-w-7xl px-4 py-16 md:px-6">
-        <div className="mb-8 flex items-end justify-between">
-          <div>
+      <section className="mx-auto max-w-7xl px-4 py-14 md:px-6 md:py-16">
+        <div className="mb-8 flex items-end justify-between gap-4">
+          <div className="min-w-0">
             <h2 className="font-[family-name:var(--font-display)] text-2xl font-bold md:text-3xl">
               Hàng mới về
             </h2>
@@ -233,11 +247,14 @@ export default async function HomePage() {
               Cập nhật liên tục mỗi tuần
             </p>
           </div>
-          <Link href="/san-pham?new=1" className="text-sm font-medium text-[var(--accent)]">
+          <Link
+            href="/san-pham?new=1"
+            className="shrink-0 text-sm font-medium text-[var(--accent)]"
+          >
             Xem tất cả
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4 md:gap-6">
           {newest.map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}
@@ -247,7 +264,7 @@ export default async function HomePage() {
       {/* Newsletter */}
       <section className="bg-neutral-950 py-16 text-white">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-8 px-4 md:flex-row md:items-center md:px-6">
-          <div>
+          <div className="min-w-0">
             <h2 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-wide">
               ĐĂNG KÝ NGAY
             </h2>

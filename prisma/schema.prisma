@@ -31,6 +31,13 @@ enum PaymentMethod {
   BANK_TRANSFER
 }
 
+enum PaymentStatus {
+  UNPAID
+  PENDING
+  PAID
+  FAILED
+}
+
 model User {
   id            String         @id @default(cuid())
   name          String?
@@ -45,6 +52,7 @@ model User {
   orders        Order[]
   cart          Cart?
   wishlist      WishlistItem[]
+  reviews       Review[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 }
@@ -125,6 +133,7 @@ model Product {
   images       ProductImage[]
   variants     ProductVariant[]
   collections  ProductCollection[]
+  reviews      Review[]
   isFeatured   Boolean             @default(false)
   isNew        Boolean             @default(false)
   isBestSeller Boolean             @default(false)
@@ -201,24 +210,45 @@ model WishlistItem {
 }
 
 model Order {
-  id            String        @id @default(cuid())
-  orderNumber   String        @unique
-  userId        String?
-  user          User?         @relation(fields: [userId], references: [id])
-  status        OrderStatus   @default(PENDING)
-  paymentMethod PaymentMethod @default(COD)
-  customerName  String
-  customerPhone String
-  customerEmail String?
-  address       String
-  note          String?
-  subtotal      Int
-  shippingFee   Int           @default(0)
-  discount      Int           @default(0)
-  total         Int
-  items         OrderItem[]
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id              String         @id @default(cuid())
+  orderNumber     String         @unique
+  userId          String?
+  user            User?          @relation(fields: [userId], references: [id])
+  status          OrderStatus    @default(PENDING)
+  paymentMethod   PaymentMethod  @default(COD)
+  paymentStatus   PaymentStatus  @default(UNPAID)
+  paymentProvider String?
+  paymentRef      String?
+  customerName    String
+  customerPhone   String
+  customerEmail   String?
+  address         String
+  note            String?
+  couponCode      String?
+  subtotal        Int
+  shippingFee     Int            @default(0)
+  discount        Int            @default(0)
+  total           Int
+  items           OrderItem[]
+  reviews         Review[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, productId])
 }
 
 model OrderItem {

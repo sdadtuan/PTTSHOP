@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { Heart, Minus, Plus, ShoppingBag, Truck, ShieldCheck, RefreshCw } from "lucide-react";
-import { useCart } from "@/components/cart/cart-context";
+import { useSession } from "next-auth/react";
+import { useCart, WISHLIST_GUEST_KEY } from "@/components/cart/cart-context";
 import { discountPercent, formatVnd } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -31,6 +32,8 @@ type Props = {
 
 export function ProductPurchase({ product }: Props) {
   const { addItem } = useCart();
+  const { status } = useSession();
+  const [wishSaved, setWishSaved] = useState(false);
   const colors = useMemo(() => {
     const map = new Map<string, { name: string; hex: string | null }>();
     for (const v of product.variants) {
@@ -74,6 +77,40 @@ export function ProductPurchase({ product }: Props) {
     );
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
+  }
+
+  async function handleWish() {
+    if (!selected) return;
+    const payload = {
+      variantId: selected.id,
+      productId: product.id,
+      slug: product.slug,
+      name: product.name,
+      color: selected.color,
+      size: selected.size,
+      price: selected.price,
+      image: product.images[0]?.url ?? "",
+    };
+    if (status === "authenticated") {
+      await fetch("/api/wishlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ variantId: selected.id }),
+      });
+    } else {
+      try {
+        const raw = localStorage.getItem(WISHLIST_GUEST_KEY);
+        const list = raw ? (JSON.parse(raw) as typeof payload[]) : [];
+        if (!list.some((i) => i.variantId === selected.id)) {
+          list.push(payload);
+          localStorage.setItem(WISHLIST_GUEST_KEY, JSON.stringify(list));
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+    setWishSaved(true);
+    setTimeout(() => setWishSaved(false), 1500);
   }
 
   return (
@@ -198,10 +235,14 @@ export function ProductPurchase({ product }: Props) {
 
         <button
           type="button"
-          className="rounded border border-neutral-200 p-3 transition hover:border-neutral-400"
+          onClick={() => void handleWish()}
+          className={cn(
+            "rounded border border-neutral-200 p-3 transition hover:border-neutral-400",
+            wishSaved && "border-[var(--accent)] text-[var(--accent)]",
+          )}
           aria-label="Yêu thích"
         >
-          <Heart className="h-5 w-5" />
+          <Heart className={cn("h-5 w-5", wishSaved && "fill-current")} />
         </button>
       </div>
 

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/product/product-card";
 import { ProductGallery } from "@/components/product/product-gallery";
 import { ProductPurchase } from "@/components/product/product-purchase";
+import { ProductReviews } from "@/components/product/product-reviews";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -78,6 +79,8 @@ export default async function ProductDetailPage({ params }: Props) {
         <ProductGallery images={product.images} name={product.name} />
         <ProductPurchase product={product} />
       </div>
+
+      <ProductReviews productId={product.id} />
 
       <section className="mt-16 grid gap-8 border-t border-neutral-100 pt-10 md:grid-cols-2">
         <div>

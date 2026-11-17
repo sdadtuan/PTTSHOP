@@ -7,6 +7,11 @@ const img = (id: string) =>
   `https://images.unsplash.com/${id}?auto=format&fit=crop&w=800&q=80`;
 
 async function main() {
+  console.warn(
+    "\n⚠️  SEED: admin@vizfas.vn / admin123 — ĐỔI mật khẩu admin trước khi dùng môi trường chia sẻ / production.\n",
+  );
+
+  await prisma.review.deleteMany();
   await prisma.orderItem.deleteMany();
   await prisma.order.deleteMany();
   await prisma.cartItem.deleteMany();
@@ -20,6 +25,7 @@ async function main() {
   await prisma.category.deleteMany();
   await prisma.flashSale.deleteMany();
   await prisma.coupon.deleteMany();
+  await prisma.verificationToken.deleteMany();
   await prisma.session.deleteMany();
   await prisma.account.deleteMany();
   await prisma.user.deleteMany();
@@ -35,7 +41,7 @@ async function main() {
     },
   });
 
-  await prisma.user.create({
+  const customer = await prisma.user.create({
     data: {
       name: "Khách Demo",
       email: "khach@vizfas.vn",
@@ -129,8 +135,6 @@ async function main() {
     isFeatured?: boolean;
     isNew?: boolean;
     isBestSeller?: boolean;
-    rating?: number;
-    reviewCount?: number;
     images: string[];
     colors: { name: string; hex: string }[];
     sizes: string[];
@@ -151,8 +155,6 @@ async function main() {
       categoryId: aoThun.id,
       isFeatured: true,
       isBestSeller: true,
-      rating: 4.8,
-      reviewCount: 128,
       images: [
         img("photo-1521572163474-6864f9cf17ab"),
         img("photo-1583743814966-8936f5b7be1a"),
@@ -179,8 +181,6 @@ async function main() {
       categoryId: aoThun.id,
       isNew: true,
       isFeatured: true,
-      rating: 4.6,
-      reviewCount: 86,
       images: [
         img("photo-1562157873-818bc0726f68"),
         img("photo-1576566588028-4147f3842f27"),
@@ -204,8 +204,6 @@ async function main() {
       categoryId: aoThun.id,
       isNew: true,
       isFeatured: true,
-      rating: 4.7,
-      reviewCount: 94,
       images: [
         img("photo-1515886657613-9f3515b0c78f"),
         img("photo-1434389677669-e08b4cac3105"),
@@ -230,8 +228,6 @@ async function main() {
       isFeatured: true,
       isBestSeller: true,
       isNew: true,
-      rating: 4.8,
-      reviewCount: 128,
       images: [
         img("photo-1556821840-3a63f95609a7"),
         img("photo-1578587018452-892bacefd3f2"),
@@ -257,8 +253,6 @@ async function main() {
       gender: "MALE",
       categoryId: aoKhoac.id,
       isBestSeller: true,
-      rating: 4.5,
-      reviewCount: 67,
       images: [
         img("photo-1551028719-00167b16eac5"),
         img("photo-1591047139829-d91aecb6caea"),
@@ -281,8 +275,6 @@ async function main() {
       gender: "UNISEX",
       categoryId: aoKhoac.id,
       isBestSeller: true,
-      rating: 4.5,
-      reviewCount: 52,
       images: [img("photo-1544022613-e87ca75a784a")],
       colors: [
         { name: "Đen/Kem", hex: "#222222" },
@@ -302,8 +294,6 @@ async function main() {
       categoryId: quan.id,
       isFeatured: true,
       isNew: true,
-      rating: 4.4,
-      reviewCount: 41,
       images: [
         img("photo-1624378439575-d8705ad7ae80"),
         img("photo-1473966968600-fa801b869a1a"),
@@ -326,8 +316,6 @@ async function main() {
       gender: "MALE",
       categoryId: quan.id,
       isBestSeller: true,
-      rating: 4.3,
-      reviewCount: 38,
       images: [img("photo-1473966968600-fa801b869a1a")],
       colors: [
         { name: "Be", hex: "#D2B48C" },
@@ -346,8 +334,6 @@ async function main() {
       gender: "UNISEX",
       categoryId: phuKien.id,
       isNew: true,
-      rating: 4.2,
-      reviewCount: 29,
       images: [img("photo-1588850561407-ed78ebb91e8e")],
       colors: [
         { name: "Xanh lá", hex: "#2F6B4F" },
@@ -366,8 +352,6 @@ async function main() {
       gender: "UNISEX",
       categoryId: phuKien.id,
       isFeatured: true,
-      rating: 4.1,
-      reviewCount: 22,
       images: [img("photo-1548036328-c9fa89d128fa")],
       colors: [
         { name: "Đen", hex: "#111111" },
@@ -385,8 +369,6 @@ async function main() {
       gender: "MALE",
       categoryId: aoThun.id,
       isFeatured: true,
-      rating: 4.4,
-      reviewCount: 33,
       images: [img("photo-1529374255404-311a2a4f1fd9")],
       colors: [
         { name: "Trắng/Đen", hex: "#F5F5F5" },
@@ -404,8 +386,6 @@ async function main() {
       gender: "MALE",
       categoryId: aoThun.id,
       isNew: true,
-      rating: 4.5,
-      reviewCount: 47,
       images: [img("photo-1586790170083-2f9ceadc732d")],
       colors: [
         { name: "Trắng", hex: "#F5F5F5" },
@@ -433,8 +413,8 @@ async function main() {
         isFeatured: p.isFeatured ?? false,
         isNew: p.isNew ?? false,
         isBestSeller: p.isBestSeller ?? false,
-        rating: p.rating ?? 0,
-        reviewCount: p.reviewCount ?? 0,
+        rating: 0,
+        reviewCount: 0,
         images: {
           create: p.images.map((url, i) => ({
             url,
@@ -472,7 +452,59 @@ async function main() {
     }
   }
 
-  console.log("Seed xong: admin@vizfas.vn / admin123 | khach@vizfas.vn / khach123");
+  // Sample completed order + real review for demo customer
+  const demoProduct = await prisma.product.findFirst({
+    where: { slug: "ao-thun-oversize" },
+    include: { variants: { take: 1 } },
+  });
+  if (demoProduct?.variants[0]) {
+    const variant = demoProduct.variants[0];
+    const order = await prisma.order.create({
+      data: {
+        orderNumber: "VFSEED0001",
+        userId: customer.id,
+        status: "COMPLETED",
+        paymentMethod: "COD",
+        paymentStatus: "PAID",
+        paymentProvider: "cod",
+        customerName: customer.name || "Khách Demo",
+        customerPhone: customer.phone || "0901234567",
+        customerEmail: customer.email,
+        address: "123 Nguyễn Huệ, Quận 1, TP.HCM",
+        subtotal: variant.price,
+        shippingFee: 0,
+        discount: 0,
+        total: variant.price,
+        items: {
+          create: {
+            variantId: variant.id,
+            name: demoProduct.name,
+            color: variant.color,
+            size: variant.size,
+            price: variant.price,
+            quantity: 1,
+          },
+        },
+      },
+    });
+    await prisma.review.create({
+      data: {
+        userId: customer.id,
+        productId: demoProduct.id,
+        orderId: order.id,
+        rating: 5,
+        comment: "Áo đẹp, form rộng vừa ý. Sẽ mua lại!",
+      },
+    });
+    await prisma.product.update({
+      where: { id: demoProduct.id },
+      data: { rating: 5, reviewCount: 1 },
+    });
+  }
+
+  console.log(
+    "Seed xong: admin@vizfas.vn / admin123 | khach@vizfas.vn / khach123 — ĐỔI mật khẩu admin trước khi dùng chung.",
+  );
 }
 
 main()

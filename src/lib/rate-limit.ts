@@ -36,6 +36,26 @@ export function rateLimit(
   };
 }
 
+/** Read-only check without incrementing. */
+export function isRateLimited(
+  key: string,
+  limit: number,
+): { limited: boolean; retryAfterMs: number } {
+  const now = Date.now();
+  const current = buckets.get(key);
+  if (!current || current.resetAt <= now) {
+    return { limited: false, retryAfterMs: 0 };
+  }
+  if (current.count >= limit) {
+    return { limited: true, retryAfterMs: Math.max(0, current.resetAt - now) };
+  }
+  return { limited: false, retryAfterMs: 0 };
+}
+
+export function clearRateLimit(key: string) {
+  buckets.delete(key);
+}
+
 export function clientKey(req: Request, suffix: string) {
   const forwarded = req.headers.get("x-forwarded-for");
   const ip =

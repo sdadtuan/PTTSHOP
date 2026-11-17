@@ -1,0 +1,133 @@
+import { z } from "zod";
+import { handleApiError, jsonError, jsonOk } from "@/lib/api";
+import { requireAdmin } from "@/lib/auth-guards";
+import { prisma } from "@/lib/prisma";
+
+export async function GET() {
+  try {
+    await requireAdmin();
+    const products = await prisma.product.findMany({
+      include: {
+        category: true,
+        variants: true,
+        images: { orderBy: { sortOrder: "asc" } },
+      },
+      orderBy: { updatedAt: "desc" },
+    });
+    return jsonOk({ products });
+  } catch (err) {
+    return handleApiError(err);
+  }
+}
+
+const variantSchema = z.object({
+  sku: z.string().min(1),
+  color: z.string().min(1),
+  colorHex: z.string().optional().nullable(),
+  size: z.string().min(1),
+  price: z.number().int().positive(),
+  compareAt: z.number().int().positive().optional().nullable(),
+  stock: z.number().int().nonnegative(),
+});
+
+const createSchema = z.object({
+  name: z.string().min(2),
+  slug: z.string().min(2),
+  description: z.string().optional(),
+  material: z.string().optional(),
+  fit: z.string().optional(),
+  gender: z.enum(["MALE", "FEMALE", "UNISEX"]).default("UNISEX"),
+  categoryId: z.string().optional().nullable(),
+  isFeatured: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  isBestSeller: z.boolean().optional(),
+  images: z.array(z.object({ url: z.string().url(), alt: z.string().optional() })).min(1),
+  variants: z.array(variantSchema).min(1),
+});
+
+export async function POST(req: Request) {
+  try {
+    await requireAdmin();
+    const body = createSchema.parse(await req.json());
+    const existing = await prisma.product.findUnique({
+      where: { slug: body.slug },
+    });
+    if (existing) return jsonError("Slug đã tồn tại", 409);
+
+    const product = await prisma.product.create({
+      data: {
+        name: body.name,
+        slug: body.slug,
+        description: body.description,
+        material: body.material,
+        fit: body.fit,
+        gender: body.gender,
+        categoryId: body.categoryId || null,
+        isFeatured: body.isFeatured ?? false,
+        isNew: body.isNew ?? false,
+        isBestSeller: body.isBestSeller ?? false,
+        images: {
+          create: body.images.map((img, i) => ({
+            url: img.url,
+            alt: img.alt || body.name,
+            sortOrder: i,
+          })),
+        },
+        variants: {
+          create: body.variants.map((v) => ({
+            sku: v.sku,
+            color: v.color,
+            colorHex: v.colorHex || null,
+            size: v.size,
+            price: v.price,
+            compareAt: v.compareAt || null,
+            stock: v.stock,
+          })),
+        },
+      },
+      include: { variants: true, images: true },
+    });
+    return jsonOk({ product }, { status: 201 });
+  } catch (err) {
+    return handleApiError(err);
+  }
+}
+
+const patchSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(2).optional(),
+  description: z.string().optional().nullable(),
+  categoryId: z.string().optional().nullable(),
+  isFeatured: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  isBestSeller: z.boolean().optional(),
+  gender: z.enum(["MALE", "FEMALE", "UNISEX"]).optional(),
+});
+
+export async function PATCH(req: Request) {
+  try {
+    await requireAdmin();
+    const body = patchSchema.parse(await req.json());
+    const { id, ...data } = body;
+    const product = await prisma.product.update({
+      where: { id },
+      data,
+    });
+    return jsonOk({ product });
+  } catch (err) {
+    return handleApiError(err);
+  }
+}
+
+const deleteSchema = z.object({ id: z.string().min(1) });
+
+export async function DELETE(req: Request) {
+  try {
+    await requireAdmin();
+    const { id } = deleteSchema.parse(await req.json());
+    await prisma.product.delete({ where: { id } });
+    return jsonOk({ ok: true });
+  } catch (err) {
+    return handleApiError(err);
+  }
+}

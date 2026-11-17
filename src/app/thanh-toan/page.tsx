@@ -14,6 +14,9 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<"COD" | "BANK_TRANSFER">(
     "COD",
   );
+  const [couponCode, setCouponCode] = useState("");
+  const [discount, setDiscount] = useState(0);
+  const [couponMsg, setCouponMsg] = useState("");
 
   if (items.length === 0) {
     return (
@@ -27,7 +30,24 @@ export default function CheckoutPage() {
   }
 
   const shipping = subtotal >= 500000 ? 0 : 30000;
-  const total = subtotal + shipping;
+  const total = Math.max(0, subtotal + shipping - discount);
+
+  async function applyCoupon() {
+    setCouponMsg("");
+    const res = await fetch("/api/coupons/validate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: couponCode, subtotal }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.valid) {
+      setDiscount(0);
+      setCouponMsg(data.error || "Mã không hợp lệ");
+      return;
+    }
+    setDiscount(data.discount || 0);
+    setCouponMsg(data.description || `Giảm ${formatVnd(data.discount)}`);
+  }
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -42,6 +62,7 @@ export default function CheckoutPage() {
       address: String(form.get("address") || ""),
       note: String(form.get("note") || ""),
       paymentMethod,
+      couponCode: couponCode || undefined,
       items: items.map((i) => ({
         variantId: i.variantId,
         quantity: i.quantity,
@@ -132,6 +153,26 @@ export default function CheckoutPage() {
               </li>
             ))}
           </ul>
+
+          <div className="mt-4 flex gap-2">
+            <input
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+              placeholder="Mã giảm giá"
+              className="flex-1 rounded border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-neutral-900"
+            />
+            <button
+              type="button"
+              onClick={() => void applyCoupon()}
+              className="rounded border border-neutral-900 px-3 py-2 text-xs font-semibold"
+            >
+              Áp dụng
+            </button>
+          </div>
+          {couponMsg ? (
+            <p className="mt-2 text-xs text-neutral-600">{couponMsg}</p>
+          ) : null}
+
           <div className="mt-5 space-y-2 border-t border-neutral-100 pt-4 text-sm">
             <div className="flex justify-between">
               <span className="text-neutral-500">Tạm tính</span>
@@ -141,6 +182,12 @@ export default function CheckoutPage() {
               <span className="text-neutral-500">Ship</span>
               <span>{shipping === 0 ? "Miễn phí" : formatVnd(shipping)}</span>
             </div>
+            {discount > 0 ? (
+              <div className="flex justify-between text-emerald-700">
+                <span>Giảm giá</span>
+                <span>-{formatVnd(discount)}</span>
+              </div>
+            ) : null}
             <div className="flex justify-between text-base font-semibold">
               <span>Tổng</span>
               <span>{formatVnd(total)}</span>
