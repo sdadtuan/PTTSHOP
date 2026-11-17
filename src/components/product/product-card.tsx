@@ -17,10 +17,13 @@ type ProductCardProps = {
     }[];
   };
   large?: boolean;
+  /** Homepage display override (home-v2) while link stays the real product. */
+  imageOverride?: string;
 };
 
-export function ProductCard({ product, large }: ProductCardProps) {
-  const image = product.images[0];
+export function ProductCard({ product, large, imageOverride }: ProductCardProps) {
+  const imageUrl = imageOverride || product.images[0]?.url;
+  const imageAlt = product.images[0]?.alt || product.name;
   const prices = product.variants.map((v) => v.price);
   const minPrice = prices.length ? Math.min(...prices) : 0;
   const compareAt = product.variants.find((v) => v.compareAt)?.compareAt;
@@ -38,14 +41,14 @@ export function ProductCard({ product, large }: ProductCardProps) {
       <Link href={`/san-pham/${product.slug}`} className="block">
         <div
           className={cn(
-            "relative overflow-hidden bg-neutral-100",
+            "relative overflow-hidden rounded-2xl bg-neutral-100",
             large ? "aspect-[4/5]" : "aspect-[3/4]",
           )}
         >
-          {image ? (
+          {imageUrl ? (
             <Image
-              src={image.url}
-              alt={image.alt || product.name}
+              src={imageUrl}
+              alt={imageAlt}
               fill
               sizes={
                 large

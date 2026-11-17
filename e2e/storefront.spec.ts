@@ -6,6 +6,14 @@ test.describe("Storefront", () => {
     await expect(page.getByRole("link", { name: "VIZFAS" }).first()).toBeVisible();
     await expect(page.getByRole("heading", { name: /Mặc Đơn Giản/i })).toBeVisible();
     await expect(page.getByText(/Vẫn Nổi Bật/i).first()).toBeVisible();
+    await expect(page.getByText(/BỘ SƯU TẬP Hè 2024/i).first()).toBeVisible();
+    await expect(page.getByText(/Phong Cách Đơn Giản/i).first()).toBeVisible();
+    await expect(page.getByText(/Khám Phá Các/i).first()).toBeVisible();
+    await expect(page.getByText(/Đa Dạng Kiểu Dáng/i).first()).toBeVisible();
+    await expect(page.getByRole("tab", { name: /Tất cả/i })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /Sản phẩm\s+Nổi Bật/i }),
+    ).toBeVisible();
     await expect(page.getByText(/PHỐI/i).first()).toBeVisible();
   });
 

@@ -7,18 +7,17 @@ import { Heart, Menu, Search, ShoppingBag, User, X } from "lucide-react";
 import { useCart } from "@/components/cart/cart-context";
 import { cn } from "@/lib/utils";
 
-const leftNav = [
+const primaryNav = [
   { href: "/", label: "Trang chủ" },
   { href: "/san-pham", label: "Sản phẩm" },
-  { href: "/san-pham?category=phu-kien", label: "Phụ kiện" },
+  { href: "/bo-suu-tap", label: "Bộ sưu tập" },
   { href: "/ve-chung-toi", label: "Về chúng tôi" },
 ];
 
 const mobileNav = [
-  ...leftNav,
+  ...primaryNav,
   { href: "/san-pham?gender=MALE", label: "Nam" },
   { href: "/san-pham?gender=FEMALE", label: "Nữ" },
-  { href: "/bo-suu-tap", label: "Bộ sưu tập" },
   { href: "/tai-khoan", label: "Tài khoản" },
   { href: "/lien-he", label: "Liên hệ" },
 ];
@@ -41,7 +40,8 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-black/5 bg-[var(--background)]/95 backdrop-blur-md">
-      <div className="relative mx-auto flex h-16 max-w-7xl items-center px-4 md:h-[4.5rem] md:px-6">
+      {/* Row 1: logo centered + utilities */}
+      <div className="relative mx-auto flex h-14 max-w-7xl items-center px-4 md:h-16 md:px-6">
         <button
           type="button"
           className="rounded-full p-2 text-neutral-700 transition hover:bg-black/5 md:hidden"
@@ -52,24 +52,12 @@ export function Header() {
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
 
-        <nav className="hidden min-w-0 flex-1 items-center gap-6 text-sm font-medium text-neutral-800 md:flex">
-          {leftNav.map((item) => (
-            <Link
-              key={item.href + item.label}
-              href={item.href}
-              className="whitespace-nowrap transition hover:text-[var(--accent)]"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-
         <Link
           href="/"
           className="absolute left-1/2 -translate-x-1/2"
           onClick={() => setOpen(false)}
         >
-          <span className="font-[family-name:var(--font-display)] text-2xl font-extrabold tracking-[0.22em] text-neutral-900 md:text-[1.65rem]">
+          <span className="font-[family-name:var(--font-display)] text-2xl font-extrabold tracking-[0.22em] text-neutral-900 md:text-[1.75rem]">
             VIZFAS
           </span>
         </Link>
@@ -114,6 +102,22 @@ export function Header() {
           </Link>
         </div>
       </div>
+
+      {/* Row 2: centered nav (desktop) — mock layout */}
+      <nav className="hidden border-t border-black/[0.04] md:block">
+        <ul className="mx-auto flex max-w-7xl items-center justify-center gap-10 px-6 py-2.5 text-sm font-medium text-neutral-800">
+          {primaryNav.map((item) => (
+            <li key={item.href + item.label}>
+              <Link
+                href={item.href}
+                className="whitespace-nowrap transition hover:text-[var(--accent)]"
+              >
+                {item.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
 
       {searchOpen ? (
         <div className="border-t border-black/5 bg-[var(--background)]">

@@ -71,6 +71,14 @@ export function Footer() {
               IG
             </a>
             <a
+              href="https://tiktok.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-full border border-neutral-200 px-3 py-2 transition hover:border-neutral-900"
+            >
+              TT
+            </a>
+            <a
               href="https://youtube.com"
               target="_blank"
               rel="noopener noreferrer"
@@ -129,13 +137,13 @@ export function Footer() {
           <p>© {new Date().getFullYear()} VIZFAS. All rights reserved.</p>
           <div className="flex flex-wrap gap-4">
             <Link href="/chinh-sach/dieu-khoan" className="hover:text-neutral-800">
-              Điều khoản
+              Điều khoản sử dụng
             </Link>
             <Link href="/chinh-sach/bao-mat" className="hover:text-neutral-800">
-              Bảo mật
+              Chính sách bảo mật
             </Link>
             <Link href="/chinh-sach/van-chuyen" className="hover:text-neutral-800">
-              Vận chuyển
+              Quy định bảo mật
             </Link>
           </div>
         </div>

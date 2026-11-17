@@ -63,29 +63,53 @@ body {
   animation: float-soft 5s ease-in-out infinite;
 }
 
-/* 2×2 collage — 4 ảnh AI 3:4 theo mock homepage */
-.hero-mosaic {
+/* Hero 2×3 shutter mosaic — one photo sliced via background-position */
+.hero-mosaic-6 {
+  --hero-src: url("/images/home-v2/hero-main.jpg");
   display: grid;
-  grid-template-columns: 1.05fr 0.95fr;
-  grid-template-rows: 1fr 1.08fr;
-  gap: var(--tile-gap);
-  aspect-ratio: 4 / 5;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(3, 1fr);
+  gap: 0.4rem;
+  aspect-ratio: 3 / 4;
   min-height: 420px;
   width: 100%;
 }
 
-.hero-mosaic > * {
-  position: relative;
+.hero-mosaic-6 > * {
   min-height: 0;
   height: 100%;
   overflow: hidden;
-  border-radius: 0.35rem;
-  background: #e7e5e4;
+  border-radius: 0.75rem;
+  background-color: #e7e5e4;
+  background-image: var(--hero-src);
+  background-repeat: no-repeat;
+  /* Cover the full mosaic as if one photo behind gutters */
+  background-size: 200% 300%;
+}
+
+.hero-mosaic-6 > *:nth-child(1) {
+  background-position: 0% 0%;
+}
+.hero-mosaic-6 > *:nth-child(2) {
+  background-position: 100% 0%;
+}
+.hero-mosaic-6 > *:nth-child(3) {
+  background-position: 0% 50%;
+}
+.hero-mosaic-6 > *:nth-child(4) {
+  background-position: 100% 50%;
+}
+.hero-mosaic-6 > *:nth-child(5) {
+  background-position: 0% 100%;
+}
+.hero-mosaic-6 > *:nth-child(6) {
+  background-position: 100% 100%;
 }
 
 @media (min-width: 768px) {
-  .hero-mosaic {
-    min-height: 520px;
+  .hero-mosaic-6 {
+    min-height: 560px;
+    gap: 0.5rem;
   }
 }
 
