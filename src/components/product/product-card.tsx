@@ -24,6 +24,8 @@ type ProductCardProps = {
   imageOverride?: string;
   /** Fixed frame ratio from mock measurements. */
   frame?: FrameKey;
+  /** Eager-load for above/critical homepage slots (avoids gray lazy placeholders). */
+  priority?: boolean;
 };
 
 export function ProductCard({
@@ -31,6 +33,7 @@ export function ProductCard({
   large,
   imageOverride,
   frame,
+  priority,
 }: ProductCardProps) {
   const imageUrl = imageOverride || product.images[0]?.url;
   const imageAlt = product.images[0]?.alt || product.name;
@@ -73,6 +76,10 @@ export function ProductCard({
               }
               className="object-cover transition duration-500 group-hover:scale-105"
               style={{ objectPosition }}
+              priority={priority}
+              loading={
+                priority ? undefined : imageOverride ? "eager" : undefined
+              }
             />
           ) : (
             <div className="flex h-full items-center justify-center text-sm text-neutral-400">

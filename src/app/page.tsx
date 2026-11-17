@@ -376,6 +376,7 @@ export default async function HomePage() {
                 large
                 frame="featuredLarge"
                 imageOverride={homeImages.featured.large[i]}
+                priority
               />
             ))}
           </div>
@@ -401,6 +402,7 @@ export default async function HomePage() {
                   product={p}
                   frame="featuredSmall"
                   imageOverride={src}
+                  priority
                 />
               );
             })}
@@ -410,7 +412,10 @@ export default async function HomePage() {
 
       {/* PHỐI MÀU — type left, large image, text top-right, 2×3 grid bottom-right */}
       <section className="relative mx-auto max-w-7xl overflow-hidden px-4 py-14 md:px-6 md:py-20">
-        <p className="pointer-events-none absolute top-1/2 right-2 z-20 hidden -translate-y-1/2 rotate-180 text-[11px] font-black tracking-[0.4em] text-neutral-400 [writing-mode:vertical-rl] md:block lg:right-0">
+        <p
+          className="pointer-events-none absolute top-1/2 right-2 z-20 hidden -translate-y-1/2 rotate-180 text-[11px] font-black tracking-[0.4em] text-neutral-500 [writing-mode:vertical-rl] md:block lg:right-0"
+          data-testid="phoi-vertical-label"
+        >
           BỘ SƯU TẬP MỚI
         </p>
 
@@ -463,6 +468,7 @@ export default async function HomePage() {
                   key={src}
                   className="relative overflow-hidden rounded-2xl bg-neutral-200"
                   style={{ aspectRatio: FRAME_ASPECT.phoiGrid }}
+                  data-testid={`phoi-grid-cell-${i + 1}`}
                 >
                   <Image
                     src={src}
@@ -471,6 +477,7 @@ export default async function HomePage() {
                     sizes="(max-width:768px) 45vw, 15vw"
                     className="object-cover"
                     style={{ objectPosition: OBJECT_POSITION.phoiGrid }}
+                    loading="eager"
                   />
                 </div>
               ))}

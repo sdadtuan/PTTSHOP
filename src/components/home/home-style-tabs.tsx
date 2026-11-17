@@ -82,6 +82,7 @@ export function HomeStyleTabs({ products }: Props) {
               key={p.id}
               product={p}
               frame="diversePants"
+              priority={i < 3}
               imageOverride={
                 useFlat
                   ? homeImages.diverse.pants[i % homeImages.diverse.pants.length]
