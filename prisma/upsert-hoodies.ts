@@ -2,6 +2,8 @@
  * Additive upsert for men's/women's hoodies with per-colour gallery images.
  * Does NOT wipe existing DB data.
  * Uses AI photoreal assets under /public/images/ai-hoodies/* (front / back / fabric).
+ * Image sync is idempotent by (url, color): update/create desired rows, drop only
+ * exact url+color duplicates and stale ai-hoodies script rows — never videos/admin media.
  */
 import { PrismaClient } from "@prisma/client";
 
@@ -18,6 +20,10 @@ const ai = (file: string) => `/images/ai-hoodies/${file}`;
 /** Per-colour gallery: front → back → fabric (fabric used in “Chi tiết sản phẩm”). */
 function shots(key: "kem" | "den" | "nau" | "xam" | "hong"): string[] {
   return [ai(`${key}-front.jpg`), ai(`${key}-back.jpg`), ai(`${key}-fabric.jpg`)];
+}
+
+function imageKey(url: string, color: string | null | undefined) {
+  return `${url}::${color ?? ""}`;
 }
 
 async function ensureCategory() {
@@ -44,6 +50,118 @@ async function refreshCategoryImages() {
   };
   for (const [slug, image] of Object.entries(map)) {
     await prisma.category.updateMany({ where: { slug }, data: { image } });
+  }
+}
+
+async function syncHoodieImages(
+  productId: string,
+  productName: string,
+  colors: ColorPack[],
+  cardImage?: string,
+) {
+  type DesiredImage = {
+    url: string;
+    alt: string;
+    color: string | null;
+    sortOrder: number;
+  };
+
+  const desired: DesiredImage[] = [];
+  let sort = 0;
+  if (cardImage) {
+    desired.push({
+      url: cardImage,
+      alt: `${productName} - thẻ sản phẩm`,
+      color: null,
+      sortOrder: sort++,
+    });
+  }
+  for (const color of colors) {
+    for (const url of color.images) {
+      desired.push({
+        url,
+        alt: `${productName} - ${color.name}`,
+        color: color.name,
+        sortOrder: sort++,
+      });
+    }
+  }
+
+  const desiredKeys = new Set(desired.map((d) => imageKey(d.url, d.color)));
+
+  const currentImages = await prisma.productImage.findMany({
+    where: { productId, type: "image" },
+    orderBy: { sortOrder: "asc" },
+  });
+
+  // Keep first row per url+color; drop exact script-style duplicates only.
+  const seenKeys = new Set<string>();
+  const duplicateIds: string[] = [];
+  for (const img of currentImages) {
+    const k = imageKey(img.url, img.color);
+    if (!desiredKeys.has(k)) continue;
+    if (seenKeys.has(k)) {
+      duplicateIds.push(img.id);
+      continue;
+    }
+    seenKeys.add(k);
+  }
+  if (duplicateIds.length) {
+    await prisma.productImage.deleteMany({
+      where: { id: { in: duplicateIds } },
+    });
+    console.log(
+      `Removed ${duplicateIds.length} duplicate ProductImage(s) on ${productId}: ${duplicateIds.join(", ")}`,
+    );
+  }
+
+  // Remove stale ai-hoodies script images no longer in the desired pack.
+  // Keep videos and non-script uploads.
+  const staleScriptIds = currentImages
+    .filter((img) => {
+      if (duplicateIds.includes(img.id)) return false;
+      if (!img.url.includes("/images/ai-hoodies/")) return false;
+      return !desiredKeys.has(imageKey(img.url, img.color));
+    })
+    .map((img) => img.id);
+  if (staleScriptIds.length) {
+    await prisma.productImage.deleteMany({
+      where: { id: { in: staleScriptIds } },
+    });
+  }
+
+  const remaining = await prisma.productImage.findMany({
+    where: { productId, type: "image" },
+  });
+  const byKey = new Map(
+    remaining.map((img) => [imageKey(img.url, img.color), img] as const),
+  );
+
+  for (const row of desired) {
+    const k = imageKey(row.url, row.color);
+    const existingRow = byKey.get(k);
+    if (existingRow) {
+      await prisma.productImage.update({
+        where: { id: existingRow.id },
+        data: {
+          alt: row.alt,
+          sortOrder: row.sortOrder,
+          type: "image",
+        },
+      });
+    } else {
+      const created = await prisma.productImage.create({
+        data: {
+          productId,
+          url: row.url,
+          alt: row.alt,
+          color: row.color,
+          sortOrder: row.sortOrder,
+          type: "image",
+        },
+      });
+      byKey.set(k, created);
+    }
   }
 }
 
@@ -100,7 +218,6 @@ async function upsertHoodie(input: {
         reviewCount: existing.reviewCount || 24,
       },
     });
-    await prisma.productImage.deleteMany({ where: { productId: product.id } });
 
     // Drop swatches without photos (colours no longer in pack).
     // Skip variants referenced by OrderItem (no onDelete cascade).
@@ -129,33 +246,12 @@ async function upsertHoodie(input: {
     }
   }
 
-  let sort = 0;
-  // Optional distinct card hero so homepage/related grids vary.
-  if (input.cardImage) {
-    await prisma.productImage.create({
-      data: {
-        productId: product.id,
-        url: input.cardImage,
-        alt: `${input.name} - thẻ sản phẩm`,
-        color: null,
-        sortOrder: sort++,
-      },
-    });
-  }
-
-  for (const color of input.colors) {
-    for (const url of color.images) {
-      await prisma.productImage.create({
-        data: {
-          productId: product.id,
-          url,
-          alt: `${input.name} - ${color.name}`,
-          color: color.name,
-          sortOrder: sort++,
-        },
-      });
-    }
-  }
+  await syncHoodieImages(
+    product.id,
+    input.name,
+    input.colors,
+    input.cardImage,
+  );
 
   const sizes = ["S", "M", "L", "XL", "XXL"];
   for (const color of input.colors) {

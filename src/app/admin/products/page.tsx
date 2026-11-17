@@ -24,6 +24,7 @@ import {
   useAdminToast,
 } from "@/components/admin/ui";
 import { formatVnd } from "@/lib/format";
+import { mediaListKey } from "@/lib/media-list-key";
 import { cn } from "@/lib/utils";
 
 type ProductImage = {
@@ -484,7 +485,7 @@ export default function AdminProductsPage() {
                 <ul className="mt-3 grid gap-3 sm:grid-cols-2">
                   {draftVideos.map((v, idx) => (
                     <li
-                      key={`${v.url}-${idx}`}
+                      key={mediaListKey(v, idx)}
                       className="rounded-[var(--admin-radius-md)] border border-[var(--admin-border)] bg-white p-3"
                     >
                       <video

@@ -3,9 +3,11 @@
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Pause, Play, Search, Volume2, VolumeX } from "lucide-react";
+import { mediaListKey } from "@/lib/media-list-key";
 import { cn } from "@/lib/utils";
 
 export type GalleryImage = {
+  id?: string;
   url: string;
   alt: string | null;
   color?: string | null;
@@ -113,7 +115,7 @@ export function ProductGallery({ images, name, selectedColor }: Props) {
     <>
       {filtered.map((img, i) => (
         <button
-          key={`${img.type || "image"}-${img.url}-${i}`}
+          key={mediaListKey(img, i)}
           type="button"
           onClick={() => selectThumb(i)}
           className={cn(
@@ -160,7 +162,7 @@ export function ProductGallery({ images, name, selectedColor }: Props) {
           {currentIsVideo ? (
             <>
               <video
-                key={current.url}
+                key={current.id ?? `${current.url}-main`}
                 ref={videoRef}
                 src={current.url}
                 poster={current.posterUrl || undefined}

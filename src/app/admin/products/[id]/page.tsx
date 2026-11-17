@@ -16,6 +16,7 @@ import {
   useAdminToast,
 } from "@/components/admin/ui";
 import { formatVnd } from "@/lib/format";
+import { mediaListKey } from "@/lib/media-list-key";
 
 type Product = {
   id: string;
@@ -28,7 +29,7 @@ type Product = {
   isBestSeller: boolean;
   categoryId?: string | null;
   category?: { name: string } | null;
-  images?: { url: string; alt?: string | null }[];
+  images?: { id?: string; url: string; alt?: string | null }[];
   variants: {
     id: string;
     sku: string;
@@ -259,9 +260,9 @@ export default function AdminProductEditPage() {
         <AdminCard>
           <h2 className="mb-4 font-semibold">Ảnh sản phẩm</h2>
           <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {(product.images || []).map((img) => (
+            {(product.images || []).map((img, index) => (
               <div
-                key={img.url}
+                key={mediaListKey(img, index)}
                 className="relative aspect-square overflow-hidden rounded-[var(--admin-radius-md)] bg-[var(--admin-surface-muted)] ring-1 ring-[var(--admin-border)]"
               >
                 <Image src={img.url} alt={img.alt || product.name} fill className="object-cover" sizes="160px" unoptimized />
