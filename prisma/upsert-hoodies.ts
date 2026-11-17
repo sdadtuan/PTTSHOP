@@ -33,11 +33,13 @@ async function ensureCategory() {
   });
 }
 
+const homeAi = (file: string) => `/images/ai-home/${file}`;
+
 async function refreshCategoryImages() {
   const map: Record<string, string> = {
-    "ao-thun": "/images/categories/ao-thun.jpg",
-    quan: "/images/categories/quan.jpg",
-    "phu-kien": "/images/categories/phu-kien.jpg",
+    "ao-thun": homeAi("cat-ao-thun.jpg"),
+    quan: homeAi("cat-quan.jpg"),
+    "phu-kien": homeAi("cat-phu-kien.jpg"),
     hoodie: ai("kem-front.jpg"),
   };
   for (const [slug, image] of Object.entries(map)) {
@@ -194,21 +196,19 @@ async function refreshCatalogCardImages() {
     include: { images: { orderBy: { sortOrder: "asc" } } },
   });
 
-  // Non-hoodie cards use lifestyle/local assets (not AI hoodie fronts)
-  // so homepage featured/listing don’t repeat the same model photos.
+  // Non-hoodie cards → ai-home lifestyle (keep ai-hoodies for hoodie SKUs).
   const pool = [
-    "/images/home/hero-1.jpg",
-    "/images/home/hero-2.jpg",
-    "/images/home/hero-3.jpg",
-    "/images/home/hero-4.jpg",
-    "/images/home/look-2.jpg",
-    "/images/home/look-3.jpg",
-    "/images/home/look-4.jpg",
-    "/images/home/look-5.jpg",
-    "/images/categories/ao-thun.jpg",
-    "/images/categories/quan.jpg",
-    "/images/categories/phu-kien.jpg",
-    "/images/home/pants-hero.jpg",
+    homeAi("hero-1-nam-thun-xanh.jpg"),
+    homeAi("hero-2-nu-thun-trang.jpg"),
+    homeAi("hero-3-nam-den-ngoi.jpg"),
+    homeAi("hero-4-nu-hoodie-croptop.jpg"),
+    homeAi("look-1-thun-cam.jpg"),
+    homeAi("look-2-nu-quan-cam.jpg"),
+    homeAi("look-3-raglan.jpg"),
+    homeAi("cat-ao-thun.jpg"),
+    homeAi("cat-quan.jpg"),
+    homeAi("cat-phu-kien.jpg"),
+    homeAi("banner-16x9.jpg"),
   ];
 
   let i = 0;
@@ -218,11 +218,14 @@ async function refreshCatalogCardImages() {
     const nextUrl = pool[i % pool.length];
     i++;
     if (primary) {
-      if (
+      const stale =
         primary.url.startsWith("https://images.unsplash.com") ||
         primary.url.includes("/images/hoodies/") ||
-        primary.url.includes("/images/ai-hoodies/")
-      ) {
+        primary.url.includes("/images/home/") ||
+        primary.url.includes("/images/categories/") ||
+        primary.url.includes("/images/ai-hoodies/") ||
+        primary.url.includes("/images/ai-home/");
+      if (stale) {
         await prisma.productImage.update({
           where: { id: primary.id },
           data: { url: nextUrl },
@@ -239,7 +242,7 @@ async function refreshCatalogCardImages() {
       });
     }
   }
-  console.log("Refreshed catalog card images (unsplash/studio/AI-misfile → lifestyle).");
+  console.log("Refreshed catalog card images → /images/ai-home/*.");
 }
 
 async function main() {

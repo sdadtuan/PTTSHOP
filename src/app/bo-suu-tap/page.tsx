@@ -40,7 +40,7 @@ export default async function CollectionsPage() {
               src={
                 c.image ||
                 c.products[0]?.product.images[0]?.url ||
-                "/images/home/look-1.jpg"
+                "/images/ai-home/look-1-thun-cam.jpg"
               }
               alt={c.name}
               fill

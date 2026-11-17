@@ -63,18 +63,20 @@ body {
   animation: float-soft 5s ease-in-out infinite;
 }
 
+/* 2×2 collage — 4 ảnh AI 3:4 theo mock homepage */
 .hero-mosaic {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(2, minmax(140px, 1fr));
+  grid-template-columns: 1.05fr 0.95fr;
+  grid-template-rows: 1fr 1.08fr;
   gap: var(--tile-gap);
+  aspect-ratio: 4 / 5;
   min-height: 420px;
   width: 100%;
 }
 
 .hero-mosaic > * {
   position: relative;
-  min-height: 140px;
+  min-height: 0;
   height: 100%;
   overflow: hidden;
   border-radius: 0.35rem;

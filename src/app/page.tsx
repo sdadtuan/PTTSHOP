@@ -6,29 +6,75 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
+const AI = "/images/ai-home";
+
+/** Hero collage 3:4 — theo mock homepage-mau (4 tile). */
 const HERO_TILES = [
-  "/images/home/hero-1.jpg",
-  "/images/home/hero-2.jpg",
-  "/images/home/hero-3.jpg",
-  "/images/home/hero-4.jpg",
-  "/images/home/hero-5.jpg",
-  "/images/home/hero-6.jpg",
-];
+  {
+    src: `${AI}/hero-1-nam-thun-xanh.jpg`,
+    alt: "Nam áo thun xanh",
+    position: "object-[50%_18%]",
+  },
+  {
+    src: `${AI}/hero-2-nu-thun-trang.jpg`,
+    alt: "Nữ áo thun trắng",
+    position: "object-[50%_12%]",
+  },
+  {
+    src: `${AI}/hero-3-nam-den-ngoi.jpg`,
+    alt: "Nam thun đen ngồi",
+    position: "object-[50%_20%]",
+  },
+  {
+    src: `${AI}/hero-4-nu-hoodie-croptop.jpg`,
+    alt: "Nữ hoodie crop",
+    position: "object-[50%_15%]",
+  },
+] as const;
 
+/** Lookbook “Phối màu tạo chất” — 3 ảnh 3:4. */
 const LOOKBOOK = [
-  "/images/home/look-1.jpg",
-  "/images/home/look-2.jpg",
-  "/images/home/look-3.jpg",
-  "/images/home/look-4.jpg",
-  "/images/home/look-5.jpg",
-  "/images/home/look-6.jpg",
-];
+  {
+    src: `${AI}/look-1-thun-cam.jpg`,
+    alt: "Look thun cam",
+    position: "object-[50%_15%]",
+  },
+  {
+    src: `${AI}/look-2-nu-quan-cam.jpg`,
+    alt: "Look nữ quần cam",
+    position: "object-[50%_12%]",
+  },
+  {
+    src: `${AI}/look-3-raglan.jpg`,
+    alt: "Look raglan",
+    position: "object-[50%_18%]",
+  },
+] as const;
 
-const CAT_FALLBACK = {
-  ao: "/images/categories/ao-thun.jpg",
-  quan: "/images/categories/quan.jpg",
-  pk: "/images/categories/phu-kien.jpg",
-};
+const CAT = {
+  ao: `${AI}/cat-ao-thun.jpg`,
+  quan: `${AI}/cat-quan.jpg`,
+  pk: `${AI}/cat-phu-kien.jpg`,
+} as const;
+
+/** Khối “Đa dạng kiểu dáng” — reuse cat-quan / look-2 / hero-3. */
+const DIVERSE = [
+  {
+    src: `${AI}/hero-3-nam-den-ngoi.jpg`,
+    alt: "Đa dạng — nam đen",
+    position: "object-[50%_18%]",
+  },
+  {
+    src: `${AI}/cat-quan.jpg`,
+    alt: "Đa dạng — quần cargo",
+    position: "object-center",
+  },
+  {
+    src: `${AI}/look-2-nu-quan-cam.jpg`,
+    alt: "Đa dạng — nữ quần cam",
+    position: "object-[50%_12%]",
+  },
+] as const;
 
 export default async function HomePage() {
   const [categories, featured, newest] = await Promise.all([
@@ -83,16 +129,16 @@ export default async function HomePage() {
         <div className="relative">
           <div className="decor-dot -top-4 -right-2 z-10 h-12 w-12 bg-[var(--accent)] md:h-16 md:w-16" />
           <div className="decor-dot -bottom-3 left-8 z-10 h-8 w-8 bg-neutral-200" />
-          <div className="hero-mosaic aspect-[5/6]">
-            {HERO_TILES.map((src, i) => (
-              <div key={src}>
+          <div className="hero-mosaic">
+            {HERO_TILES.map((tile, i) => (
+              <div key={tile.src} className="relative overflow-hidden">
                 <Image
-                  src={src}
-                  alt={`Look VIZFAS ${i + 1}`}
+                  src={tile.src}
+                  alt={tile.alt}
                   fill
-                  priority={i < 3}
-                  sizes="(max-width:768px) 33vw, 16vw"
-                  className="object-cover"
+                  priority={i < 2}
+                  sizes="(max-width:768px) 45vw, 22vw"
+                  className={`object-cover ${tile.position}`}
                 />
               </div>
             ))}
@@ -131,41 +177,40 @@ export default async function HomePage() {
         ))}
       </section>
 
-      {/* Secondary banner */}
-      <section className="mx-auto grid max-w-7xl items-center gap-6 px-4 py-14 md:grid-cols-[1fr_1.2fr_1fr] md:px-6 md:py-20">
-        <div className="relative aspect-[3/4] overflow-hidden rounded-sm bg-neutral-200">
+      {/* Banner ngang 16:9 — kem bên phải cho chữ/CTA */}
+      <section className="mx-auto max-w-7xl px-4 py-14 md:px-6 md:py-20">
+        <div className="relative aspect-[16/10] overflow-hidden rounded-sm bg-[#ebe6dc] sm:aspect-[16/9]">
           <Image
-            src="/images/home/banner-left.jpg"
-            alt="Look trái"
+            src={`${AI}/banner-16x9.jpg`}
+            alt="Phong cách đơn giản mang đậm tính cá nhân"
             fill
-            sizes="25vw"
-            className="object-cover"
+            sizes="100vw"
+            className="object-cover object-left"
+            priority={false}
           />
-          <div className="decor-dot top-4 -left-2 h-8 w-8 bg-[var(--accent)]" />
-        </div>
-        <div className="text-center">
-          <h2 className="font-[family-name:var(--font-display)] text-3xl font-extrabold tracking-tight md:text-5xl">
-            Phong Cách Đơn Giản
-            <span className="mt-2 block text-[var(--accent)]">Mang Đậm Tính</span>
-            <span className="mt-2 block">Cá Nhân</span>
-          </h2>
-          <p className="mx-auto mt-4 max-w-sm text-sm text-neutral-500">
-            Tối giản không nhàm chán — mỗi outfit là một tuyên ngôn phong cách.
-          </p>
-        </div>
-        <div className="relative aspect-[3/4] overflow-hidden rounded-sm bg-neutral-200">
-          <Image
-            src="/images/home/banner-right.jpg"
-            alt="Look phải"
-            fill
-            sizes="25vw"
-            className="object-cover"
-          />
-          <div className="decor-dot right-3 bottom-6 h-10 w-10 bg-[var(--accent)]" />
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[#ebe6dc]/95 md:via-[#ebe6dc]/25 md:to-[#ebe6dc]" />
+          <div className="absolute inset-y-0 right-0 flex w-full max-w-md flex-col justify-center px-6 py-8 text-left sm:px-10 md:w-[48%] md:max-w-none md:text-left">
+            <h2 className="font-[family-name:var(--font-display)] text-2xl font-extrabold tracking-tight text-neutral-900 sm:text-3xl md:text-4xl lg:text-5xl">
+              Phong Cách Đơn Giản
+              <span className="mt-1 block text-[var(--accent)]">
+                Mang Đậm Tính Cá Nhân
+              </span>
+            </h2>
+            <p className="mt-4 max-w-sm text-sm text-neutral-600">
+              Tối giản không nhàm chán — mỗi outfit là một tuyên ngôn phong cách.
+            </p>
+            <Link
+              href="/san-pham"
+              className="mt-6 inline-flex w-fit items-center gap-2 rounded-full bg-neutral-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--accent)]"
+            >
+              Khám phá ngay
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* Collections mosaic */}
+      {/* Collections mosaic 4:3 */}
       <section className="mx-auto max-w-7xl px-4 py-10 md:px-6 md:py-14">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -197,15 +242,11 @@ export default async function HomePage() {
             className="group relative min-h-[320px] overflow-hidden rounded-sm bg-neutral-200 md:row-span-2"
           >
             <Image
-              src={
-                mosaicCats.ao?.image?.startsWith("/images/")
-                  ? mosaicCats.ao.image
-                  : CAT_FALLBACK.ao
-              }
+              src={CAT.ao}
               alt={mosaicCats.ao?.name || "Áo thun"}
               fill
               sizes="(max-width:768px) 100vw, 33vw"
-              className="object-cover transition duration-500 group-hover:scale-105"
+              className="object-cover object-[50%_20%] transition duration-500 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
             <div className="absolute right-4 bottom-4 left-4 flex items-end justify-between gap-3">
@@ -230,15 +271,11 @@ export default async function HomePage() {
             className="group relative min-h-[200px] overflow-hidden rounded-sm bg-neutral-200 md:col-span-2"
           >
             <Image
-              src={
-                mosaicCats.quan?.image?.startsWith("/images/")
-                  ? mosaicCats.quan.image
-                  : CAT_FALLBACK.quan
-              }
+              src={CAT.quan}
               alt={mosaicCats.quan?.name || "Quần"}
               fill
               sizes="(max-width:768px) 100vw, 50vw"
-              className="object-cover transition duration-500 group-hover:scale-105"
+              className="object-cover object-center transition duration-500 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
             <div className="absolute right-4 bottom-4 left-4 flex items-end justify-between gap-3">
@@ -263,15 +300,11 @@ export default async function HomePage() {
             className="group relative min-h-[200px] overflow-hidden rounded-sm bg-neutral-200"
           >
             <Image
-              src={
-                mosaicCats.pk?.image?.startsWith("/images/")
-                  ? mosaicCats.pk.image
-                  : CAT_FALLBACK.pk
-              }
+              src={CAT.pk}
               alt={mosaicCats.pk?.name || "Phụ kiện"}
               fill
               sizes="(max-width:768px) 100vw, 25vw"
-              className="object-cover transition duration-500 group-hover:scale-105"
+              className="object-cover object-center transition duration-500 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
             <p className="absolute bottom-4 left-4 font-[family-name:var(--font-display)] text-lg font-bold text-white">
@@ -295,21 +328,41 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Pants / new products */}
+      {/* Đa dạng kiểu dáng — reuse cat-quan / look-2 / hero-3 */}
       <section className="mx-auto grid max-w-7xl gap-8 px-4 py-10 md:grid-cols-[0.9fr_1.4fr] md:px-6 md:py-14">
-        <div className="relative min-h-[420px] overflow-hidden rounded-sm bg-neutral-200">
-          <Image
-            src="/images/home/pants-hero.jpg"
-            alt="Đa dạng kiểu dáng"
-            fill
-            sizes="40vw"
-            className="object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+        <div className="relative grid min-h-[420px] grid-cols-2 grid-rows-2 gap-2 overflow-hidden rounded-sm">
+          <div className="relative row-span-2 overflow-hidden bg-neutral-200">
+            <Image
+              src={DIVERSE[0].src}
+              alt={DIVERSE[0].alt}
+              fill
+              sizes="30vw"
+              className={`object-cover ${DIVERSE[0].position}`}
+            />
+          </div>
+          <div className="relative overflow-hidden bg-neutral-200">
+            <Image
+              src={DIVERSE[1].src}
+              alt={DIVERSE[1].alt}
+              fill
+              sizes="20vw"
+              className={`object-cover ${DIVERSE[1].position}`}
+            />
+          </div>
+          <div className="relative overflow-hidden bg-neutral-200">
+            <Image
+              src={DIVERSE[2].src}
+              alt={DIVERSE[2].alt}
+              fill
+              sizes="20vw"
+              className={`object-cover ${DIVERSE[2].position}`}
+            />
+          </div>
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
           <p className="pointer-events-none absolute top-8 left-4 font-[family-name:var(--font-display)] text-5xl font-extrabold tracking-widest text-white/20 md:text-7xl">
             WEEKLY
           </p>
-          <h2 className="absolute right-5 bottom-6 left-5 font-[family-name:var(--font-display)] text-2xl font-extrabold text-white md:text-3xl">
+          <h2 className="absolute right-5 bottom-6 left-5 z-10 font-[family-name:var(--font-display)] text-2xl font-extrabold text-white md:text-3xl">
             Đa Dạng Kiểu Dáng Dễ Phối Đồ
           </h2>
         </div>
@@ -370,7 +423,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Lookbook */}
+      {/* Lookbook — Phối màu tạo chất */}
       <section className="relative mx-auto max-w-7xl overflow-hidden px-4 py-14 md:px-6 md:py-20">
         <p className="pointer-events-none absolute top-1/2 right-2 hidden origin-center -translate-y-1/2 rotate-180 font-[family-name:var(--font-display)] text-xs font-bold tracking-[0.35em] text-neutral-400 [writing-mode:vertical-rl] md:block lg:right-0">
           BỘ SƯU TẬP MỚI
@@ -383,30 +436,28 @@ export default async function HomePage() {
               <span className="block text-[var(--accent)]">TẠO</span>
               <span className="block text-neutral-900">CHẤT</span>
             </p>
-            <div className="grid grid-cols-3 gap-3 md:pl-24 lg:pl-28">
-              <div className="relative col-span-2 row-span-2 min-h-[360px] overflow-hidden rounded-sm bg-neutral-200">
+            <div className="grid grid-cols-2 gap-3 md:pl-24 lg:pl-28">
+              <div className="relative col-span-2 min-h-[380px] overflow-hidden rounded-sm bg-neutral-200 sm:min-h-[440px]">
                 <Image
-                  src={LOOKBOOK[0]}
-                  alt="Lookbook chính"
+                  src={LOOKBOOK[0].src}
+                  alt={LOOKBOOK[0].alt}
                   fill
                   priority
-                  sizes="40vw"
-                  className="object-cover"
+                  sizes="(max-width:768px) 100vw, 45vw"
+                  className={`object-cover ${LOOKBOOK[0].position}`}
                 />
               </div>
-              {LOOKBOOK.slice(1).map((src, i) => (
+              {LOOKBOOK.slice(1).map((tile) => (
                 <div
-                  key={src}
-                  className="relative aspect-square overflow-hidden rounded-sm bg-neutral-200"
+                  key={tile.src}
+                  className="relative aspect-[3/4] overflow-hidden rounded-sm bg-neutral-200"
                 >
                   <Image
-                    src={src}
-                    alt={`Lookbook ${i + 2}`}
+                    src={tile.src}
+                    alt={tile.alt}
                     fill
-                    priority={i < 2}
-                    loading="eager"
-                    sizes="15vw"
-                    className="object-cover"
+                    sizes="(max-width:768px) 50vw, 20vw"
+                    className={`object-cover ${tile.position}`}
                   />
                 </div>
               ))}
