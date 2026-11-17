@@ -41,7 +41,18 @@ const createSchema = z.object({
   isFeatured: z.boolean().optional(),
   isNew: z.boolean().optional(),
   isBestSeller: z.boolean().optional(),
-  images: z.array(z.object({ url: z.string().url(), alt: z.string().optional() })).min(1),
+  images: z
+    .array(
+      z.object({
+        url: z.string().min(1),
+        alt: z.string().optional(),
+        color: z.string().optional().nullable(),
+        type: z.enum(["image", "video"]).optional().default("image"),
+        posterUrl: z.string().optional().nullable(),
+        sortOrder: z.number().int().optional(),
+      }),
+    )
+    .min(1),
   variants: z.array(variantSchema).min(1),
 });
 
@@ -70,7 +81,10 @@ export async function POST(req: Request) {
           create: body.images.map((img, i) => ({
             url: img.url,
             alt: img.alt || body.name,
-            sortOrder: i,
+            color: img.color || null,
+            type: img.type || "image",
+            posterUrl: img.posterUrl || null,
+            sortOrder: img.sortOrder ?? i,
           })),
         },
         variants: {

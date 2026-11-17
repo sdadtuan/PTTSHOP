@@ -164,6 +164,9 @@ model ProductImage {
   url       String
   alt       String?
   color     String?
+  /// "image" | "video" — additive; existing rows default to image
+  type      String  @default("image")
+  posterUrl String?
   sortOrder Int     @default(0)
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)

@@ -1,13 +1,15 @@
 import { expect, test } from "@playwright/test";
 
 async function loginAdmin(page: import("@playwright/test").Page) {
+  await page.goto("/api/auth/csrf");
   await page.goto("/dang-nhap?callbackUrl=/admin");
   await page.getByLabel(/^Email$/i).fill("admin@vizfas.vn");
   await page.getByLabel(/Mật khẩu/i).fill("admin123");
-  await Promise.all([
-    page.waitForURL(/\/admin/, { timeout: 20_000 }),
-    page.getByRole("button", { name: /Đăng nhập/i }).click(),
-  ]);
+  await page.getByRole("button", { name: /Đăng nhập/i }).click();
+  await page.waitForURL(
+    (url) => url.pathname === "/admin" || url.pathname.startsWith("/admin/"),
+    { timeout: 25_000 },
+  );
 }
 
 test.describe("Admin redesign", () => {

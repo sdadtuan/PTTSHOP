@@ -35,7 +35,7 @@ type Props = {
     isNew?: boolean;
     rating: number;
     reviewCount: number;
-    images: { url: string; color?: string | null }[];
+    images: { url: string; color?: string | null; type?: string | null }[];
     variants: Variant[];
   };
   color: string;
@@ -72,7 +72,11 @@ export function ProductPurchase({ product, color, onColorChange }: Props) {
     : null;
 
   const imageForCart =
-    product.images.find((img) => img.color === color)?.url ||
+    product.images.find(
+      (img) =>
+        (img.type || "image") !== "video" && img.color === color,
+    )?.url ||
+    product.images.find((img) => (img.type || "image") !== "video")?.url ||
     product.images[0]?.url ||
     "";
 

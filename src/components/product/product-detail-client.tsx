@@ -46,12 +46,15 @@ export function ProductDetailClient({ product }: Props) {
   const [tab, setTab] = useState<(typeof TABS)[number]["id"]>("details");
 
   const detailImage = useMemo(() => {
-    const byColor = product.images.filter((img) => img.color === color);
+    const photos = product.images.filter(
+      (img) => (img.type || "image") !== "video",
+    );
+    const byColor = photos.filter((img) => img.color === color);
     const fabric =
       byColor.find((img) => img.url.includes("fabric")) ||
       byColor[byColor.length - 1] ||
       byColor[0];
-    return fabric?.url || product.images[0]?.url;
+    return fabric?.url || photos[0]?.url || product.images[0]?.url;
   }, [product.images, color]);
 
   return (
