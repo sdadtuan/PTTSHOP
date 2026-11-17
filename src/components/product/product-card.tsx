@@ -1,8 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
+import { FRAME_ASPECT, OBJECT_POSITION } from "@/config/home-frame-specs";
 import { formatVnd } from "@/lib/format";
 import { cn } from "@/lib/utils";
+
+type FrameKey = keyof typeof FRAME_ASPECT;
 
 type ProductCardProps = {
   product: {
@@ -19,9 +22,16 @@ type ProductCardProps = {
   large?: boolean;
   /** Homepage display override (home-v2) while link stays the real product. */
   imageOverride?: string;
+  /** Fixed frame ratio from mock measurements. */
+  frame?: FrameKey;
 };
 
-export function ProductCard({ product, large, imageOverride }: ProductCardProps) {
+export function ProductCard({
+  product,
+  large,
+  imageOverride,
+  frame,
+}: ProductCardProps) {
   const imageUrl = imageOverride || product.images[0]?.url;
   const imageAlt = product.images[0]?.alt || product.name;
   const prices = product.variants.map((v) => v.price);
@@ -35,15 +45,21 @@ export function ProductCard({ product, large, imageOverride }: ProductCardProps)
         .map((v) => [v.colorHex, v.colorHex]),
     ).values(),
   ].slice(0, 5);
+  const aspect =
+    FRAME_ASPECT[
+      frame ?? (large ? "featuredLarge" : "featuredSmall")
+    ];
+  const objectPosition =
+    frame === "diversePants"
+      ? OBJECT_POSITION.diversePants
+      : OBJECT_POSITION.featured;
 
   return (
     <article className="group relative">
       <Link href={`/san-pham/${product.slug}`} className="block">
         <div
-          className={cn(
-            "relative overflow-hidden rounded-2xl bg-neutral-100",
-            large ? "aspect-[4/5]" : "aspect-[3/4]",
-          )}
+          className="relative overflow-hidden rounded-2xl bg-neutral-100"
+          style={{ aspectRatio: aspect }}
         >
           {imageUrl ? (
             <Image
@@ -56,6 +72,7 @@ export function ProductCard({ product, large, imageOverride }: ProductCardProps)
                   : "(max-width:768px) 50vw, 25vw"
               }
               className="object-cover transition duration-500 group-hover:scale-105"
+              style={{ objectPosition }}
             />
           ) : (
             <div className="flex h-full items-center justify-center text-sm text-neutral-400">

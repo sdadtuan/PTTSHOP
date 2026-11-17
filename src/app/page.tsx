@@ -1,10 +1,11 @@
-import type { CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, RefreshCw, Truck, Wallet } from "lucide-react";
+import { HeroShatterCollage } from "@/components/home/hero-shatter-collage";
 import { HomeStyleTabs } from "@/components/home/home-style-tabs";
 import { PhoiMauType } from "@/components/home/phoi-mau-type";
 import { ProductCard } from "@/components/product/product-card";
+import { FRAME_ASPECT, GAPS, OBJECT_POSITION } from "@/config/home-frame-specs";
 import { homeImages } from "@/config/home-images";
 import { prisma } from "@/lib/prisma";
 
@@ -41,7 +42,7 @@ function padProducts(list: CardProduct[], need: number, pool: CardProduct[]) {
 }
 
 export default async function HomePage() {
-  const [categories, featured, catalog] = await Promise.all([
+  const [categories, featured, catalog, heroBanner] = await Promise.all([
     prisma.category.findMany({ orderBy: { sortOrder: "asc" }, take: 6 }),
     prisma.product.findMany({
       where: { isFeatured: true },
@@ -57,7 +58,16 @@ export default async function HomePage() {
       take: 24,
       orderBy: [{ isNew: "desc" }, { createdAt: "desc" }],
     }),
+    prisma.heroBanner.findFirst({
+      where: { isActive: true },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+    }),
   ]);
+
+  const heroSrc = heroBanner?.imageUrl || homeImages.hero.main;
+  const heroTitle = heroBanner?.title || "Mặc Đơn Giản";
+  const heroSubtitle = heroBanner?.subtitle || "Vẫn Nổi Bật";
+  const heroCtaHref = heroBanner?.ctaHref || "/san-pham";
 
   const mosaicCats = {
     ao: categories.find((c) => c.slug === "ao-thun") ?? categories[0],
@@ -86,17 +96,17 @@ export default async function HomePage() {
               Bộ sưu tập mới 2026
             </p>
             <h1 className="font-[family-name:var(--font-display)] text-5xl leading-[0.98] font-black tracking-tight text-neutral-900 sm:text-6xl md:text-7xl lg:text-[5.25rem]">
-              Mặc Đơn Giản
-              <span className="mt-2 block text-[var(--accent)]">Vẫn Nổi Bật</span>
+              {heroTitle}
+              <span className="mt-2 block text-[var(--accent)]">{heroSubtitle}</span>
             </h1>
             <p className="mt-6 max-w-md text-base leading-relaxed text-neutral-600 md:text-lg">
               Phong cách tối giản, chất liệu bền và form hiện đại — giúp bạn nổi
               bật theo cách riêng mỗi ngày.
             </p>
             <Link
-              href="/san-pham"
+              href={heroCtaHref}
               className="mt-10 inline-flex h-16 w-16 items-center justify-center rounded-full bg-neutral-900 text-white shadow-sm transition hover:bg-[var(--accent)]"
-              aria-label="Xem sản phẩm"
+              aria-label={heroBanner?.ctaLabel || "Xem sản phẩm"}
             >
               <ArrowRight className="h-6 w-6" />
             </Link>
@@ -117,22 +127,9 @@ export default async function HomePage() {
             {/* Orange square on collage corner */}
             <div className="absolute -top-4 -right-2 z-20 h-14 w-14 rounded-2xl bg-[var(--accent)] md:-top-5 md:-right-3 md:h-16 md:w-16" />
             <div className="decor-dot -bottom-2 left-6 z-10 h-9 w-9 rounded-xl bg-neutral-300" />
-            <div
-              className="hero-mosaic-6"
-              style={
-                {
-                  ["--hero-src"]: `url(${homeImages.hero.main})`,
-                } as CSSProperties
-              }
-              role="img"
-              aria-label="Hero collage VIZFAS"
-            >
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} />
-              ))}
-            </div>
+            <HeroShatterCollage src={heroSrc} />
             <Image
-              src={homeImages.hero.main}
+              src={heroSrc}
               alt=""
               width={864}
               height={1152}
@@ -162,13 +159,14 @@ export default async function HomePage() {
           <div className="decor-dot right-[6%] bottom-8 z-0 hidden h-10 w-10 rounded-2xl bg-neutral-300 md:block" />
 
           <div className="relative z-10 mb-6 w-[min(100%,280px)] -translate-y-4 -rotate-6 overflow-hidden rounded-2xl bg-neutral-200 shadow-md md:mb-10 md:w-[300px] md:-translate-y-10">
-            <div className="relative aspect-[3/4]">
+            <div className="relative" style={{ aspectRatio: FRAME_ASPECT.bannerLeft }}>
               <Image
                 src={homeImages.dualBanner.left}
                 alt="Look đơn giản — banner trái"
                 fill
                 sizes="300px"
-                className="object-cover object-[50%_12%]"
+                className="object-cover"
+                style={{ objectPosition: OBJECT_POSITION.bannerLeft }}
               />
             </div>
           </div>
@@ -179,13 +177,14 @@ export default async function HomePage() {
               aria-hidden
             />
             <div className="relative z-10 rotate-3 overflow-hidden rounded-2xl bg-neutral-200 shadow-lg">
-              <div className="relative aspect-square">
+              <div className="relative" style={{ aspectRatio: FRAME_ASPECT.bannerRight }}>
                 <Image
                   src={homeImages.dualBanner.right}
                   alt="Look đơn giản — banner phải"
                   fill
                   sizes="420px"
-                  className="object-cover object-[50%_20%]"
+                  className="object-cover"
+                  style={{ objectPosition: OBJECT_POSITION.bannerRight }}
                 />
               </div>
             </div>
@@ -205,21 +204,26 @@ export default async function HomePage() {
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 md:grid-rows-2 md:gap-5">
+        <div
+          className="grid md:grid-cols-2 md:grid-rows-2"
+          style={{ gap: GAPS.collections.desktop }}
+        >
           <Link
             href={
               mosaicCats.ao
                 ? `/san-pham?category=${mosaicCats.ao.slug}`
                 : "/san-pham"
             }
-            className="group relative min-h-[420px] overflow-hidden rounded-2xl bg-neutral-200 md:row-span-2 md:min-h-[560px]"
+            className="group relative overflow-hidden rounded-2xl bg-neutral-200 md:row-span-2"
+            style={{ aspectRatio: FRAME_ASPECT.catAoThun }}
           >
             <Image
               src={homeImages.collections.aoThun}
               alt={mosaicCats.ao?.name || "Áo thun"}
               fill
               sizes="(max-width:768px) 100vw, 50vw"
-              className="object-cover object-[50%_18%] transition duration-500 group-hover:scale-105"
+              className="object-cover transition duration-500 group-hover:scale-105"
+              style={{ objectPosition: OBJECT_POSITION.catAoThun }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/15 to-transparent" />
             <div className="absolute right-6 bottom-6 left-6 flex items-end justify-between gap-3">
@@ -245,14 +249,16 @@ export default async function HomePage() {
                 ? `/san-pham?category=${mosaicCats.quan.slug}`
                 : "/san-pham"
             }
-            className="group relative min-h-[240px] overflow-hidden rounded-2xl bg-neutral-200 md:min-h-[270px]"
+            className="group relative overflow-hidden rounded-2xl bg-neutral-200"
+            style={{ aspectRatio: FRAME_ASPECT.catQuan }}
           >
             <Image
               src={homeImages.collections.quan}
               alt={mosaicCats.quan?.name || "Quần"}
               fill
               sizes="(max-width:768px) 100vw, 50vw"
-              className="object-cover object-center transition duration-500 group-hover:scale-105"
+              className="object-cover transition duration-500 group-hover:scale-105"
+              style={{ objectPosition: OBJECT_POSITION.catQuan }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
             <div className="absolute right-6 bottom-6 left-6 flex items-end justify-between gap-3">
@@ -274,14 +280,16 @@ export default async function HomePage() {
                 ? `/san-pham?category=${mosaicCats.pk.slug}`
                 : "/san-pham"
             }
-            className="group relative min-h-[240px] overflow-hidden rounded-2xl bg-neutral-200 md:min-h-[270px]"
+            className="group relative overflow-hidden rounded-2xl bg-neutral-200"
+            style={{ aspectRatio: FRAME_ASPECT.catPhuKien }}
           >
             <Image
               src={homeImages.collections.phuKien}
               alt={mosaicCats.pk?.name || "Phụ kiện"}
               fill
               sizes="(max-width:768px) 100vw, 50vw"
-              className="object-cover object-center transition duration-500 group-hover:scale-105"
+              className="object-cover transition duration-500 group-hover:scale-105"
+              style={{ objectPosition: OBJECT_POSITION.catPhuKien }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
             <div className="absolute right-6 bottom-6 left-6 flex items-end justify-between gap-3">
@@ -320,14 +328,18 @@ export default async function HomePage() {
             </span>
           </Link>
 
-          <div className="relative mt-8 min-h-[460px] flex-1 md:mt-10 md:min-h-[520px]">
-            <div className="absolute inset-x-0 bottom-0 h-full overflow-hidden rounded-t-[2rem] bg-gradient-to-b from-neutral-100 to-neutral-200/40">
+          <div className="relative mt-8 flex-1 md:mt-10">
+            <div
+              className="relative w-full overflow-hidden rounded-t-[2rem] bg-gradient-to-b from-neutral-100 to-neutral-200/40"
+              style={{ aspectRatio: FRAME_ASPECT.diverseModel }}
+            >
               <Image
                 src={homeImages.diverse.model}
                 alt="Đa dạng kiểu dáng"
                 fill
                 sizes="(max-width:768px) 100vw, 40vw"
-                className="object-cover object-[50%_10%]"
+                className="object-cover"
+                style={{ objectPosition: OBJECT_POSITION.diverseModel }}
               />
             </div>
           </div>
@@ -353,17 +365,24 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          <div className="grid gap-5 md:grid-cols-2 md:gap-6">
+          <div
+            className="grid md:grid-cols-2"
+            style={{ gap: GAPS.featured.desktop }}
+          >
             {featuredLarge.map((p, i) => (
               <ProductCard
                 key={`feat-l-${p.id}-${i}`}
                 product={p}
                 large
+                frame="featuredLarge"
                 imageOverride={homeImages.featured.large[i]}
               />
             ))}
           </div>
-          <div className="mt-5 grid grid-cols-2 gap-4 md:mt-6 md:grid-cols-4 md:gap-6">
+          <div
+            className="mt-5 grid grid-cols-2 md:mt-6 md:grid-cols-4"
+            style={{ gap: GAPS.featured.desktop }}
+          >
             {homeImages.featured.small.map((src, i) => {
               const p =
                 featuredSmall[i] ||
@@ -380,6 +399,7 @@ export default async function HomePage() {
                 <ProductCard
                   key={`feat-s-${p.id}-${i}`}
                   product={p}
+                  frame="featuredSmall"
                   imageOverride={src}
                 />
               );
@@ -397,13 +417,17 @@ export default async function HomePage() {
         <div className="grid items-start gap-8 lg:grid-cols-[auto_1.05fr_0.95fr] lg:gap-8 lg:pr-10">
           <PhoiMauType />
 
-          <div className="relative min-h-[420px] overflow-hidden rounded-2xl bg-neutral-200 sm:min-h-[520px] lg:min-h-[560px]">
+          <div
+            className="relative w-full overflow-hidden rounded-2xl bg-neutral-200"
+            style={{ aspectRatio: FRAME_ASPECT.phoiMain }}
+          >
             <Image
               src={homeImages.colorPlay.main}
               alt="Phối màu tạo chất"
               fill
               sizes="(max-width:1024px) 100vw, 35vw"
-              className="object-cover object-[50%_15%]"
+              className="object-cover"
+              style={{ objectPosition: OBJECT_POSITION.phoiMain }}
               priority
             />
           </div>
@@ -430,11 +454,15 @@ export default async function HomePage() {
               </Link>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div
+              className="grid grid-cols-2 sm:grid-cols-3"
+              style={{ gap: GAPS.phoiGrid.desktop }}
+            >
               {homeImages.colorPlay.grid.map((src, i) => (
                 <div
                   key={src}
-                  className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-neutral-200"
+                  className="relative overflow-hidden rounded-2xl bg-neutral-200"
+                  style={{ aspectRatio: FRAME_ASPECT.phoiGrid }}
                 >
                   <Image
                     src={src}
@@ -442,6 +470,7 @@ export default async function HomePage() {
                     fill
                     sizes="(max-width:768px) 45vw, 15vw"
                     className="object-cover"
+                    style={{ objectPosition: OBJECT_POSITION.phoiGrid }}
                   />
                 </div>
               ))}

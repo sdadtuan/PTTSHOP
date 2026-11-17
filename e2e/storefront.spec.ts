@@ -17,6 +17,28 @@ test.describe("Storefront", () => {
     await expect(page.getByText(/PHỐI/i).first()).toBeVisible();
   });
 
+  test("hero shatter collage has 6 pieces on desktop", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto("/");
+    const collage = page.getByTestId("hero-shatter-collage");
+    await expect(collage).toBeVisible();
+    await expect(collage).toHaveAttribute("data-piece-count", "6");
+    await expect(page.getByTestId("hero-shatter-cell")).toHaveCount(6);
+    const box = await collage.boundingBox();
+    expect(box).toBeTruthy();
+    const aspect = box!.width / box!.height;
+    // mock collage 224/304 ≈ 0.737 — allow ≤5%
+    expect(Math.abs(aspect - 224 / 304) / (224 / 304)).toBeLessThanOrEqual(0.05);
+  });
+
+  test("hero shatter respects prefers-reduced-motion", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto("/");
+    const collage = page.getByTestId("hero-shatter-collage");
+    await expect(collage).toHaveAttribute("data-reduced-motion", "true");
+  });
+
   test("PDP colour swatch updates gallery", async ({ page }) => {
     await page.goto("/san-pham/ao-hoodie-essential");
     await expect(

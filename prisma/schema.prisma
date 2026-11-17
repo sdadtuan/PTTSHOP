@@ -172,6 +172,24 @@ model ProductImage {
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
+/// Homepage hero banners — additive table only (no wipe).
+model HeroBanner {
+  id          String   @id @default(cuid())
+  imageUrl    String
+  title       String?
+  subtitle    String?
+  ctaLabel    String?
+  ctaHref     String?
+  /// CSS object-position / focal, e.g. "50% 20%"
+  focalPoint  String   @default("50% 20%")
+  gridCols    Int      @default(2)
+  gridRows    Int      @default(3)
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 model ProductVariant {
   id            String         @id @default(cuid())
   sku           String         @unique

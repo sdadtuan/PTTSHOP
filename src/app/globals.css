@@ -63,53 +63,69 @@ body {
   animation: float-soft 5s ease-in-out infinite;
 }
 
-/* Hero 2×3 shutter mosaic — one photo sliced via background-position */
-.hero-mosaic-6 {
+/* Hero shatter collage — one photo sliced via background-position */
+.hero-shatter {
   --hero-src: url("/images/home-v2/hero-main.jpg");
+  --hero-cols: 2;
+  --hero-rows: 3;
+  --hero-cycle: 7000ms;
+  --hero-gap: 10px;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: repeat(3, 1fr);
-  gap: 0.4rem;
-  aspect-ratio: 3 / 4;
-  min-height: 420px;
+  grid-template-columns: repeat(var(--hero-cols), 1fr);
+  grid-template-rows: repeat(var(--hero-rows), 1fr);
+  gap: var(--hero-gap);
+  aspect-ratio: 224 / 304;
   width: 100%;
+  will-change: transform;
 }
 
-.hero-mosaic-6 > * {
+.hero-shatter__cell {
   min-height: 0;
-  height: 100%;
-  overflow: hidden;
   border-radius: 0.75rem;
   background-color: #e7e5e4;
   background-image: var(--hero-src);
   background-repeat: no-repeat;
-  /* Cover the full mosaic as if one photo behind gutters */
-  background-size: 200% 300%;
+  background-size: calc(var(--hero-cols) * 100%) calc(var(--hero-rows) * 100%);
+  background-position: var(--pos-x) var(--pos-y);
+  transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  opacity: 1;
+  backface-visibility: hidden;
 }
 
-.hero-mosaic-6 > *:nth-child(1) {
-  background-position: 0% 0%;
-}
-.hero-mosaic-6 > *:nth-child(2) {
-  background-position: 100% 0%;
-}
-.hero-mosaic-6 > *:nth-child(3) {
-  background-position: 0% 50%;
-}
-.hero-mosaic-6 > *:nth-child(4) {
-  background-position: 100% 50%;
-}
-.hero-mosaic-6 > *:nth-child(5) {
-  background-position: 0% 100%;
-}
-.hero-mosaic-6 > *:nth-child(6) {
-  background-position: 100% 100%;
+.hero-shatter__cell--anim {
+  animation: hero-shatter-cycle var(--hero-cycle) ease-in-out both;
+  animation-delay: var(--stagger, 0ms);
 }
 
-@media (min-width: 768px) {
-  .hero-mosaic-6 {
-    min-height: 560px;
-    gap: 0.5rem;
+@keyframes hero-shatter-cycle {
+  0% {
+    transform: translate3d(var(--dx), calc(var(--dy) - 12px), 0) rotate(var(--rot))
+      scale(0.72);
+    opacity: 0;
+  }
+  18% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  72% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  88% {
+    transform: translate3d(calc(var(--dx) * -0.85), calc(var(--dy) * -0.7), 0)
+      rotate(calc(var(--rot) * -1)) scale(0.78);
+    opacity: 0.15;
+  }
+  100% {
+    transform: translate3d(var(--dx), calc(var(--dy) - 12px), 0) rotate(var(--rot))
+      scale(0.72);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-shatter__cell--anim {
+    animation: none !important;
   }
 }
 

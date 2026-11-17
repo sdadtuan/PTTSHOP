@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { ProductCard } from "@/components/product/product-card";
+import { GAPS } from "@/config/home-frame-specs";
 import { homeImages } from "@/config/home-images";
 
 type Product = {
@@ -66,7 +67,10 @@ export function HomeStyleTabs({ products }: Props) {
           );
         })}
       </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+      <div
+        className="grid grid-cols-2 sm:grid-cols-3"
+        style={{ gap: GAPS.productGrid.desktop }}
+      >
         {filtered.map((p, i) => {
           const useFlat =
             tab === "all" ||
@@ -77,6 +81,7 @@ export function HomeStyleTabs({ products }: Props) {
             <ProductCard
               key={p.id}
               product={p}
+              frame="diversePants"
               imageOverride={
                 useFlat
                   ? homeImages.diverse.pants[i % homeImages.diverse.pants.length]
