@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
 import { FRAME_ASPECT, OBJECT_POSITION } from "@/config/home-frame-specs";
+import { TYPE_SCALE } from "@/config/home-type-scale";
 import { formatVnd } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -103,24 +104,30 @@ export function ProductCard({
             </div>
           ) : null}
           <h3
-            className={cn(
-              "font-medium text-neutral-900",
-              large ? "text-base md:text-lg" : "text-sm md:text-[15px]",
-            )}
+            className="font-medium text-neutral-900"
+            style={{
+              fontSize: large
+                ? TYPE_SCALE.productNameLarge.css
+                : TYPE_SCALE.productName.css,
+            }}
           >
             {product.name}
           </h3>
           <div className="flex flex-wrap items-center gap-2">
             <p
               className={cn(
-                "text-sm font-semibold",
+                "font-semibold",
                 onSale ? "text-[var(--accent)]" : "text-neutral-900",
               )}
+              style={{ fontSize: TYPE_SCALE.productPrice.css }}
             >
               {formatVnd(minPrice)}
             </p>
             {onSale ? (
-              <p className="text-xs text-neutral-400 line-through">
+              <p
+                className="text-neutral-400 line-through"
+                style={{ fontSize: `calc(${TYPE_SCALE.productPrice.css} * 0.85)` }}
+              >
                 {formatVnd(compareAt!)}
               </p>
             ) : null}

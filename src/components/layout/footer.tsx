@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MapPin, Mail, Phone, Clock } from "lucide-react";
+import { TYPE_SCALE } from "@/config/home-type-scale";
 
 function InstagramIcon({ className }: { className?: string }) {
   return (
@@ -115,15 +116,18 @@ export function Footer() {
         <div className="flex flex-col gap-8 border-b border-black/5 pb-12 md:flex-row md:items-start md:justify-between">
           <div className="max-w-xl">
             <div className="flex items-center gap-3">
-              <SparkLogo className="h-10 w-10 text-[var(--accent)] md:h-12 md:w-12" />
+              <SparkLogo className="h-9 w-9 text-[var(--accent)] md:h-10 md:w-10" />
               <p
                 className="font-[family-name:var(--font-display)] font-black tracking-[0.12em] text-neutral-900"
-                style={{ fontSize: "clamp(2.5rem, 5vw, 4rem)" }}
+                style={{ fontSize: TYPE_SCALE.footerLogo.css }}
               >
                 VIZFAS
               </p>
             </div>
-            <p className="mt-5 text-base leading-relaxed text-neutral-600 md:text-lg">
+            <p
+              className="mt-5 leading-relaxed text-neutral-600"
+              style={{ fontSize: TYPE_SCALE.footerTagline.css }}
+            >
               Thời trang hiện đại, tối giản và khác biệt cho thế hệ trẻ tự tin
               thể hiện phong cách mỗi ngày.
             </p>
@@ -147,7 +151,10 @@ export function Footer() {
         <div className="grid gap-10 pt-10 sm:grid-cols-2 lg:grid-cols-4">
           {columns.map((col) => (
             <div key={col.title}>
-              <p className="text-sm font-bold tracking-wide text-neutral-900">
+              <p
+                className="font-bold tracking-wide text-neutral-900"
+                style={{ fontSize: TYPE_SCALE.footerTagline.css }}
+              >
                 {col.title}
               </p>
               <span
@@ -159,7 +166,8 @@ export function Footer() {
                   <li key={`${col.title}-${link.label}`}>
                     <Link
                       href={link.href}
-                      className="text-sm text-neutral-500 transition hover:text-[var(--accent)]"
+                      className="text-neutral-500 transition hover:text-[var(--accent)]"
+                      style={{ fontSize: TYPE_SCALE.footerLink.css }}
                     >
                       {link.label}
                     </Link>
@@ -170,14 +178,20 @@ export function Footer() {
           ))}
 
           <div>
-            <p className="text-sm font-bold tracking-wide text-neutral-900">
+            <p
+              className="font-bold tracking-wide text-neutral-900"
+              style={{ fontSize: TYPE_SCALE.footerTagline.css }}
+            >
               Liên hệ
             </p>
             <span
               className="mt-2 block h-[3px] w-9 rounded-full bg-[var(--accent)]"
               aria-hidden
             />
-            <ul className="mt-4 space-y-3 text-sm text-neutral-500">
+            <ul
+              className="mt-4 space-y-3 text-neutral-500"
+              style={{ fontSize: TYPE_SCALE.footerLink.css }}
+            >
               <li className="flex items-start gap-2.5">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" />
                 <span>TP. Hồ Chí Minh, Việt Nam</span>
