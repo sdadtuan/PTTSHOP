@@ -1,7 +1,7 @@
 /**
  * Additive upsert for men's/women's hoodies with per-colour gallery images.
  * Does NOT wipe existing DB data.
- * Uses local studio assets under /public/images/hoodies/* — colour-consistent.
+ * Uses AI photoreal assets under /public/images/ai-hoodies/* (front / back / fabric).
  */
 import { PrismaClient } from "@prisma/client";
 
@@ -13,26 +13,21 @@ type ColorPack = {
   images: string[];
 };
 
-const local = (key: string, file: string) => `/images/hoodies/${key}/${file}`;
+const ai = (file: string) => `/images/ai-hoodies/${file}`;
 
-function shots(key: string): string[] {
-  return [
-    local(key, "01-front.jpg"),
-    local(key, "02-side.jpg"),
-    local(key, "03-back.jpg"),
-    local(key, "04-front-alt.jpg"),
-    local(key, "05-fabric.jpg"),
-  ];
+/** Per-colour gallery: front → back → fabric (fabric used in “Chi tiết sản phẩm”). */
+function shots(key: "kem" | "den" | "nau" | "xam" | "hong"): string[] {
+  return [ai(`${key}-front.jpg`), ai(`${key}-back.jpg`), ai(`${key}-fabric.jpg`)];
 }
 
 async function ensureCategory() {
   return prisma.category.upsert({
     where: { slug: "hoodie" },
-    update: { image: local("kem", "01-front.jpg") },
+    update: { image: ai("kem-front.jpg") },
     create: {
       name: "Hoodie",
       slug: "hoodie",
-      image: local("kem", "01-front.jpg"),
+      image: ai("kem-front.jpg"),
       sortOrder: 5,
     },
   });
@@ -43,7 +38,7 @@ async function refreshCategoryImages() {
     "ao-thun": "/images/categories/ao-thun.jpg",
     quan: "/images/categories/quan.jpg",
     "phu-kien": "/images/categories/phu-kien.jpg",
-    hoodie: local("kem", "01-front.jpg"),
+    hoodie: ai("kem-front.jpg"),
   };
   for (const [slug, image] of Object.entries(map)) {
     await prisma.category.updateMany({ where: { slug }, data: { image } });
@@ -59,6 +54,8 @@ async function upsertHoodie(input: {
   colors: ColorPack[];
   price: number;
   compareAt: number;
+  /** Optional first-card image override so grids don’t repeat the same front. */
+  cardImage?: string;
 }) {
   const existing = await prisma.product.findUnique({
     where: { slug: input.slug },
@@ -102,9 +99,48 @@ async function upsertHoodie(input: {
       },
     });
     await prisma.productImage.deleteMany({ where: { productId: product.id } });
+
+    // Drop swatches without photos (colours no longer in pack).
+    // Skip variants referenced by OrderItem (no onDelete cascade).
+    const keep = new Set(input.colors.map((c) => c.name));
+    const stale = existing.variants.filter((v) => !keep.has(v.color));
+    if (stale.length) {
+      const staleIds = stale.map((v) => v.id);
+      const blocked = await prisma.orderItem.findMany({
+        where: { variantId: { in: staleIds } },
+        select: { variantId: true },
+      });
+      const blockedSet = new Set(blocked.map((b) => b.variantId));
+      const deletable = staleIds.filter((id) => !blockedSet.has(id));
+      if (deletable.length) {
+        await prisma.productVariant.deleteMany({
+          where: { id: { in: deletable } },
+        });
+      }
+      const leftover = staleIds.filter((id) => blockedSet.has(id));
+      if (leftover.length) {
+        await prisma.productVariant.updateMany({
+          where: { id: { in: leftover } },
+          data: { stock: 0 },
+        });
+      }
+    }
   }
 
   let sort = 0;
+  // Optional distinct card hero so homepage/related grids vary.
+  if (input.cardImage) {
+    await prisma.productImage.create({
+      data: {
+        productId: product.id,
+        url: input.cardImage,
+        alt: `${input.name} - thẻ sản phẩm`,
+        color: null,
+        sortOrder: sort++,
+      },
+    });
+  }
+
   for (const color of input.colors) {
     for (const url of color.images) {
       await prisma.productImage.create({
@@ -152,23 +188,27 @@ async function upsertHoodie(input: {
   console.log(`Upserted hoodie: ${input.slug}`);
 }
 
-/** Point other catalog cards at local assets so listing grids stay filled. */
+/** Point other catalog cards at varied AI hoodie / local assets. */
 async function refreshCatalogCardImages() {
   const products = await prisma.product.findMany({
     include: { images: { orderBy: { sortOrder: "asc" } } },
   });
 
+  // Non-hoodie cards use lifestyle/local assets (not AI hoodie fronts)
+  // so homepage featured/listing don’t repeat the same model photos.
   const pool = [
-    local("kem", "01-front.jpg"),
-    local("den", "01-front.jpg"),
-    local("nau", "01-front.jpg"),
-    local("xam", "01-front.jpg"),
-    local("hong", "01-front.jpg"),
     "/images/home/hero-1.jpg",
     "/images/home/hero-2.jpg",
     "/images/home/hero-3.jpg",
+    "/images/home/hero-4.jpg",
     "/images/home/look-2.jpg",
     "/images/home/look-3.jpg",
+    "/images/home/look-4.jpg",
+    "/images/home/look-5.jpg",
+    "/images/categories/ao-thun.jpg",
+    "/images/categories/quan.jpg",
+    "/images/categories/phu-kien.jpg",
+    "/images/home/pants-hero.jpg",
   ];
 
   let i = 0;
@@ -178,7 +218,11 @@ async function refreshCatalogCardImages() {
     const nextUrl = pool[i % pool.length];
     i++;
     if (primary) {
-      if (primary.url.startsWith("https://images.unsplash.com")) {
+      if (
+        primary.url.startsWith("https://images.unsplash.com") ||
+        primary.url.includes("/images/hoodies/") ||
+        primary.url.includes("/images/ai-hoodies/")
+      ) {
         await prisma.productImage.update({
           where: { id: primary.id },
           data: { url: nextUrl },
@@ -195,7 +239,7 @@ async function refreshCatalogCardImages() {
       });
     }
   }
-  console.log("Refreshed catalog card images (unsplash → local where needed).");
+  console.log("Refreshed catalog card images (unsplash/studio/AI-misfile → lifestyle).");
 }
 
 async function main() {
@@ -207,16 +251,15 @@ async function main() {
     slug: "ao-hoodie-essential",
     gender: "MALE",
     description:
-      "Áo Hoodie Essential form rộng cho nam — chất nỉ mềm, dày dặn, phong cách unisex dễ phối. Mỗi màu có gallery riêng (front / side / back / detail / fabric).",
+      "Áo Hoodie Essential form rộng cho nam — chất nỉ mềm, dày dặn, in ESSENTIALS. Gallery ảnh thật theo màu Kem / Đen / Nâu (front / back / fabric).",
     categoryId: hoodie.id,
     price: 599000,
     compareAt: 899000,
+    cardImage: ai("kem-front.jpg"),
     colors: [
       { name: "Kem", hex: "#E8DCC8", images: shots("kem") },
       { name: "Đen", hex: "#1C1C1C", images: shots("den") },
       { name: "Nâu", hex: "#6B4423", images: shots("nau") },
-      { name: "Xám", hex: "#C4C4C4", images: shots("xam") },
-      { name: "Hồng", hex: "#E8A0BF", images: shots("hong") },
     ],
   });
 
@@ -225,16 +268,15 @@ async function main() {
     slug: "ao-hoodie-nu-essential",
     gender: "FEMALE",
     description:
-      "Áo Hoodie nữ form rộng VIZFAS Essential — mềm mại, dễ layer. Gallery theo màu Xám / Hồng / Đen / Kem / Nâu.",
+      "Áo Hoodie nữ form rộng VIZFAS Essential — in VIZFAS, mềm mại, dễ layer. Gallery ảnh thật Xám / Hồng / Đen (front / back / fabric).",
     categoryId: hoodie.id,
     price: 579000,
     compareAt: 849000,
+    cardImage: ai("xam-front.jpg"),
     colors: [
       { name: "Xám", hex: "#C4C4C4", images: shots("xam") },
       { name: "Hồng", hex: "#E8A0BF", images: shots("hong") },
       { name: "Đen", hex: "#1C1C1C", images: shots("den") },
-      { name: "Kem", hex: "#E8DCC8", images: shots("kem") },
-      { name: "Nâu", hex: "#6B4423", images: shots("nau") },
     ],
   });
 
@@ -246,6 +288,7 @@ async function main() {
     categoryId: hoodie.id,
     price: 629000,
     compareAt: 929000,
+    cardImage: ai("den-back.jpg"),
     colors: [
       { name: "Đen", hex: "#1C1C1C", images: shots("den") },
       { name: "Xám", hex: "#C4C4C4", images: shots("xam") },
@@ -261,6 +304,7 @@ async function main() {
     categoryId: hoodie.id,
     price: 549000,
     compareAt: 799000,
+    cardImage: ai("hong-front.jpg"),
     colors: [
       { name: "Hồng", hex: "#E8A0BF", images: shots("hong") },
       { name: "Kem", hex: "#E8DCC8", images: shots("kem") },
@@ -276,6 +320,7 @@ async function main() {
     categoryId: hoodie.id,
     price: 589000,
     compareAt: 859000,
+    cardImage: ai("nau-front.jpg"),
     colors: [
       { name: "Nâu", hex: "#6B4423", images: shots("nau") },
       { name: "Đen", hex: "#1C1C1C", images: shots("den") },
@@ -284,7 +329,7 @@ async function main() {
   });
 
   await refreshCatalogCardImages();
-  console.log("Done. Local colour-consistent hoodie galleries applied.");
+  console.log("Done. AI photoreal hoodie galleries applied.");
 }
 
 main()

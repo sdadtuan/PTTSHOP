@@ -43,6 +43,30 @@ async function shot(page, name, fullPage = true) {
   console.log("saved", path);
 }
 
+async function clickSwatch(page, label) {
+  const byAria = page.locator(
+    `button[aria-label*="${label}"], button[title*="${label}"]`,
+  );
+  if ((await byAria.count()) > 0) {
+    await byAria.first().click();
+    return;
+  }
+  const colorRow = page.locator("text=Màu sắc").locator("..").locator("button");
+  const count = await colorRow.count();
+  for (let i = 0; i < count; i++) {
+    const btn = colorRow.nth(i);
+    const aria = (await btn.getAttribute("aria-label")) || "";
+    const title = (await btn.getAttribute("title")) || "";
+    if (aria.includes(label) || title.includes(label)) {
+      await btn.click();
+      return;
+    }
+  }
+  // fallback: try nth by known order if label match failed
+  if (label === "Nâu" && count >= 3) await colorRow.nth(2).click();
+  if (label === "Hồng" && count >= 2) await colorRow.nth(1).click();
+}
+
 const browser = await chromium.launch({ headless: true });
 
 // Desktop homepage
@@ -64,7 +88,7 @@ const browser = await chromium.launch({ headless: true });
   await page.close();
 }
 
-// PDP colour 1 (Kem default)
+// PDP men Kem (default)
 {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   await page.goto(base + "/san-pham/ao-hoodie-essential", {
@@ -75,30 +99,33 @@ const browser = await chromium.launch({ headless: true });
   await page.close();
 }
 
-// PDP colour 2 (Đen)
+// PDP men Nâu
 {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   await page.goto(base + "/san-pham/ao-hoodie-essential", {
     waitUntil: "networkidle",
   });
   await page.waitForTimeout(800);
-  // click black swatch — look for button/label containing Đen or title
-  const swatches = page.locator('button[aria-label*="Đen"], button[title*="Đen"]');
-  if ((await swatches.count()) > 0) {
-    await swatches.first().click();
-  } else {
-    // fallback: colour buttons near "Màu sắc"
-    const buttons = page.locator("button").filter({ hasText: /^$/ });
-    // click second colour circle (Đen) by role near text
-    const colorRow = page.locator("text=Màu sắc").locator("..").locator("button");
-    if ((await colorRow.count()) >= 2) await colorRow.nth(1).click();
-  }
+  await clickSwatch(page, "Nâu");
   await page.waitForTimeout(900);
   await shot(page, "pdp-after-color2.png", true);
   await page.close();
 }
 
-// Mobile PDP
+// PDP women Hồng
+{
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  await page.goto(base + "/san-pham/ao-hoodie-nu-essential", {
+    waitUntil: "networkidle",
+  });
+  await page.waitForTimeout(800);
+  await clickSwatch(page, "Hồng");
+  await page.waitForTimeout(900);
+  await shot(page, "pdp-women-hong.png", true);
+  await page.close();
+}
+
+// Mobile PDP (men Kem)
 {
   const iPhone = devices["iPhone 13"];
   const page = await browser.newPage({ ...iPhone });

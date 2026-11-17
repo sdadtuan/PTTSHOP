@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useMemo, useState } from "react";
 import { ProductGallery, type GalleryImage } from "@/components/product/product-gallery";
 import { ProductPurchase } from "@/components/product/product-purchase";
@@ -152,11 +153,13 @@ export function ProductDetailClient({ product }: Props) {
             ) : null}
           </div>
           <div className="relative min-h-[320px] overflow-hidden rounded-sm bg-neutral-100 md:min-h-[380px]">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={detailImage || "/images/hoodies/kem/05-fabric.jpg"}
+            <Image
+              src={detailImage || "/images/ai-hoodies/kem-fabric.jpg"}
               alt={`Chi tiết chất liệu ${color}`}
-              className="h-full w-full object-cover"
+              fill
+              sizes="(max-width:768px) 100vw, 40vw"
+              loading="lazy"
+              className="object-cover"
             />
           </div>
         </div>
