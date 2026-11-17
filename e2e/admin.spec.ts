@@ -1,16 +1,34 @@
 import { expect, test } from "@playwright/test";
 
-test.describe("Admin orders", () => {
-  test("admin can login and open orders", async ({ page }) => {
-    await page.goto("/dang-nhap?callbackUrl=/admin");
-    await page.getByLabel(/^Email$/i).fill("admin@vizfas.vn");
-    await page.getByLabel(/Mật khẩu/i).fill("admin123");
-    await Promise.all([
-      page.waitForURL(/\/admin/, { timeout: 20_000 }),
-      page.getByRole("button", { name: /Đăng nhập/i }).click(),
-    ]);
-    await expect(page.getByRole("heading", { name: /Admin VIZFAS/i })).toBeVisible();
+async function loginAdmin(page: import("@playwright/test").Page) {
+  await page.goto("/dang-nhap?callbackUrl=/admin");
+  await page.getByLabel(/^Email$/i).fill("admin@vizfas.vn");
+  await page.getByLabel(/Mật khẩu/i).fill("admin123");
+  await Promise.all([
+    page.waitForURL(/\/admin/, { timeout: 20_000 }),
+    page.getByRole("button", { name: /Đăng nhập/i }).click(),
+  ]);
+}
+
+test.describe("Admin redesign", () => {
+  test("admin can open dashboard, products, orders", async ({ page }) => {
+    await loginAdmin(page);
+    await expect(page.getByRole("heading", { name: /Dashboard/i })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: /Menu quản trị/i })).toBeVisible();
+    await expect(page.getByText(/Doanh thu/i).first()).toBeVisible();
+
+    await page.goto("/admin/products");
+    await expect(page.getByRole("heading", { name: /^Sản phẩm$/i })).toBeVisible();
+
     await page.goto("/admin/orders");
     await expect(page.getByRole("heading", { name: /Đơn hàng/i })).toBeVisible();
+  });
+
+  test("admin shell is responsive on mobile viewport", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await loginAdmin(page);
+    await expect(page.getByRole("heading", { name: /Dashboard/i })).toBeVisible();
+    await page.getByRole("button", { name: /Mở menu/i }).click();
+    await expect(page.getByRole("navigation", { name: /Menu quản trị/i })).toBeVisible();
   });
 });
