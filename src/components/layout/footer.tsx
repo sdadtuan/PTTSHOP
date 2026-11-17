@@ -39,17 +39,21 @@ export function Footer() {
   if (pathname?.startsWith("/admin")) return null;
 
   return (
-    <footer className="mt-auto border-t border-black/5 bg-[var(--background)] text-neutral-700">
-      <div className="mx-auto max-w-7xl px-4 pt-14 pb-10 md:px-6">
+    <footer className="relative mt-auto overflow-hidden border-t border-black/5 bg-[var(--background)] text-neutral-700">
+      <div className="pointer-events-none absolute top-10 right-[18%] h-8 w-8 rounded-lg bg-[var(--accent)]/90" />
+      <div className="pointer-events-none absolute top-24 right-[12%] h-6 w-6 rounded-md bg-neutral-300" />
+      <div className="pointer-events-none absolute bottom-28 left-[8%] h-7 w-7 rounded-lg bg-[var(--accent)]/70" />
+
+      <div className="relative mx-auto max-w-7xl px-4 pt-14 pb-10 md:px-6">
         <div className="flex flex-col gap-6 border-b border-black/5 pb-10 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="font-[family-name:var(--font-display)] text-3xl font-extrabold tracking-[0.2em] text-neutral-900">
+          <div className="relative">
+            <p className="font-[family-name:var(--font-display)] text-5xl font-black tracking-[0.18em] text-[var(--accent)] md:text-6xl lg:text-7xl">
               VIZFAS
-              <span className="ml-1 inline-block text-[var(--accent)]" aria-hidden>
-                ✦
+              <span className="ml-1 inline-block text-neutral-900" aria-hidden>
+                +
               </span>
             </p>
-            <p className="mt-2 max-w-sm text-sm text-neutral-500">
+            <p className="mt-3 max-w-sm text-sm text-neutral-500">
               Thời trang đơn giản, vẫn nổi bật — form hiện đại, dễ phối mỗi ngày.
             </p>
           </div>
