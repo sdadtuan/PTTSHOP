@@ -19,26 +19,33 @@ Mở [http://localhost:3000](http://localhost:3000).
 | Admin    | admin@vizfas.vn   | admin123  |
 | Khách    | khach@vizfas.vn   | khach123  |
 
+> **Bảo mật:** Đổi mật khẩu admin mặc định trước khi dùng môi trường chia sẻ / production. Xem `.env.example`.
+
 Admin: [/admin](http://localhost:3000/admin)
 
 ## Scripts
 
 - `npm run dev` — dev server
-- `npm run db:push` — đồng bộ schema
+- `npm run db:migrate` — chạy Prisma migrations
 - `npm run db:seed` — seed dữ liệu mẫu
-- `npm run db:setup` — push + seed
+- `npm run db:setup` — migrate + seed
+- `npm run test` — Vitest (API)
 
-## Đã có trong MVP
+## Biến môi trường
 
-- Storefront: Home, Catalog (filter), PDP (màu/size), Cart, Checkout COD/CK
+Copy `.env.example` → `.env`. Bắt buộc: `DATABASE_URL`, `AUTH_SECRET`, `AUTH_URL`.  
+SMTP (`SMTP_*`, `EMAIL_FROM`) tùy chọn — khi trống, email được ghi log console.
+
+## Đã có / đang mở rộng
+
+- Storefront: Home, Catalog, PDP, Cart, Checkout COD/CK
 - Auth credentials + role ADMIN/CUSTOMER
-- Admin xem đơn hàng cơ bản
-- Floating Zalo / Messenger / Phone
-- Giỏ hàng localStorage
+- Prisma migrations (không chỉ `db push`)
+- Backend phases 0–8: accounts, cart DB, coupons, reviews, admin CRUD, email (xem plan)
 
-## Phase tiếp theo
+## Ghi chú kỹ thuật
 
-- Admin CRUD sản phẩm / upload ảnh
-- Wishlist đồng bộ user
-- VNPay / MoMo
-- Chuyển SQLite → PostgreSQL production
+- SQLite local (PostgreSQL sau)
+- Cart source of truth: DB + cookie `sessionId` (không localStorage)
+- Payment: COD + chuyển khoản; chỗ gắn VNPay/MoMo sau
+- Ảnh admin: URL (chưa upload file)
