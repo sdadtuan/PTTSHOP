@@ -7,27 +7,32 @@ export const TYPE_SCALE = {
   heroH1: {
     label: "Hero H1",
     desktopPx: 76,
-    css: "clamp(2.75rem, 6vw, 4.75rem)",
+    css: "clamp(2.75rem, 6vw, 4.75rem)", // 76px
   },
   heroBadge: {
     label: "Hero badge text",
     desktopPx: 20,
-    css: "1.25rem", // 20px
+    css: "1.25rem",
   },
   heroFeature: {
     label: "Hero feature icons label",
     desktopPx: 16,
-    css: "1rem", // 16px
+    css: "1rem",
   },
   bannerH2: {
-    label: "Banner Phong Cách H2",
-    desktopPx: 56,
-    css: "clamp(2rem, 4.2vw, 3.5rem)",
+    label: "Banner Phong Cách H2 (= Hero H1)",
+    desktopPx: 76,
+    css: "clamp(2.75rem, 6vw, 4.75rem)", // ~76px — match H1
+  },
+  bannerDesc: {
+    label: "Banner description",
+    desktopPx: 20,
+    css: "1.25rem",
   },
   collectionsH2: {
     label: "Bộ Sưu Tập H2",
     desktopPx: 68,
-    css: "clamp(2.5rem, 5.2vw, 4.25rem)", // ~64–72
+    css: "clamp(2.5rem, 5.2vw, 4.25rem)",
   },
   diverseH2: {
     label: "Đa Dạng H2",
@@ -42,12 +47,12 @@ export const TYPE_SCALE = {
   tileLabel: {
     label: "Collection tile title",
     desktopPx: 36,
-    css: "2.25rem", // 36px @1280
+    css: "2.25rem",
   },
   productName: {
     label: "Product card name (×1.5)",
     desktopPx: 22.5,
-    css: "clamp(1.125rem, 1.6vw, 1.4rem)", // ~18–22.5
+    css: "clamp(1.125rem, 1.6vw, 1.4rem)",
   },
   productNameLarge: {
     label: "Product card name large (×1.5)",
@@ -70,23 +75,23 @@ export const TYPE_SCALE = {
     css: "clamp(1.25rem, 2.2vw, 1.75rem)",
   },
   footerLogo: {
-    label: "Footer VIZFAS",
-    desktopPx: 48,
-    css: "3rem", // 48px
+    label: "Footer VIZFAS (+40%)",
+    desktopPx: 67,
+    css: "4.2rem", // ~67px
   },
   footerTagline: {
-    label: "Footer tagline / column title",
-    desktopPx: 22,
-    css: "1.375rem", // 22px
+    label: "Footer tagline / column title (+40%)",
+    desktopPx: 31,
+    css: "1.9375rem", // ~31px
   },
   footerLink: {
-    label: "Footer link",
-    desktopPx: 18,
-    css: "1.125rem", // 18px
+    label: "Footer link (+40%)",
+    desktopPx: 25,
+    css: "1.5625rem", // ~25px
   },
   verticalLabel: {
     label: "BỘ SƯU TẬP MỚI dọc",
-    desktopPx: 16,
-    css: "1rem",
+    desktopPx: 40,
+    css: "2.5rem", // 40px
   },
 } as const;

@@ -68,7 +68,7 @@ export function HomeStyleTabs({ products }: Props) {
         })}
       </div>
       <div
-        className="grid grid-cols-2 sm:grid-cols-3"
+        className="grid grid-cols-2 sm:grid-cols-3 min-w-0"
         style={{ gap: GAPS.productGrid.desktop }}
       >
         {filtered.map((p, i) => {

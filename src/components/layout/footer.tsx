@@ -104,19 +104,19 @@ export function Footer() {
   return (
     <footer className="relative mt-auto overflow-hidden border-t border-black/5 bg-white text-neutral-700">
       <div
-        className="pointer-events-none absolute top-4 right-[16%] h-24 w-24 rotate-[22deg] rounded-3xl bg-[var(--accent)]/90 md:h-28 md:w-28"
+        className="pointer-events-none absolute top-4 right-[14%] h-44 w-44 rotate-[22deg] rounded-[2rem] bg-[var(--accent)]/90 md:h-52 md:w-52"
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute top-20 right-[8%] h-16 w-16 -rotate-[14deg] rounded-2xl bg-neutral-300 md:h-20 md:w-20"
+        className="pointer-events-none absolute top-28 right-[5%] h-32 w-32 -rotate-[14deg] rounded-3xl bg-neutral-300 md:h-40 md:w-40"
         aria-hidden
       />
 
-      <div className="relative mx-auto max-w-7xl px-4 pt-16 pb-12 md:px-6">
-        <div className="flex flex-col gap-8 border-b border-black/5 pb-12 md:flex-row md:items-start md:justify-between">
-          <div className="max-w-xl">
-            <div className="flex items-center gap-3">
-              <SparkLogo className="h-9 w-9 text-[var(--accent)] md:h-10 md:w-10" />
+      <div className="relative mx-auto max-w-7xl px-4 pt-20 pb-14 md:px-6">
+        <div className="flex flex-col gap-8 border-b border-black/5 pb-14 md:flex-row md:items-start md:justify-between">
+          <div className="max-w-2xl">
+            <div className="flex items-center gap-4">
+              <SparkLogo className="h-12 w-12 text-[var(--accent)] md:h-14 md:w-14" />
               <p
                 className="font-[family-name:var(--font-display)] font-black tracking-[0.12em] text-neutral-900"
                 style={{ fontSize: TYPE_SCALE.footerLogo.css }}
@@ -139,9 +139,9 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={label}
-                  className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-neutral-900 text-white transition hover:bg-[var(--accent)]"
+                  className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-neutral-900 text-white transition hover:bg-[var(--accent)]"
                 >
-                  <Icon className="h-5 w-5" />
+                  <Icon className="h-6 w-6" />
                 </a>
               ))}
             </div>
