@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Heart, Menu, Search, ShoppingBag, User, X } from "lucide-react";
 import { useCart } from "@/components/cart/cart-context";
@@ -23,6 +24,7 @@ const mobileNav = [
 ];
 
 export function Header() {
+  const pathname = usePathname();
   const { count } = useCart();
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -34,6 +36,8 @@ export function Header() {
       document.body.style.overflow = "";
     };
   }, [open]);
+
+  if (pathname?.startsWith("/admin")) return null;
 
   return (
     <header className="sticky top-0 z-50 border-b border-black/5 bg-[var(--background)]/95 backdrop-blur-md">

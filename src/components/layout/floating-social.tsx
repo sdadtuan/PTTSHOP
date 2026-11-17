@@ -1,4 +1,7 @@
+"use client";
+
 import { MessageCircle, Phone } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 const items = [
   {
@@ -32,6 +35,9 @@ const items = [
 ];
 
 export function FloatingSocial() {
+  const pathname = usePathname();
+  if (pathname?.startsWith("/admin")) return null;
+
   return (
     <div
       className="pointer-events-none fixed top-1/2 right-3 z-40 hidden -translate-y-1/2 flex-col gap-2 md:right-4 lg:flex"

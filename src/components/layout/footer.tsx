@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const columns = [
   {
@@ -32,6 +35,9 @@ const columns = [
 ];
 
 export function Footer() {
+  const pathname = usePathname();
+  if (pathname?.startsWith("/admin")) return null;
+
   return (
     <footer className="mt-auto border-t border-black/5 bg-[var(--background)] text-neutral-700">
       <div className="mx-auto max-w-7xl px-4 pt-14 pb-10 md:px-6">
