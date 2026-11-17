@@ -66,8 +66,25 @@ body {
 .hero-mosaic {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(2, 1fr);
+  grid-template-rows: repeat(2, minmax(140px, 1fr));
   gap: var(--tile-gap);
+  min-height: 420px;
+  width: 100%;
+}
+
+.hero-mosaic > * {
+  position: relative;
+  min-height: 140px;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 0.35rem;
+  background: #e7e5e4;
+}
+
+@media (min-width: 768px) {
+  .hero-mosaic {
+    min-height: 520px;
+  }
 }
 
 .decor-dot {

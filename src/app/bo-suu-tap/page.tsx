@@ -40,7 +40,7 @@ export default async function CollectionsPage() {
               src={
                 c.image ||
                 c.products[0]?.product.images[0]?.url ||
-                "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1200&q=80"
+                "/images/home/look-1.jpg"
               }
               alt={c.name}
               fill

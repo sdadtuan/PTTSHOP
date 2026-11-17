@@ -38,8 +38,8 @@ export default async function ProductDetailPage({ params }: Props) {
     where: {
       id: { not: product.id },
       OR: [
-        { categoryId: product.categoryId ?? undefined },
-        { gender: product.gender },
+        { slug: { contains: "hoodie" } },
+        { category: { slug: "hoodie" } },
       ],
     },
     include: {
@@ -47,6 +47,7 @@ export default async function ProductDetailPage({ params }: Props) {
       variants: true,
     },
     take: 4,
+    orderBy: { updatedAt: "desc" },
   });
 
   return (

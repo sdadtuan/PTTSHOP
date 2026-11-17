@@ -7,22 +7,28 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 const HERO_TILES = [
-  "https://images.unsplash.com/photo-1520975916090-3105956dac38?auto=format&fit=crop&w=900&q=85",
-  "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=85",
-  "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=85",
-  "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=900&q=85",
-  "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=900&q=85",
-  "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=900&q=85",
+  "/images/home/hero-1.jpg",
+  "/images/home/hero-2.jpg",
+  "/images/home/hero-3.jpg",
+  "/images/home/hero-4.jpg",
+  "/images/home/hero-5.jpg",
+  "/images/home/hero-6.jpg",
 ];
 
 const LOOKBOOK = [
-  "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=1000&q=85",
-  "https://images.unsplash.com/photo-1578587018452-892bacefd3f2?auto=format&fit=crop&w=600&q=85",
-  "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=600&q=85",
-  "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=600&q=85",
-  "https://images.unsplash.com/photo-1556306535-0f09a537f0a3?auto=format&fit=crop&w=600&q=85",
-  "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=85",
+  "/images/home/look-1.jpg",
+  "/images/home/look-2.jpg",
+  "/images/home/look-3.jpg",
+  "/images/home/look-4.jpg",
+  "/images/home/look-5.jpg",
+  "/images/home/look-6.jpg",
 ];
+
+const CAT_FALLBACK = {
+  ao: "/images/categories/ao-thun.jpg",
+  quan: "/images/categories/quan.jpg",
+  pk: "/images/categories/phu-kien.jpg",
+};
 
 export default async function HomePage() {
   const [categories, featured, newest] = await Promise.all([
@@ -75,16 +81,16 @@ export default async function HomePage() {
         </div>
 
         <div className="relative">
-          <div className="decor-dot -top-4 -right-2 h-12 w-12 bg-[var(--accent)] md:h-16 md:w-16" />
-          <div className="decor-dot -bottom-3 left-8 h-8 w-8 bg-neutral-200" />
-          <div className="hero-mosaic aspect-[5/6] overflow-hidden rounded-sm">
+          <div className="decor-dot -top-4 -right-2 z-10 h-12 w-12 bg-[var(--accent)] md:h-16 md:w-16" />
+          <div className="decor-dot -bottom-3 left-8 z-10 h-8 w-8 bg-neutral-200" />
+          <div className="hero-mosaic aspect-[5/6]">
             {HERO_TILES.map((src, i) => (
-              <div key={src} className="relative overflow-hidden bg-neutral-200">
+              <div key={src}>
                 <Image
                   src={src}
                   alt={`Look VIZFAS ${i + 1}`}
                   fill
-                  priority={i < 2}
+                  priority={i < 3}
                   sizes="(max-width:768px) 33vw, 16vw"
                   className="object-cover"
                 />
@@ -127,14 +133,15 @@ export default async function HomePage() {
 
       {/* Secondary banner */}
       <section className="mx-auto grid max-w-7xl items-center gap-6 px-4 py-14 md:grid-cols-[1fr_1.2fr_1fr] md:px-6 md:py-20">
-        <div className="relative aspect-[3/4] overflow-hidden bg-neutral-200">
+        <div className="relative aspect-[3/4] overflow-hidden rounded-sm bg-neutral-200">
           <Image
-            src="https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=900&q=85"
+            src="/images/home/banner-left.jpg"
             alt="Look trái"
             fill
             sizes="25vw"
             className="object-cover"
           />
+          <div className="decor-dot top-4 -left-2 h-8 w-8 bg-[var(--accent)]" />
         </div>
         <div className="text-center">
           <h2 className="font-[family-name:var(--font-display)] text-3xl font-extrabold tracking-tight md:text-5xl">
@@ -146,14 +153,15 @@ export default async function HomePage() {
             Tối giản không nhàm chán — mỗi outfit là một tuyên ngôn phong cách.
           </p>
         </div>
-        <div className="relative aspect-[3/4] overflow-hidden bg-neutral-200">
+        <div className="relative aspect-[3/4] overflow-hidden rounded-sm bg-neutral-200">
           <Image
-            src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=85"
+            src="/images/home/banner-right.jpg"
             alt="Look phải"
             fill
             sizes="25vw"
             className="object-cover"
           />
+          <div className="decor-dot right-3 bottom-6 h-10 w-10 bg-[var(--accent)]" />
         </div>
       </section>
 
@@ -181,51 +189,85 @@ export default async function HomePage() {
 
         <div className="grid gap-3 md:grid-cols-3 md:grid-rows-2 md:gap-4">
           <Link
-            href={mosaicCats.ao ? `/san-pham?category=${mosaicCats.ao.slug}` : "/san-pham"}
-            className="group relative min-h-[320px] overflow-hidden bg-neutral-200 md:row-span-2"
+            href={
+              mosaicCats.ao
+                ? `/san-pham?category=${mosaicCats.ao.slug}`
+                : "/san-pham"
+            }
+            className="group relative min-h-[320px] overflow-hidden rounded-sm bg-neutral-200 md:row-span-2"
           >
             <Image
-              src={mosaicCats.ao?.image || HERO_TILES[2]}
+              src={
+                mosaicCats.ao?.image?.startsWith("/images/")
+                  ? mosaicCats.ao.image
+                  : CAT_FALLBACK.ao
+              }
               alt={mosaicCats.ao?.name || "Áo thun"}
               fill
               sizes="(max-width:768px) 100vw, 33vw"
               className="object-cover transition duration-500 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-            <p className="absolute bottom-4 left-4 font-[family-name:var(--font-display)] text-xl font-bold text-white">
-              {mosaicCats.ao?.name || "Áo thun"}
-            </p>
-            <span className="absolute right-4 bottom-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-neutral-900 text-white">
-              <ArrowRight className="h-4 w-4" />
-            </span>
+            <div className="absolute right-4 bottom-4 left-4 flex items-end justify-between gap-3">
+              <div>
+                <p className="font-[family-name:var(--font-display)] text-xl font-bold text-white">
+                  {mosaicCats.ao?.name || "Áo Thun"}
+                </p>
+                <p className="mt-1 text-xs text-white/80">Form rộng, dễ layer</p>
+              </div>
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-neutral-900 text-white">
+                <ArrowRight className="h-4 w-4" />
+              </span>
+            </div>
           </Link>
 
           <Link
-            href={mosaicCats.quan ? `/san-pham?category=${mosaicCats.quan.slug}` : "/san-pham"}
-            className="group relative min-h-[200px] overflow-hidden bg-neutral-200 md:col-span-2"
+            href={
+              mosaicCats.quan
+                ? `/san-pham?category=${mosaicCats.quan.slug}`
+                : "/san-pham"
+            }
+            className="group relative min-h-[200px] overflow-hidden rounded-sm bg-neutral-200 md:col-span-2"
           >
             <Image
-              src={mosaicCats.quan?.image || HERO_TILES[4]}
+              src={
+                mosaicCats.quan?.image?.startsWith("/images/")
+                  ? mosaicCats.quan.image
+                  : CAT_FALLBACK.quan
+              }
               alt={mosaicCats.quan?.name || "Quần"}
               fill
               sizes="(max-width:768px) 100vw, 50vw"
               className="object-cover transition duration-500 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
-            <p className="absolute bottom-4 left-4 font-[family-name:var(--font-display)] text-xl font-bold text-white">
-              {mosaicCats.quan?.name || "Quần"}
-            </p>
-            <span className="absolute right-4 bottom-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-neutral-900 text-white">
-              <ArrowRight className="h-4 w-4" />
-            </span>
+            <div className="absolute right-4 bottom-4 left-4 flex items-end justify-between gap-3">
+              <div>
+                <p className="font-[family-name:var(--font-display)] text-xl font-bold text-white">
+                  {mosaicCats.quan?.name || "Quần"}
+                </p>
+                <p className="mt-1 text-xs text-white/80">Cargo &amp; easy fit</p>
+              </div>
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-neutral-900 text-white">
+                <ArrowRight className="h-4 w-4" />
+              </span>
+            </div>
           </Link>
 
           <Link
-            href={mosaicCats.pk ? `/san-pham?category=${mosaicCats.pk.slug}` : "/san-pham"}
-            className="group relative min-h-[200px] overflow-hidden bg-neutral-200"
+            href={
+              mosaicCats.pk
+                ? `/san-pham?category=${mosaicCats.pk.slug}`
+                : "/san-pham"
+            }
+            className="group relative min-h-[200px] overflow-hidden rounded-sm bg-neutral-200"
           >
             <Image
-              src={mosaicCats.pk?.image || HERO_TILES[5]}
+              src={
+                mosaicCats.pk?.image?.startsWith("/images/")
+                  ? mosaicCats.pk.image
+                  : CAT_FALLBACK.pk
+              }
               alt={mosaicCats.pk?.name || "Phụ kiện"}
               fill
               sizes="(max-width:768px) 100vw, 25vw"
@@ -233,11 +275,11 @@ export default async function HomePage() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
             <p className="absolute bottom-4 left-4 font-[family-name:var(--font-display)] text-lg font-bold text-white">
-              {mosaicCats.pk?.name || "Phụ kiện"}
+              {mosaicCats.pk?.name || "Phụ Kiện"}
             </p>
           </Link>
 
-          <div className="flex min-h-[200px] flex-col justify-between border border-black/5 bg-white p-5">
+          <div className="flex min-h-[200px] flex-col justify-between rounded-sm border border-black/5 bg-white p-5">
             <p className="text-sm leading-relaxed text-neutral-600">
               Bộ sưu tập Essentials giúp bạn mặc nhanh, phối dễ và luôn chỉn chu
               trong mọi hoàn cảnh.
@@ -253,17 +295,20 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Category + new products */}
+      {/* Pants / new products */}
       <section className="mx-auto grid max-w-7xl gap-8 px-4 py-10 md:grid-cols-[0.9fr_1.4fr] md:px-6 md:py-14">
-        <div className="relative min-h-[420px] overflow-hidden bg-neutral-200">
+        <div className="relative min-h-[420px] overflow-hidden rounded-sm bg-neutral-200">
           <Image
-            src="https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=1200&q=85"
+            src="/images/home/pants-hero.jpg"
             alt="Đa dạng kiểu dáng"
             fill
             sizes="40vw"
             className="object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+          <p className="pointer-events-none absolute top-8 left-4 font-[family-name:var(--font-display)] text-5xl font-extrabold tracking-widest text-white/20 md:text-7xl">
+            WEEKLY
+          </p>
           <h2 className="absolute right-5 bottom-6 left-5 font-[family-name:var(--font-display)] text-2xl font-extrabold text-white md:text-3xl">
             Đa Dạng Kiểu Dáng Dễ Phối Đồ
           </h2>
@@ -304,7 +349,10 @@ export default async function HomePage() {
             <h2 className="font-[family-name:var(--font-display)] text-2xl font-extrabold md:text-3xl">
               Sản phẩm <span className="text-[var(--accent)]">Nổi Bật</span>
             </h2>
-            <Link href="/san-pham" className="text-sm font-semibold tracking-wide">
+            <Link
+              href="/san-pham"
+              className="text-sm font-semibold tracking-wide"
+            >
               XEM TẤT CẢ
             </Link>
           </div>
@@ -323,29 +371,50 @@ export default async function HomePage() {
       </section>
 
       {/* Lookbook */}
-      <section className="mx-auto max-w-7xl px-4 py-14 md:px-6 md:py-20">
-        <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+      <section className="relative mx-auto max-w-7xl overflow-hidden px-4 py-14 md:px-6 md:py-20">
+        <p className="pointer-events-none absolute top-1/2 right-2 hidden origin-center -translate-y-1/2 rotate-180 font-[family-name:var(--font-display)] text-xs font-bold tracking-[0.35em] text-neutral-400 [writing-mode:vertical-rl] md:block lg:right-0">
+          BỘ SƯU TẬP MỚI
+        </p>
+        <div className="grid items-center gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:pr-10">
           <div className="relative">
-            <p className="pointer-events-none absolute -left-2 top-0 z-10 hidden max-w-[4.5rem] font-[family-name:var(--font-display)] text-4xl font-extrabold leading-[0.95] tracking-tight md:block lg:text-5xl">
-              PHỐI
-              <span className="block text-[var(--accent)]">MÀU</span>
-              TẠO
-              <span className="block text-[var(--accent)]">CHẤT</span>
+            <p className="pointer-events-none absolute -left-1 top-0 z-10 hidden max-w-[5rem] font-[family-name:var(--font-display)] text-4xl leading-[0.92] font-extrabold tracking-tight md:block lg:-left-3 lg:text-5xl">
+              <span className="text-[var(--accent)]">PHỐI</span>
+              <span className="block text-neutral-900">MÀU</span>
+              <span className="block text-[var(--accent)]">TẠO</span>
+              <span className="block text-neutral-900">CHẤT</span>
             </p>
-            <div className="grid grid-cols-3 gap-3 md:pl-24">
-              <div className="relative col-span-2 row-span-2 min-h-[360px] overflow-hidden bg-neutral-200">
-                <Image src={LOOKBOOK[0]} alt="Lookbook chính" fill sizes="40vw" className="object-cover" />
+            <div className="grid grid-cols-3 gap-3 md:pl-24 lg:pl-28">
+              <div className="relative col-span-2 row-span-2 min-h-[360px] overflow-hidden rounded-sm bg-neutral-200">
+                <Image
+                  src={LOOKBOOK[0]}
+                  alt="Lookbook chính"
+                  fill
+                  priority
+                  sizes="40vw"
+                  className="object-cover"
+                />
               </div>
               {LOOKBOOK.slice(1).map((src, i) => (
-                <div key={src} className="relative aspect-square overflow-hidden bg-neutral-200">
-                  <Image src={src} alt={`Lookbook ${i + 2}`} fill sizes="15vw" className="object-cover" />
+                <div
+                  key={src}
+                  className="relative aspect-square overflow-hidden rounded-sm bg-neutral-200"
+                >
+                  <Image
+                    src={src}
+                    alt={`Lookbook ${i + 2}`}
+                    fill
+                    priority={i < 2}
+                    loading="eager"
+                    sizes="15vw"
+                    className="object-cover"
+                  />
                 </div>
               ))}
             </div>
           </div>
           <div>
             <h2 className="font-[family-name:var(--font-display)] text-2xl font-extrabold md:text-3xl">
-              Xu Hướng Màu Sắc: Tự Do Thể Hiện Phong Cách Riêng
+              Xu Hướng Màu Sắc: Tự Tin Thể Hiện Phong Cách Riêng
             </h2>
             <p className="mt-4 text-sm leading-relaxed text-neutral-600">
               Từ kem trung tính đến đen tối giản hay hồng nổi bật — VIZFAS giúp
