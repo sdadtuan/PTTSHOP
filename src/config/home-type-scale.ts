@@ -77,17 +77,17 @@ export const TYPE_SCALE = {
   footerLogo: {
     label: "Footer VIZFAS (+40%)",
     desktopPx: 67,
-    css: "4.2rem", // ~67px
+    css: "clamp(2.5rem, 8vw, 4.2rem)", // ~40–67px
   },
   footerTagline: {
     label: "Footer tagline / column title (+40%)",
     desktopPx: 31,
-    css: "1.9375rem", // ~31px
+    css: "clamp(1.125rem, 3.2vw, 1.9375rem)",
   },
   footerLink: {
     label: "Footer link (+40%)",
     desktopPx: 25,
-    css: "1.5625rem", // ~25px
+    css: "clamp(1rem, 2.6vw, 1.5625rem)",
   },
   verticalLabel: {
     label: "BỘ SƯU TẬP MỚI dọc",

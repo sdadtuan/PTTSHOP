@@ -8,7 +8,10 @@ test.describe("Storefront", () => {
     await expect(page.getByText(/Vẫn Nổi Bật/i).first()).toBeVisible();
     await expect(page.getByTestId("hero-badge")).toBeVisible();
     await expect(page.getByTestId("hero-badge")).toContainText(/2026/i);
-    await expect(page.getByText(/Phong Cách Đơn Giản/i).first()).toBeVisible();
+    await expect(page.getByTestId("banner-phong-cach")).toBeVisible();
+    await expect(
+      page.getByText(/Phong Cách Đơn Giản/i).locator("visible=true").first(),
+    ).toBeVisible();
     await expect(page.getByText(/Khám Phá Các/i).first()).toBeVisible();
     await expect(page.getByText(/Đa Dạng Kiểu Dáng/i).first()).toBeVisible();
     await expect(page.getByRole("tab", { name: /Tất cả/i })).toBeVisible();
@@ -54,6 +57,20 @@ test.describe("Storefront", () => {
   test("listing search and sort controls render", async ({ page }) => {
     await page.goto("/san-pham?q=hoodie");
     await expect(page.getByRole("heading", { name: /Sản phẩm/i })).toBeVisible();
+  });
+
+  test("mobile homepage has no horizontal overflow", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/");
+    await expect(page.getByTestId("banner-phong-cach")).toBeVisible();
+    await expect(page.getByTestId("banner-title-mobile")).toBeVisible();
+    const metrics = await page.evaluate(() => ({
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+      bodyScrollWidth: document.body.scrollWidth,
+    }));
+    expect(metrics.scrollWidth).toBeLessThanOrEqual(390);
+    expect(metrics.bodyScrollWidth).toBeLessThanOrEqual(390);
   });
 });
 

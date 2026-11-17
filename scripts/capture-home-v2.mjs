@@ -10,18 +10,26 @@ const mockDir = path.join(out, "mock-crops");
 fs.mkdirSync(compareDir, { recursive: true });
 
 async function settle(page) {
-  const height = await page.evaluate(() => document.body.scrollHeight);
-  for (let y = 0; y < height; y += 550) {
+  const height = await page.evaluate(() =>
+    Math.min(document.body.scrollHeight || 4000, 8000),
+  );
+  for (let y = 0; y < height; y += 700) {
     await page.evaluate((yy) => window.scrollTo(0, yy), y);
-    await page.waitForTimeout(120);
+    await page.waitForTimeout(80);
   }
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(300);
   await page.evaluate(async () => {
-    const imgs = [...document.querySelectorAll("img")];
-    await Promise.all(
-      imgs.map((img) => img.decode?.().catch(() => undefined) || Promise.resolve()),
-    );
+    const imgs = [...document.querySelectorAll("img")].slice(0, 40);
+    await Promise.race([
+      Promise.all(
+        imgs.map(
+          (img) =>
+            img.decode?.().catch(() => undefined) || Promise.resolve(),
+        ),
+      ),
+      new Promise((r) => setTimeout(r, 2500)),
+    ]);
   });
 }
 
@@ -102,10 +110,10 @@ const desktop = await browser.newPage({
   viewport: { width: 1280, height: 900 },
 });
 await desktop.goto("http://localhost:3000/", {
-  waitUntil: "networkidle",
+  waitUntil: "domcontentloaded",
   timeout: 90000,
 });
-await desktop.waitForTimeout(1500);
+await desktop.waitForTimeout(2000);
 await settle(desktop);
 
 const typeSizes = await desktop.evaluate(() => {
@@ -173,10 +181,10 @@ const mobile = await browser.newPage({
   viewport: { width: 390, height: 844 },
 });
 await mobile.goto("http://localhost:3000/", {
-  waitUntil: "networkidle",
+  waitUntil: "domcontentloaded",
   timeout: 90000,
 });
-await mobile.waitForTimeout(1000);
+await mobile.waitForTimeout(1500);
 await settle(mobile);
 await mobile.screenshot({
   path: path.join(out, "homepage-mobile-full.png"),

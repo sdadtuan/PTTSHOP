@@ -6,8 +6,8 @@ const out =
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
-await page.goto("http://localhost:3000/", { waitUntil: "networkidle" });
-await page.waitForTimeout(700);
+await page.goto("http://localhost:3000/", { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(1200);
 
 const banner = page.locator("section").filter({ has: page.getByTestId("banner-title") });
 const diverse = page.locator("section").filter({ has: page.getByTestId("diverse-title") });

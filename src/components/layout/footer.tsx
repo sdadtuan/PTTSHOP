@@ -103,20 +103,21 @@ export function Footer() {
 
   return (
     <footer className="relative mt-auto overflow-hidden border-t border-black/5 bg-white text-neutral-700">
+      {/* Decor — desktop only large; mobile tucked away so không đè logo */}
       <div
-        className="pointer-events-none absolute top-4 right-[14%] h-44 w-44 rotate-[22deg] rounded-[2rem] bg-[var(--accent)]/90 md:h-52 md:w-52"
+        className="pointer-events-none absolute top-4 right-[-10%] z-0 h-24 w-24 rotate-[22deg] rounded-[1.5rem] bg-[var(--accent)]/70 sm:right-[14%] sm:h-44 sm:w-44 sm:rounded-[2rem] sm:bg-[var(--accent)]/90 md:h-52 md:w-52"
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute top-28 right-[5%] h-32 w-32 -rotate-[14deg] rounded-3xl bg-neutral-300 md:h-40 md:w-40"
+        className="pointer-events-none absolute top-36 right-[-6%] z-0 hidden h-32 w-32 -rotate-[14deg] rounded-3xl bg-neutral-300 sm:block md:top-28 md:right-[5%] md:h-40 md:w-40"
         aria-hidden
       />
 
-      <div className="relative mx-auto max-w-7xl px-4 pt-20 pb-14 md:px-6">
-        <div className="flex flex-col gap-8 border-b border-black/5 pb-14 md:flex-row md:items-start md:justify-between">
-          <div className="max-w-2xl">
-            <div className="flex items-center gap-4">
-              <SparkLogo className="h-12 w-12 text-[var(--accent)] md:h-14 md:w-14" />
+      <div className="relative z-10 mx-auto max-w-7xl overflow-hidden px-4 pt-16 pb-12 md:px-6 md:pt-20 md:pb-14">
+        <div className="flex flex-col gap-8 border-b border-black/5 pb-10 md:flex-row md:items-start md:justify-between md:pb-14">
+          <div className="relative z-10 max-w-2xl">
+            <div className="flex items-center gap-3 md:gap-4">
+              <SparkLogo className="h-10 w-10 shrink-0 text-[var(--accent)] md:h-14 md:w-14" />
               <p
                 className="font-[family-name:var(--font-display)] font-black tracking-[0.12em] text-neutral-900"
                 style={{ fontSize: TYPE_SCALE.footerLogo.css }}

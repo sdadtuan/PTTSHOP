@@ -113,8 +113,8 @@ export default async function HomePage() {
               style={{ fontSize: TYPE_SCALE.heroH1.css }}
               data-testid="hero-h1"
             >
-              <span className="block whitespace-nowrap">{heroTitle}</span>
-              <span className="mt-1 block whitespace-nowrap text-[var(--accent)]">
+              <span className="block md:whitespace-nowrap">{heroTitle}</span>
+              <span className="mt-1 block text-[var(--accent)] md:whitespace-nowrap">
                 {heroSubtitle}
                 <span
                   className="mt-2 block h-2 w-[70%] rounded-full bg-[var(--accent)]"
@@ -172,28 +172,29 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Banner Phong Cách — H1-size title ~65% wide @x20%; desc 2 lines ~50%; imgs ~22% */}
-      <section className="relative overflow-hidden bg-[#f3f3f3]">
-        <div className="relative mx-auto min-h-[min(48vw,520px)] max-w-7xl px-4 py-10 md:px-6 md:py-12">
-          <div className="pointer-events-none absolute top-2 right-[10%] z-0 h-20 w-20 rotate-[20deg] rounded-2xl bg-[var(--accent)] md:h-24 md:w-24" />
-          <div className="pointer-events-none absolute bottom-5 left-[2%] z-0 h-16 w-16 -rotate-[16deg] rounded-2xl bg-[var(--accent)] md:h-20 md:w-20" />
+      {/* Banner Phong Cách — desktop layered; mobile stacked (no overflow) */}
+      <section className="relative overflow-hidden bg-[#f3f3f3]" data-testid="banner-phong-cach">
+        {/* —— Desktop —— */}
+        <div className="relative mx-auto hidden min-h-[min(42vw,480px)] max-w-7xl px-6 py-12 md:block">
+          <div className="pointer-events-none absolute top-2 right-[10%] z-0 h-24 w-24 rotate-[20deg] rounded-2xl bg-[var(--accent)]" />
+          <div className="pointer-events-none absolute bottom-5 left-[2%] z-0 h-20 w-20 -rotate-[16deg] rounded-2xl bg-[var(--accent)]" />
 
-          {/* Left photo ~22% top-left */}
-          <div className="absolute top-4 left-[2%] z-10 w-[22%] max-w-[280px] min-w-[120px] -rotate-[8deg] overflow-hidden rounded-xl bg-neutral-200 shadow-md">
+          {/* Left photo — only touches title edge */}
+          <div className="absolute top-6 left-[1%] z-10 w-[20%] max-w-[260px] -rotate-[8deg] overflow-hidden rounded-xl bg-neutral-200 shadow-md">
             <div className="relative" style={{ aspectRatio: FRAME_ASPECT.bannerLeft }}>
               <Image
                 src={homeImages.dualBanner.left}
                 alt="Look đơn giản — banner trái"
                 fill
-                sizes="22vw"
+                sizes="20vw"
                 className="object-cover"
                 style={{ objectPosition: OBJECT_POSITION.bannerLeft }}
               />
             </div>
           </div>
 
-          {/* Title @ x≈20%, width ~65%; z above images */}
-          <div className="relative z-40 ml-[18%] w-[65%] max-w-[820px] pt-[18%] md:pt-[12%]">
+          {/* Title above images; starts clear of left photo */}
+          <div className="relative z-40 ml-[22%] w-[58%] max-w-[760px] pt-[10%]">
             <h2
               className="font-[family-name:var(--font-display)] leading-[0.95] font-black tracking-tight text-neutral-900"
               style={{ fontSize: TYPE_SCALE.bannerH2.css }}
@@ -212,15 +213,15 @@ export default async function HomePage() {
               </span>
             </h2>
             <p
-              className="mt-4 w-full max-w-[36rem] leading-relaxed text-neutral-600 md:w-[77%] md:min-w-[22rem]"
+              className="mt-4 w-[77%] min-w-[22rem] max-w-[36rem] leading-relaxed text-neutral-600"
               style={{ fontSize: TYPE_SCALE.bannerDesc.css }}
             >
               Những bộ trang phục dành cho phong cách hiện đại, thoải mái và tự tin mỗi ngày.
             </p>
           </div>
 
-          {/* Right photo ~22% ngang Cá Nhân */}
-          <div className="absolute top-[28%] right-[2%] z-20 w-[22%] max-w-[280px] min-w-[130px] rotate-[5deg] md:top-[22%]">
+          {/* Right photo — top ngang Cá Nhân (thấp hơn dòng 1), dưới chữ */}
+          <div className="absolute top-[54%] right-[2%] z-10 w-[20%] max-w-[260px] rotate-[5deg]">
             <div
               className="absolute -right-3 -bottom-3 h-[82%] w-[88%] rotate-2 rounded-2xl bg-[var(--accent)]"
               aria-hidden
@@ -231,13 +232,60 @@ export default async function HomePage() {
                   src={homeImages.dualBanner.right}
                   alt="Look đơn giản — banner phải"
                   fill
-                  sizes="22vw"
+                  sizes="20vw"
                   className="object-cover"
                   style={{ objectPosition: OBJECT_POSITION.bannerRight }}
                 />
               </div>
             </div>
           </div>
+        </div>
+
+        {/* —— Mobile: ảnh tách riêng, chữ wrap —— */}
+        <div className="mx-auto max-w-7xl px-4 py-8 md:hidden">
+          <div className="mb-5 flex items-end justify-center gap-4">
+            <div className="w-[38%] -rotate-[6deg] overflow-hidden rounded-xl bg-neutral-200 shadow-md">
+              <div className="relative" style={{ aspectRatio: FRAME_ASPECT.bannerLeft }}>
+                <Image
+                  src={homeImages.dualBanner.left}
+                  alt="Look đơn giản — banner trái"
+                  fill
+                  sizes="38vw"
+                  className="object-cover"
+                  style={{ objectPosition: OBJECT_POSITION.bannerLeft }}
+                />
+              </div>
+            </div>
+            <div className="relative w-[42%] rotate-[4deg]">
+              <div
+                className="absolute -right-2 -bottom-2 h-[80%] w-[84%] rounded-2xl bg-[var(--accent)]"
+                aria-hidden
+              />
+              <div className="relative overflow-hidden rounded-xl bg-neutral-200 shadow-md">
+                <div className="relative" style={{ aspectRatio: FRAME_ASPECT.bannerRight }}>
+                  <Image
+                    src={homeImages.dualBanner.right}
+                    alt="Look đơn giản — banner phải"
+                    fill
+                    sizes="42vw"
+                    className="object-cover"
+                    style={{ objectPosition: OBJECT_POSITION.bannerRight }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <h2
+            className="font-[family-name:var(--font-display)] text-[clamp(1.75rem,8vw,2.5rem)] leading-[1.05] font-black tracking-tight break-words text-neutral-900"
+            data-testid="banner-title-mobile"
+          >
+            <span className="block">Phong Cách Đơn Giản</span>
+            <span className="mt-1 block text-[var(--accent)]">Mang Đậm Tính</span>
+            <span className="mt-1 block text-[var(--accent)]">Cá Nhân</span>
+          </h2>
+          <p className="mt-3 text-base leading-relaxed break-words text-neutral-600">
+            Những bộ trang phục dành cho phong cách hiện đại, thoải mái và tự tin mỗi ngày.
+          </p>
         </div>
       </section>
 
@@ -382,9 +430,9 @@ export default async function HomePage() {
                   style={{ fontSize: TYPE_SCALE.diverseH2.css }}
                   data-testid="diverse-title"
                 >
-                  <span className="block whitespace-nowrap">Đa Dạng</span>
-                  <span className="block whitespace-nowrap">Kiểu Dáng</span>
-                  <span className="mt-0.5 block whitespace-nowrap text-[var(--accent)]">
+                  <span className="block md:whitespace-nowrap">Đa Dạng</span>
+                  <span className="block md:whitespace-nowrap">Kiểu Dáng</span>
+                  <span className="mt-0.5 block text-[var(--accent)] md:whitespace-nowrap">
                     Dễ Phối Đồ
                   </span>
                 </h2>
@@ -491,7 +539,7 @@ export default async function HomePage() {
 
       {/* PHỐI MÀU — model full height; type clear; lưới spans under CHẤT (not over type) */}
       <section className="relative mx-auto max-w-7xl overflow-hidden px-4 py-14 md:px-6 md:py-20">
-        <div className="relative grid grid-cols-1 gap-x-3 gap-y-4 lg:grid-cols-[minmax(200px,0.26fr)_minmax(220px,0.3fr)_minmax(0,0.44fr)] lg:[grid-template-areas:'model_type_copy'_'model_grid_grid'] lg:pr-10">
+        <div className="relative grid grid-cols-1 gap-x-3 gap-y-4 lg:grid-cols-[minmax(200px,0.26fr)_minmax(220px,0.3fr)_minmax(0,0.44fr)] lg:[grid-template-areas:'model_type_copy'_'model_grid_grid'] lg:pr-14">
           <div className="relative z-10 h-[420px] lg:h-auto lg:[grid-area:model]">
             <Image
               src={homeImages.colorPlay.main}
@@ -544,21 +592,21 @@ export default async function HomePage() {
                 </div>
               ))}
             </div>
+            {/* Vertical label = đúng cao lưới + vạch cam; 1 dòng nowrap */}
+            <div
+              className="pointer-events-none absolute inset-y-0 -right-3 z-20 hidden flex-col items-center md:flex lg:-right-6"
+              data-testid="phoi-vertical-label"
+            >
+              <span className="w-1.5 flex-1 rounded-full bg-[var(--accent)]" aria-hidden />
+              <p
+                className="my-2 rotate-180 whitespace-nowrap font-black tracking-[0.22em] text-[var(--accent)] [writing-mode:vertical-rl]"
+                style={{ fontSize: TYPE_SCALE.verticalLabel.css }}
+              >
+                BỘ SƯU TẬP MỚI
+              </p>
+              <span className="w-1.5 flex-1 rounded-full bg-[var(--accent)]" aria-hidden />
+            </div>
           </div>
-        </div>
-
-        <div
-          className="pointer-events-none absolute top-auto right-1 bottom-0 z-20 hidden h-[42%] flex-col items-center justify-between gap-3 md:flex lg:right-0"
-          data-testid="phoi-vertical-label"
-        >
-          <span className="w-1.5 flex-1 rounded-full bg-[var(--accent)]" aria-hidden />
-          <p
-            className="rotate-180 font-black tracking-[0.28em] text-[var(--accent)] [writing-mode:vertical-rl]"
-            style={{ fontSize: TYPE_SCALE.verticalLabel.css }}
-          >
-            BỘ SƯU TẬP MỚI
-          </p>
-          <span className="w-1.5 flex-1 rounded-full bg-[var(--accent)]" aria-hidden />
         </div>
       </section>
     </div>
