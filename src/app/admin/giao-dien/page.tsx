@@ -64,6 +64,13 @@ export default function AdminGiaoDienPage() {
   const [busy, setBusy] = useState(false);
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
   const [previewKey, setPreviewKey] = useState(0);
+  const [previewHostW, setPreviewHostW] = useState(0);
+  const previewHostRef = useCallback((el: HTMLDivElement | null) => {
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => setPreviewHostW(Math.floor(entry.contentRect.width)));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const [products, setProducts] = useState<ProductOption[]>([]);
   const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [productQuery, setProductQuery] = useState("");
@@ -265,6 +272,8 @@ export default function AdminGiaoDienPage() {
 
   const disabled = busy || loading || !state;
   const pv = PREVIEW[previewMode];
+  // Fit the preview frame to the available width (phones/tablets) — never larger than the design scale.
+  const previewScale = previewHostW ? Math.min(pv.scale, previewHostW / pv.w) : pv.scale;
 
   return (
     <div className="space-y-6" data-testid="admin-giao-dien">
@@ -320,7 +329,7 @@ export default function AdminGiaoDienPage() {
       </AdminCard>
 
       <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
-        <div data-testid="admin-sections">
+        <div className="min-w-0" data-testid="admin-sections">
           <AdminCard>
             <h2 className="mb-1 font-semibold">Khu vực trang chủ</h2>
             <p className="mb-3 text-xs text-[var(--admin-text-muted)]">Theo đúng thứ tự trên trang. Bật/tắt và ↑↓ để sắp xếp.</p>
@@ -386,7 +395,7 @@ export default function AdminGiaoDienPage() {
           </AdminCard>
         </div>
 
-        <div data-testid="admin-edit-form">
+        <div className="min-w-0" data-testid="admin-edit-form">
           <AdminCard>
             <div className="mb-4 space-y-1">
               <h2 className="text-lg font-semibold" data-testid="cms-edit-title">
@@ -447,7 +456,7 @@ export default function AdminGiaoDienPage() {
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={state.heroBanner.imageUrl} alt="" className="h-16 w-14 rounded object-cover" />
                     ) : null}
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-[12rem] flex-1">
                       <p className="font-medium">Ảnh vỡ mảnh (shatter) dùng chung với “Banner trang chủ”</p>
                       <p className="text-xs text-[var(--admin-text-muted)]">
                         Đổi ảnh lớn và tự chia ô tại trang Banner trang chủ. Tiêu đề, mô tả, nút ở đây.
@@ -584,9 +593,10 @@ export default function AdminGiaoDienPage() {
               </a>
             </div>
           </div>
+          <div ref={previewHostRef} className="w-full min-w-0 overflow-hidden">
           <div
             className="mx-auto overflow-hidden rounded-[var(--admin-radius-md)] border border-[var(--admin-border)] bg-neutral-100"
-            style={{ width: pv.w * pv.scale, height: pv.h * pv.scale }}
+            style={{ width: pv.w * previewScale, maxWidth: "100%", height: pv.h * previewScale }}
             data-testid={previewMode === "desktop" ? "admin-preview-desktop" : "admin-preview-mobile"}
           >
             <iframe
@@ -594,8 +604,9 @@ export default function AdminGiaoDienPage() {
               title={`Xem trước trang chủ (${previewMode})`}
               src={`/?cmsPreview=draft&v=${previewKey}`}
               data-testid="cms-preview-frame"
-              style={{ width: pv.w, height: pv.h, transform: `scale(${pv.scale})`, transformOrigin: "top left", border: 0, background: "white" }}
+              style={{ width: pv.w, height: pv.h, transform: `scale(${previewScale})`, transformOrigin: "top left", border: 0, background: "white" }}
             />
+          </div>
           </div>
         </AdminCard>
       </div>

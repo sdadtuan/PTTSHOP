@@ -96,7 +96,7 @@ export default function CheckoutPage() {
         onSubmit={onSubmit}
         className="mt-8 grid gap-10 lg:grid-cols-[1.4fr_0.9fr]"
       >
-        <div className="space-y-5 border border-neutral-100 bg-white p-6">
+        <div className="min-w-0 space-y-5 border border-neutral-100 bg-white p-6">
           <h2 className="font-semibold">Thông tin giao hàng</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Họ tên" name="name" required />
@@ -136,7 +136,7 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        <aside className="h-fit border border-neutral-100 bg-white p-6">
+        <aside className="h-fit min-w-0 border border-neutral-100 bg-white p-6">
           <h2 className="font-semibold">Đơn hàng ({items.length})</h2>
           <ul className="mt-4 space-y-3 text-sm">
             {items.map((i) => (
@@ -159,7 +159,7 @@ export default function CheckoutPage() {
               value={couponCode}
               onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
               placeholder="Mã giảm giá"
-              className="flex-1 rounded border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-neutral-900"
+              className="min-w-0 flex-1 rounded border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-neutral-900"
             />
             <button
               type="button"

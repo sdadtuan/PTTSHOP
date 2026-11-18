@@ -49,7 +49,7 @@ export default function CartPage() {
       </h1>
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[1.5fr_0.9fr]">
-        <ul className="divide-y divide-neutral-100 border border-neutral-100 bg-white">
+        <ul className="min-w-0 divide-y divide-neutral-100 border border-neutral-100 bg-white">
           {items.map((item) => (
             <li key={item.variantId} className="flex gap-4 p-4 md:p-5">
               <div className="relative h-28 w-24 shrink-0 overflow-hidden bg-neutral-100">
@@ -79,13 +79,13 @@ export default function CartPage() {
                   <button
                     type="button"
                     onClick={() => removeItem(item.variantId)}
-                    className="text-neutral-400 hover:text-red-500"
+                    className="-m-2 p-2 text-neutral-400 hover:text-red-500"
                     aria-label="Xóa"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
-                <div className="mt-4 flex items-center justify-between">
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center border border-neutral-200">
                     <button
                       type="button"
@@ -118,7 +118,7 @@ export default function CartPage() {
           ))}
         </ul>
 
-        <aside className="h-fit border border-neutral-100 bg-white p-6">
+        <aside className="h-fit min-w-0 border border-neutral-100 bg-white p-6">
           <h2 className="font-[family-name:var(--font-display)] text-lg font-bold">
             Tóm tắt đơn hàng
           </h2>

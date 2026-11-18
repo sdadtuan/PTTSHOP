@@ -856,7 +856,8 @@ export function ProductEditor({ productId }: { productId?: string }) {
                   <p className="mt-2 text-xs text-[var(--admin-text-muted)]" data-testid="pe-color-image-count">
                     {ownPhotos.length} ảnh riêng của màu này
                   </p>
-                  <table className="mt-2 w-full text-sm">
+                  <div className="mt-2 overflow-x-auto" data-testid="pe-size-table-scroll">
+                  <table className="w-full min-w-[440px] text-sm">
                     <thead>
                       <tr className="text-left text-xs text-[var(--admin-text-muted)]">
                         <th className="py-1 pr-2 font-medium">Size</th>
@@ -932,6 +933,7 @@ export function ProductEditor({ productId }: { productId?: string }) {
                       ))}
                     </tbody>
                   </table>
+                  </div>
                   <button
                     type="button"
                     className="mt-2 text-xs font-medium text-[var(--admin-accent)]"

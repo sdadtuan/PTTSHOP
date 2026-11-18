@@ -235,7 +235,7 @@ export function ProductPurchase({ product, color, onColorChange }: Props) {
           <button
             type="button"
             onClick={() => setShowChart((v) => !v)}
-            className="inline-flex items-center gap-1 text-xs text-neutral-500 underline"
+            className="-my-1.5 inline-flex items-center gap-1 py-1.5 text-xs text-neutral-500 underline"
           >
             <Ruler className="h-3.5 w-3.5" />
             Bảng size
