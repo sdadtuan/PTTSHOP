@@ -19,8 +19,12 @@ import {
 import { HEX_RE } from "@/lib/product-media";
 import { cn } from "@/lib/utils";
 import {
+  AUTO_UNKNOWN_HEX,
+  autoHexForName,
   buildSavePayload,
+  colorNameStatus,
   colorsFromApi,
+  splitColorEntry,
   makeMain,
   mediaFromApi,
   movePhoto,
@@ -93,7 +97,8 @@ function defaultColor(price = 0): EditorColor {
   return {
     key: newKey("c"),
     name: "",
-    hex: "#111111",
+    hex: AUTO_UNKNOWN_HEX,
+    hexManual: false,
     sizes: ["S", "M", "L"].map((size) => ({ key: newKey("s"), size, price, compareAt: null, stock: 0 })),
   };
 }
@@ -209,7 +214,29 @@ export function ProductEditor({ productId }: { productId?: string }) {
       const to = patch.name;
       setMedia((m) => renameColorInMedia(m, from, to));
     }
-    setColors((prev) => prev.map((c) => (c.key === key ? { ...c, ...patch } : c)));
+    setColors((prev) =>
+      prev.map((c) => {
+        if (c.key !== key) return c;
+        const next = { ...c, ...patch };
+        // auto-fill hex from the typed name unless the admin picked one
+        if (patch.name !== undefined && !next.hexManual) {
+          next.hex = autoHexForName(patch.name) ?? AUTO_UNKNOWN_HEX;
+        }
+        if (patch.name !== undefined && patch.name !== c.name) next.keepCombined = false;
+        return next;
+      }),
+    );
+  }
+
+  function splitColor(key: string) {
+    const c = colors.find((x) => x.key === key);
+    if (!c) return;
+    const parts = splitColorEntry(c);
+    if (parts.length < 2) return;
+    setColors((prev) => prev.flatMap((x) => (x.key === key ? parts : [x])));
+    // media tagged with the combined name become shared (visible for every colour)
+    setMedia((m) => m.map((x) => (x.color === c.name ? { ...x, color: "" } : x)));
+    toast(`Đã tách thành ${parts.length} màu riêng — tồn kho được chia đều, hãy kiểm tra lại`);
   }
 
   function patchSize(colorKey: string, sizeKey: string, patch: Partial<EditorColor["sizes"][number]>) {
@@ -250,6 +277,12 @@ export function ProductEditor({ productId }: { productId?: string }) {
     colors.forEach((c, i) => {
       if (!c.name.trim()) local.push(`Màu #${i + 1} chưa có tên`);
       if (!HEX_RE.test(c.hex)) local.push(`Màu ${c.name || i + 1}: mã màu phải dạng #RRGGBB`);
+      const st = colorNameStatus(c.name);
+      if (st.parts.length > 1 && !c.keepCombined) {
+        local.push(`"${c.name}" có ${st.parts.length} màu — bấm "Tách thành ${st.parts.length} màu" hoặc "Giữ là 1 màu phối"`);
+      } else if (c.name.trim() && st.unknown.length && !c.hexManual) {
+        local.push(`Không nhận ra màu "${c.name}" — hãy chọn mã màu bằng bảng màu`);
+      }
       if (!c.sizes.length) local.push(`Màu ${c.name || i + 1} chưa có size`);
       c.sizes.forEach((s) => {
         if (!s.size.trim()) local.push(`Màu ${c.name}: có size trống`);
@@ -723,7 +756,7 @@ export function ProductEditor({ productId }: { productId?: string }) {
                       <input
                         value={c.name}
                         onChange={(e) => patchColor(c.key, { name: e.target.value })}
-                        placeholder="VD: Nâu"
+                        placeholder="VD: Nâu, Xanh rêu, #A0522D"
                         className="w-full rounded border border-[var(--admin-border)] px-2 py-1.5"
                         data-testid="pe-color-name"
                       />
@@ -734,13 +767,13 @@ export function ProductEditor({ productId }: { productId?: string }) {
                         <input
                           type="color"
                           value={HEX_RE.test(c.hex) ? c.hex.toLowerCase() : "#111111"}
-                          onChange={(e) => patchColor(c.key, { hex: e.target.value.toUpperCase() })}
+                          onChange={(e) => patchColor(c.key, { hex: e.target.value.toUpperCase(), hexManual: true })}
                           className="h-9 w-12 cursor-pointer rounded border border-[var(--admin-border)]"
                           aria-label={`Chọn mã màu ${c.name}`}
                         />
                         <input
                           value={c.hex}
-                          onChange={(e) => patchColor(c.key, { hex: e.target.value.trim() })}
+                          onChange={(e) => patchColor(c.key, { hex: e.target.value.trim(), hexManual: true })}
                           className="w-24 rounded border border-[var(--admin-border)] px-2 py-1.5 font-mono text-xs uppercase"
                           data-testid="pe-color-hex"
                           aria-label={`Mã hex ${c.name}`}
@@ -772,6 +805,54 @@ export function ProductEditor({ productId }: { productId?: string }) {
                       Xóa màu
                     </button>
                   </div>
+                  {(() => {
+                    const st = colorNameStatus(c.name);
+                    if (st.parts.length > 1 && !c.keepCombined) {
+                      return (
+                        <div
+                          className="mt-2 flex flex-wrap items-center gap-2 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900"
+                          data-testid="pe-color-split-banner"
+                        >
+                          <span>
+                            Tên này có {st.parts.length} màu:{" "}
+                            {st.parts.map((p) => (
+                              <span key={p} className="mr-1 inline-flex items-center gap-1">
+                                <span
+                                  className="inline-block h-3 w-3 rounded-full ring-1 ring-black/15"
+                                  style={{ background: autoHexForName(p) ?? "#ddd" }}
+                                />
+                                {p}
+                              </span>
+                            ))}
+                          </span>
+                          <button
+                            type="button"
+                            className="rounded bg-[var(--admin-accent)] px-2 py-1 font-medium text-white"
+                            onClick={() => splitColor(c.key)}
+                            data-testid="pe-color-split"
+                          >
+                            Tách thành {st.parts.length} màu riêng
+                          </button>
+                          <button
+                            type="button"
+                            className="rounded border border-amber-400 px-2 py-1"
+                            onClick={() => patchColor(c.key, { keepCombined: true })}
+                            data-testid="pe-color-keep"
+                          >
+                            Giữ là 1 màu phối
+                          </button>
+                        </div>
+                      );
+                    }
+                    if (c.name.trim() && st.unknown.length && !c.hexManual) {
+                      return (
+                        <p className="mt-2 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900" data-testid="pe-color-unknown">
+                          Không nhận ra màu &quot;{st.unknown.join(", ")}&quot; — hãy chọn mã màu bằng bảng màu bên cạnh (đang tạm hiện xám, không phải đen).
+                        </p>
+                      );
+                    }
+                    return null;
+                  })()}
                   <p className="mt-2 text-xs text-[var(--admin-text-muted)]" data-testid="pe-color-image-count">
                     {ownPhotos.length} ảnh riêng của màu này
                   </p>

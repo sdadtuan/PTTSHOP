@@ -1,4 +1,11 @@
 /** Pure state helpers for the admin product editor (unit-tested in Vitest). */
+import {
+  colorNameToHex,
+  LEGACY_DEFAULT_HEX,
+  prettyColorName,
+  resolveSwatch,
+  splitColorNames,
+} from "@/lib/color-names";
 import { isVideoMedia, normalizeHex } from "@/lib/product-media";
 
 export type EditorMedia = {
@@ -21,7 +28,16 @@ export type EditorSize = {
   stock: number;
 };
 
-export type EditorColor = { key: string; name: string; hex: string; sizes: EditorSize[] };
+export type EditorColor = {
+  key: string;
+  name: string;
+  hex: string;
+  sizes: EditorSize[];
+  /** true once the admin picked/typed a hex — name changes stop auto-filling it */
+  hexManual?: boolean;
+  /** admin chose to keep a multi-colour name as ONE two-tone colourway */
+  keepCombined?: boolean;
+};
 
 export type ApiProduct = {
   id: string;
@@ -72,7 +88,19 @@ export function colorsFromApi(p: ApiProduct): EditorColor[] {
   for (const v of p.variants || []) {
     let c = map.get(v.color);
     if (!c) {
-      c = { key: newKey("c"), name: v.color, hex: normalizeHex(v.colorHex), sizes: [] };
+      const stored = v.colorHex ? normalizeHex(v.colorHex, "") : "";
+      const sw = resolveSwatch(v.color, stored || null);
+      const legacy = !stored || (stored === LEGACY_DEFAULT_HEX && sw.hex !== LEGACY_DEFAULT_HEX);
+      const multi = splitColorNames(v.color).length > 1;
+      c = {
+        key: newKey("c"),
+        name: v.color,
+        hex: legacy ? sw.hex || "#CCCCCC" : stored,
+        hexManual: !legacy,
+        // a two-tone name saved with its own hex (e.g. "Đen/Kem" #222222) stays combined
+        keepCombined: multi && !legacy,
+        sizes: [],
+      };
       map.set(v.color, c);
     }
     c.sizes.push({ key: v.id, id: v.id, size: v.size, price: v.price, compareAt: v.compareAt ?? null, stock: v.stock });
@@ -137,4 +165,47 @@ export function buildSavePayload(
       })),
     ),
   };
+}
+
+export const AUTO_UNKNOWN_HEX = "#CCCCCC";
+
+/** Hex to auto-fill for a typed name (first colour for multi names); null if unknown. */
+export function autoHexForName(name: string): string | null {
+  const parts = splitColorNames(name);
+  return colorNameToHex(parts[0] ?? name);
+}
+
+export type ColorNameStatus = { parts: string[]; unknown: string[] };
+export function colorNameStatus(name: string): ColorNameStatus {
+  const parts = splitColorNames(name);
+  return { parts, unknown: parts.filter((p) => !colorNameToHex(p)) };
+}
+
+/**
+ * Split one colour entry whose name holds several colours into separate entries,
+ * each with its own hex and the same sizes. Stock is DIVIDED (never multiplied);
+ * the first colour keeps the existing variant ids.
+ */
+export function splitColorEntry(c: EditorColor): EditorColor[] {
+  const parts = splitColorNames(c.name);
+  if (parts.length < 2) return [c];
+  const n = parts.length;
+  return parts.map((p, pi) => ({
+    key: newKey("c"),
+    name: prettyColorName(p),
+    hex: colorNameToHex(p) ?? AUTO_UNKNOWN_HEX,
+    hexManual: false,
+    sizes: c.sizes.map((s) => {
+      const base = Math.floor(s.stock / n);
+      const extra = pi < s.stock - base * n ? 1 : 0;
+      return {
+        key: pi === 0 ? s.key : newKey("s"),
+        id: pi === 0 ? s.id : undefined,
+        size: s.size,
+        price: s.price,
+        compareAt: s.compareAt,
+        stock: base + extra,
+      };
+    }),
+  }));
 }

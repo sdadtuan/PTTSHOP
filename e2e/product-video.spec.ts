@@ -34,7 +34,8 @@ test.describe("Product video", () => {
     test.skip(testInfo.project.name !== "chromium", "Desktop admin flow once");
 
     await adminLogin(page);
-    await page.goto("/admin/products");
+    // Filter by slug so the row is on page 1 no matter how many products exist.
+    await page.goto("/admin/products?q=ao-hoodie-essential");
     await expect(page.getByRole("heading", { name: /Sản phẩm/i })).toBeVisible();
 
     const manageBtn = page.getByTestId("manage-media-ao-hoodie-essential");

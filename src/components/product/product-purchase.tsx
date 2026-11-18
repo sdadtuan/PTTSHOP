@@ -14,6 +14,7 @@ import {
 import { useSession } from "next-auth/react";
 import { useCart, WISHLIST_GUEST_KEY } from "@/components/cart/cart-context";
 import { discountPercent, formatVnd } from "@/lib/format";
+import { resolveSwatch, swatchBackground } from "@/lib/color-names";
 import { primaryImage } from "@/lib/product-media";
 import { cn } from "@/lib/utils";
 
@@ -59,9 +60,14 @@ export function ProductPurchase({ product, color, onColorChange }: Props) {
   const { status } = useSession();
   const [wishSaved, setWishSaved] = useState(false);
   const colors = useMemo(() => {
-    const map = new Map<string, { name: string; hex: string | null }>();
+    const map = new Map<string, { name: string; hex: string | null; bg: string }>();
     for (const v of product.variants) {
-      if (!map.has(v.color)) map.set(v.color, { name: v.color, hex: v.colorHex });
+      if (!map.has(v.color)) {
+        // Legacy rows saved with the old default #111111 resolve from the name
+        // ("trắng" → white); multi-colour names render as a split dot.
+        const sw = resolveSwatch(v.color, v.colorHex);
+        map.set(v.color, { name: v.color, hex: sw.hex, bg: swatchBackground(sw.stops) });
+      }
     }
     return [...map.values()];
   }, [product.variants]);
@@ -216,7 +222,7 @@ export function ProductPurchase({ product, color, onColorChange }: Props) {
             >
               <span
                 className="block h-full w-full rounded-full ring-1 ring-black/10"
-                style={{ backgroundColor: c.hex || "#ddd" }}
+                style={{ background: c.bg }}
               />
             </button>
           ))}

@@ -4,6 +4,7 @@ import { ShoppingBag } from "lucide-react";
 import { FRAME_ASPECT, OBJECT_POSITION } from "@/config/home-frame-specs";
 import { TYPE_SCALE } from "@/config/home-type-scale";
 import { formatVnd } from "@/lib/format";
+import { resolveSwatch, swatchBackground } from "@/lib/color-names";
 import { primaryImage } from "@/lib/product-media";
 import { cn } from "@/lib/utils";
 
@@ -24,6 +25,7 @@ type ProductCardProps = {
       price: number;
       compareAt: number | null;
       colorHex: string | null;
+      color?: string;
     }[];
   };
   large?: boolean;
@@ -52,8 +54,12 @@ export function ProductCard({
   const colors = [
     ...new Map(
       product.variants
-        .filter((v) => v.colorHex)
-        .map((v) => [v.colorHex, v.colorHex]),
+        .map((v) => resolveSwatch(v.color ?? "", v.colorHex))
+        .filter((sw) => sw.stops.length > 0)
+        .map((sw) => {
+          const bg = swatchBackground(sw.stops);
+          return [bg, bg] as const;
+        }),
     ).values(),
   ].slice(0, 5);
   const aspect =
@@ -101,11 +107,11 @@ export function ProductCard({
         <div className="mt-3 space-y-1.5">
           {colors.length > 0 ? (
             <div className="flex gap-1.5">
-              {colors.map((hex) => (
+              {colors.map((bg) => (
                 <span
-                  key={hex}
+                  key={bg}
                   className="h-3.5 w-3.5 rounded-full border border-black/10"
-                  style={{ backgroundColor: hex || "#ccc" }}
+                  style={{ background: bg }}
                 />
               ))}
             </div>
