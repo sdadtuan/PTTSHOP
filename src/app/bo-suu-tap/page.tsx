@@ -11,7 +11,11 @@ export default async function CollectionsPage() {
         include: {
           product: {
             include: {
-              images: { orderBy: { sortOrder: "asc" }, take: 1 },
+              images: {
+  where: { type: { not: "video" }, isHidden: false },
+  orderBy: { sortOrder: "asc" },
+  take: 1,
+},
             },
           },
         },

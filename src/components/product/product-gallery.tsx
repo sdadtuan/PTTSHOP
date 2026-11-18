@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Pause, Play, Search, Volume2, VolumeX } from "lucide-react";
 import { mediaListKey } from "@/lib/media-list-key";
+import { firstColorPhotoIndex, isVideoMedia, mediaForColor } from "@/lib/product-media";
 import { cn } from "@/lib/utils";
 
 export type GalleryImage = {
@@ -13,69 +14,45 @@ export type GalleryImage = {
   color?: string | null;
   type?: string | null;
   posterUrl?: string | null;
+  isHidden?: boolean | null;
 };
 
 type Props = {
   images: GalleryImage[];
   name: string;
   selectedColor?: string;
+  /** Increments every time the shopper picks a colour (even the same one again). */
+  colorPickNonce?: number;
 };
 
-function isVideo(img: GalleryImage) {
-  if ((img.type || "").toLowerCase() === "video") return true;
-  const u = (img.url || "").toLowerCase();
-  return u.endsWith(".mp4") || u.endsWith(".webm") || u.includes("video/");
-}
+const isVideo = (img: GalleryImage) => isVideoMedia(img);
 
-function prioritizeMedia(list: GalleryImage[]) {
-  const videos = list.filter(isVideo);
-  const photos = list.filter((img) => !isVideo(img));
-  return [...videos, ...photos];
-}
+export function ProductGallery({ images, name, selectedColor, colorPickNonce = 0 }: Props) {
+  const filtered = useMemo(
+    () => mediaForColor(images, selectedColor),
+    [images, selectedColor],
+  );
 
-function dedupe(list: GalleryImage[]) {
-  const seen = new Set<string>();
-  return list.filter((img) => {
-    const key = `${img.type || "image"}:${img.url}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
+  // Selection is remembered per colour: on first load the video (index 0)
+  // stays in the main frame; when the shopper picks another colour the main
+  // frame jumps to that colour's first photo. Derived state — no effect needed.
+  const [sel, setSel] = useState<{ color?: string; nonce: number; index: number; zoom: boolean }>({
+    color: selectedColor,
+    nonce: colorPickNonce,
+    index: 0,
+    zoom: false,
   });
-}
-
-export function ProductGallery({ images, name, selectedColor }: Props) {
-  const filtered = useMemo(() => {
-    if (!selectedColor) return prioritizeMedia(images);
-
-    const colorExact = images.filter((img) => img.color === selectedColor);
-    const colorVideos = colorExact.filter(isVideo);
-    const colorPhotos = colorExact.filter((img) => !isVideo(img));
-
-    const unscoped = images.filter((img) => !img.color);
-    const unscopedVideos = unscoped.filter(isVideo);
-    const unscopedPhotos = unscoped.filter((img) => !isVideo(img));
-
-    // Prefer: video đúng màu → video chung → ảnh đúng màu → ảnh chung → tất cả
-    const preferred = dedupe([
-      ...colorVideos,
-      ...unscopedVideos,
-      ...colorPhotos,
-      ...unscopedPhotos,
-    ]);
-    return preferred.length > 0 ? preferred : prioritizeMedia(images);
-  }, [images, selectedColor]);
-
-  const [active, setActive] = useState(0);
-  const [zoom, setZoom] = useState(false);
+  const sameColor = sel.color === selectedColor && sel.nonce === colorPickNonce;
+  const active = Math.min(
+    sameColor ? sel.index : firstColorPhotoIndex(filtered, selectedColor),
+    Math.max(0, filtered.length - 1),
+  );
+  const zoom = sameColor ? sel.zoom : false;
+  const setZoom = (fn: (v: boolean) => boolean) =>
+    setSel({ color: selectedColor, nonce: colorPickNonce, index: active, zoom: fn(zoom) });
   const [muted, setMuted] = useState(true);
   const [playing, setPlaying] = useState(true);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-
-  useEffect(() => {
-    setActive(0);
-    setZoom(false);
-    setPlaying(true);
-  }, [selectedColor, filtered.length]);
 
   const current = filtered[active] ?? filtered[0];
   const currentIsVideo = current ? isVideo(current) : false;
@@ -99,8 +76,7 @@ export function ProductGallery({ images, name, selectedColor }: Props) {
     } else {
       setPlaying(true);
     }
-    setZoom(false);
-    setActive(i);
+    setSel({ color: selectedColor, nonce: colorPickNonce, index: i, zoom: false });
   }
 
   if (!current) {
@@ -119,20 +95,35 @@ export function ProductGallery({ images, name, selectedColor }: Props) {
           type="button"
           onClick={() => selectThumb(i)}
           className={cn(
-            "relative aspect-square overflow-hidden border bg-neutral-100",
+            "relative aspect-square w-16 shrink-0 overflow-hidden border bg-neutral-100 sm:w-full",
             active === i ? "border-neutral-900" : "border-transparent",
           )}
           aria-label={isVideo(img) ? `Video ${i + 1}` : `Ảnh ${i + 1}`}
           data-testid={isVideo(img) ? "gallery-thumb-video" : "gallery-thumb-image"}
+          data-active={active === i ? "true" : "false"}
+          data-url={img.url}
         >
           {isVideo(img) ? (
             <>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={img.posterUrl || img.url}
-                alt={img.alt || name}
-                className="h-full w-full object-cover"
-              />
+              {img.posterUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={img.posterUrl}
+                  alt={img.alt || name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                // Không có poster: dùng chính khung đầu của video làm thumbnail
+                // (trước đây render <img src=".mp4"> → ảnh vỡ hiện alt text).
+                <video
+                  src={`${img.url}#t=0.1`}
+                  muted
+                  playsInline
+                  preload="metadata"
+                  className="pointer-events-none h-full w-full object-cover"
+                  aria-hidden="true"
+                />
+              )}
               <span className="absolute inset-0 flex items-center justify-center bg-black/25 text-xs font-semibold text-white">
                 ▶
               </span>
@@ -152,13 +143,21 @@ export function ProductGallery({ images, name, selectedColor }: Props) {
   );
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex min-w-0 flex-col gap-3">
       <div className="flex gap-3 md:gap-4">
-        <div className="hidden w-16 shrink-0 flex-col gap-2 sm:flex md:w-20">
+        <div
+          className="hidden max-h-[720px] w-16 shrink-0 flex-col gap-2 overflow-y-auto sm:flex md:w-20"
+          data-testid="gallery-thumbs-desktop"
+        >
           {thumbs}
         </div>
 
-        <div className="relative min-h-[420px] flex-1 overflow-hidden bg-neutral-100 md:aspect-[3/4] md:min-h-0">
+        <div
+          className="relative min-h-[420px] flex-1 overflow-hidden bg-neutral-100 md:aspect-[3/4] md:min-h-0"
+          data-testid="gallery-main"
+          data-current-url={current.url}
+          data-current-type={currentIsVideo ? "video" : "image"}
+        >
           {currentIsVideo ? (
             <>
               <video
@@ -230,7 +229,12 @@ export function ProductGallery({ images, name, selectedColor }: Props) {
         </div>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto sm:hidden">{thumbs}</div>
+      <div
+        className="flex gap-2 overflow-x-auto sm:hidden"
+        data-testid="gallery-thumbs-mobile"
+      >
+        {thumbs}
+      </div>
     </div>
   );
 }

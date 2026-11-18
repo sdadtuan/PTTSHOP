@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useMemo, useState } from "react";
 import { ProductGallery, type GalleryImage } from "@/components/product/product-gallery";
 import { ProductPurchase } from "@/components/product/product-purchase";
+import { isVideoMedia, visibleMedia } from "@/lib/product-media";
 
 type Variant = {
   id: string;
@@ -42,19 +43,24 @@ const TABS = [
 
 export function ProductDetailClient({ product }: Props) {
   const initialColor = product.variants[0]?.color ?? "";
-  const [color, setColor] = useState(initialColor);
+  const [color, setColorState] = useState(initialColor);
+  const [colorPickNonce, setColorPickNonce] = useState(0);
+  const setColor = (c: string) => {
+    setColorState(c);
+    setColorPickNonce((n) => n + 1);
+  };
   const [tab, setTab] = useState<(typeof TABS)[number]["id"]>("details");
 
   const detailImage = useMemo(() => {
-    const photos = product.images.filter(
-      (img) => (img.type || "image") !== "video",
+    const photos = visibleMedia(product.images).filter(
+      (img) => !isVideoMedia(img),
     );
     const byColor = photos.filter((img) => img.color === color);
     const fabric =
       byColor.find((img) => img.url.includes("fabric")) ||
       byColor[byColor.length - 1] ||
       byColor[0];
-    return fabric?.url || photos[0]?.url || product.images[0]?.url;
+    return fabric?.url || photos[0]?.url;
   }, [product.images, color]);
 
   return (
@@ -64,6 +70,7 @@ export function ProductDetailClient({ product }: Props) {
           images={product.images}
           name={product.name}
           selectedColor={color}
+          colorPickNonce={colorPickNonce}
         />
         <ProductPurchase
           product={product}

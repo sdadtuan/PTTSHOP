@@ -14,6 +14,7 @@ import {
 import { useSession } from "next-auth/react";
 import { useCart, WISHLIST_GUEST_KEY } from "@/components/cart/cart-context";
 import { discountPercent, formatVnd } from "@/lib/format";
+import { primaryImage } from "@/lib/product-media";
 import { cn } from "@/lib/utils";
 
 type Variant = {
@@ -35,12 +36,23 @@ type Props = {
     isNew?: boolean;
     rating: number;
     reviewCount: number;
-    images: { url: string; color?: string | null; type?: string | null }[];
+    images: {
+      url: string;
+      color?: string | null;
+      type?: string | null;
+      isHidden?: boolean | null;
+    }[];
     variants: Variant[];
   };
   color: string;
   onColorChange: (color: string) => void;
 };
+
+const SIZE_ORDER = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL", "3XL", "4XL"];
+function sizeRank(size: string) {
+  const i = SIZE_ORDER.indexOf(size.toUpperCase());
+  return i === -1 ? 100 + (Number.parseInt(size, 10) || 0) : i;
+}
 
 export function ProductPurchase({ product, color, onColorChange }: Props) {
   const { addItem } = useCart();
@@ -55,10 +67,15 @@ export function ProductPurchase({ product, color, onColorChange }: Props) {
   }, [product.variants]);
 
   const sizesForColor = useMemo(
-    () => product.variants.filter((v) => v.color === color),
+    () =>
+      product.variants
+        .filter((v) => v.color === color)
+        .sort((a, b) => sizeRank(a.size) - sizeRank(b.size)),
     [product.variants, color],
   );
-  const [size, setSize] = useState(sizesForColor[0]?.size ?? "");
+  const [size, setSize] = useState(
+    sizesForColor.find((v) => v.stock > 0)?.size ?? sizesForColor[0]?.size ?? "",
+  );
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const [showChart, setShowChart] = useState(false);
@@ -71,14 +88,7 @@ export function ProductPurchase({ product, color, onColorChange }: Props) {
     ? discountPercent(selected.price, selected.compareAt)
     : null;
 
-  const imageForCart =
-    product.images.find(
-      (img) =>
-        (img.type || "image") !== "video" && img.color === color,
-    )?.url ||
-    product.images.find((img) => (img.type || "image") !== "video")?.url ||
-    product.images[0]?.url ||
-    "";
+  const imageForCart = primaryImage(product.images, color)?.url || "";
 
   function handleAdd() {
     if (!selected) return;
@@ -185,17 +195,30 @@ export function ProductPurchase({ product, color, onColorChange }: Props) {
               type="button"
               onClick={() => {
                 onColorChange(c.name);
-                const next = product.variants.find((v) => v.color === c.name);
+                const next =
+                  product.variants.find(
+                    (v) => v.color === c.name && v.size === size && v.stock > 0,
+                  ) ??
+                  product.variants.find((v) => v.color === c.name && v.stock > 0) ??
+                  product.variants.find((v) => v.color === c.name);
                 if (next) setSize(next.size);
               }}
               className={cn(
-                "h-9 w-9 rounded-full border-2 transition",
+                "h-9 w-9 rounded-full border-2 p-0.5 transition",
                 color === c.name ? "border-neutral-900" : "border-transparent",
               )}
-              style={{ backgroundColor: c.hex || "#ddd" }}
               aria-label={c.name}
+              aria-pressed={color === c.name}
               title={c.name}
-            />
+              data-testid="pdp-color-dot"
+              data-color={c.name}
+              data-hex={c.hex || ""}
+            >
+              <span
+                className="block h-full w-full rounded-full ring-1 ring-black/10"
+                style={{ backgroundColor: c.hex || "#ddd" }}
+              />
+            </button>
           ))}
         </div>
       </div>
@@ -250,6 +273,10 @@ export function ProductPurchase({ product, color, onColorChange }: Props) {
               type="button"
               disabled={v.stock <= 0}
               onClick={() => setSize(v.size)}
+              data-testid="pdp-size"
+              data-size={v.size}
+              data-stock={v.stock}
+              aria-pressed={size === v.size}
               className={cn(
                 "min-w-12 rounded border px-3 py-2 text-sm font-medium transition",
                 size === v.size
@@ -263,6 +290,14 @@ export function ProductPurchase({ product, color, onColorChange }: Props) {
           ))}
         </div>
       </div>
+
+      <p className="-mt-3 text-xs text-neutral-500" data-testid="pdp-stock">
+        {selected
+          ? selected.stock > 0
+            ? `Còn ${selected.stock} sản phẩm (${selected.color} / ${selected.size})`
+            : `Hết hàng (${selected.color} / ${selected.size})`
+          : "Chưa có biến thể"}
+      </p>
 
       <div className="flex items-center gap-3">
         <div className="flex items-center rounded border border-neutral-200 bg-white">

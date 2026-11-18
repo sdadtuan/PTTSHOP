@@ -50,7 +50,11 @@ export const cartInclude = {
         include: {
           product: {
             include: {
-              images: { orderBy: { sortOrder: "asc" as const }, take: 1 },
+              images: {
+  where: { type: { not: "video" }, isHidden: false },
+  orderBy: { sortOrder: "asc" as const },
+  take: 1,
+},
             },
           },
         },

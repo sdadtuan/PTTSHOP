@@ -4,6 +4,7 @@ import { ShoppingBag } from "lucide-react";
 import { FRAME_ASPECT, OBJECT_POSITION } from "@/config/home-frame-specs";
 import { TYPE_SCALE } from "@/config/home-type-scale";
 import { formatVnd } from "@/lib/format";
+import { primaryImage } from "@/lib/product-media";
 import { cn } from "@/lib/utils";
 
 type FrameKey = keyof typeof FRAME_ASPECT;
@@ -13,7 +14,12 @@ type ProductCardProps = {
     id: string;
     name: string;
     slug: string;
-    images: { url: string; alt: string | null }[];
+    images: {
+      url: string;
+      alt: string | null;
+      type?: string | null;
+      isHidden?: boolean | null;
+    }[];
     variants: {
       price: number;
       compareAt: number | null;
@@ -36,8 +42,9 @@ export function ProductCard({
   frame,
   priority,
 }: ProductCardProps) {
-  const imageUrl = imageOverride || product.images[0]?.url;
-  const imageAlt = product.images[0]?.alt || product.name;
+  const cover = primaryImage(product.images);
+  const imageUrl = imageOverride || cover?.url;
+  const imageAlt = cover?.alt || product.name;
   const prices = product.variants.map((v) => v.price);
   const minPrice = prices.length ? Math.min(...prices) : 0;
   const compareAt = product.variants.find((v) => v.compareAt)?.compareAt;

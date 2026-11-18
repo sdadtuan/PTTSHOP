@@ -2,10 +2,24 @@ import { z } from "zod";
 import { handleApiError, jsonError, jsonOk } from "@/lib/api";
 import { requireAdmin } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
+import { saveProductFull } from "@/lib/product-save";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     await requireAdmin();
+    const id = new URL(req.url).searchParams.get("id");
+    if (id) {
+      const product = await prisma.product.findUnique({
+        where: { id },
+        include: {
+          category: true,
+          variants: { orderBy: { id: "asc" } },
+          images: { orderBy: { sortOrder: "asc" } },
+        },
+      });
+      if (!product) return jsonError("Không tìm thấy sản phẩm", 404);
+      return jsonOk({ product });
+    }
     const products = await prisma.product.findMany({
       include: {
         category: true,
@@ -141,6 +155,30 @@ export async function DELETE(req: Request) {
     const { id } = deleteSchema.parse(await req.json());
     await prisma.product.delete({ where: { id } });
     return jsonOk({ ok: true });
+  } catch (err) {
+    return handleApiError(err);
+  }
+}
+
+/**
+ * Full save from the admin product editor: basic info + every image/video
+ * (array order = display order) + every colour/size variant, in one transaction.
+ * Works for create (no id) and edit (id). Removed variants that already have
+ * orders are kept with stock 0 instead of being deleted.
+ */
+export async function PUT(req: Request) {
+  try {
+    await requireAdmin();
+    const result = await saveProductFull(prisma, await req.json());
+    const product = await prisma.product.findUnique({
+      where: { id: result.productId },
+      include: {
+        category: true,
+        variants: { orderBy: { id: "asc" } },
+        images: { orderBy: { sortOrder: "asc" } },
+      },
+    });
+    return jsonOk({ product, keptVariantIds: result.keptVariantIds });
   } catch (err) {
     return handleApiError(err);
   }
