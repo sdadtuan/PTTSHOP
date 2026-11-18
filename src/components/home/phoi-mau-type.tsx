@@ -5,9 +5,11 @@ import { homeImages } from "@/config/home-images";
 /**
  * Giant stacked PHỐI / MÀU / TẠO / CHẤT — PHỐI đen, còn lại cam + texture.
  */
-export function PhoiMauType() {
+export function PhoiMauType({ fillImage }: { fillImage?: string } = {}) {
+  // fillImage is CMS-validated (isSafeMediaUrl: no quotes/parentheses/whitespace).
+  const fill = fillImage || homeImages.colorPlay.typeFill;
   const textured: CSSProperties = {
-    backgroundImage: `linear-gradient(rgba(249,115,22,0.78), rgba(249,115,22,0.78)), url(${homeImages.colorPlay.typeFill})`,
+    backgroundImage: `linear-gradient(rgba(249,115,22,0.78), rgba(249,115,22,0.78)), url(${fill})`,
     backgroundSize: "cover",
     backgroundPosition: "50% 28%",
     WebkitBackgroundClip: "text",

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MapPin, Mail, Phone, Clock } from "lucide-react";
+import { useSiteBrand } from "@/components/cms/site-brand-context";
 import { TYPE_SCALE } from "@/config/home-type-scale";
 
 function InstagramIcon({ className }: { className?: string }) {
@@ -90,16 +91,19 @@ const columns = [
   },
 ];
 
-const social = [
-  { href: "https://instagram.com", label: "Instagram", Icon: InstagramIcon },
-  { href: "https://facebook.com", label: "Facebook", Icon: FacebookIcon },
-  { href: "https://tiktok.com", label: "TikTok", Icon: TikTokIcon },
-  { href: "https://youtube.com", label: "YouTube", Icon: YoutubeIcon },
-] as const;
-
 export function Footer() {
   const pathname = usePathname();
+  const brand = useSiteBrand();
   if (pathname?.startsWith("/admin")) return null;
+
+  const social = [
+    { href: brand.socialInstagram || "https://instagram.com", label: "Instagram", Icon: InstagramIcon },
+    { href: brand.socialFacebook || "https://facebook.com", label: "Facebook", Icon: FacebookIcon },
+    { href: brand.socialTiktok || "https://tiktok.com", label: "TikTok", Icon: TikTokIcon },
+    { href: brand.socialYoutube || "https://youtube.com", label: "YouTube", Icon: YoutubeIcon },
+  ] as const;
+
+  const brandName = brand.brandName || "VIZFAS";
 
   return (
     <footer className="relative mt-auto overflow-hidden border-t border-black/5 bg-white text-neutral-700">
@@ -117,20 +121,28 @@ export function Footer() {
         <div className="flex flex-col gap-8 border-b border-black/5 pb-10 md:flex-row md:items-start md:justify-between md:pb-14">
           <div className="relative z-10 max-w-2xl">
             <div className="flex items-center gap-3 md:gap-4">
-              <SparkLogo className="h-10 w-10 shrink-0 text-[var(--accent)] md:h-14 md:w-14" />
+              {brand.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={brand.logoUrl}
+                  alt=""
+                  className="h-10 w-10 object-contain md:h-14 md:w-14"
+                />
+              ) : (
+                <SparkLogo className="h-10 w-10 shrink-0 text-[var(--accent)] md:h-14 md:w-14" />
+              )}
               <p
                 className="font-[family-name:var(--font-display)] font-black tracking-[0.12em] text-neutral-900"
                 style={{ fontSize: TYPE_SCALE.footerLogo.css }}
               >
-                VIZFAS
+                {brandName}
               </p>
             </div>
             <p
               className="mt-5 leading-relaxed text-neutral-600"
               style={{ fontSize: TYPE_SCALE.footerTagline.css }}
             >
-              Thời trang hiện đại, tối giản và khác biệt cho thế hệ trẻ tự tin
-              thể hiện phong cách mỗi ngày.
+              {brand.footerTagline}
             </p>
             <div className="mt-6 flex items-center gap-3">
               {social.map(({ href, label, Icon }) => (
@@ -195,23 +207,29 @@ export function Footer() {
             >
               <li className="flex items-start gap-2.5">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" />
-                <span>TP. Hồ Chí Minh, Việt Nam</span>
+                <span>{brand.contactAddress}</span>
               </li>
               <li className="flex items-center gap-2.5">
                 <Mail className="h-4 w-4 shrink-0 text-[var(--accent)]" />
-                <a href="mailto:hello@vizfas.vn" className="hover:text-[var(--accent)]">
-                  hello@vizfas.vn
+                <a
+                  href={`mailto:${brand.contactEmail}`}
+                  className="hover:text-[var(--accent)]"
+                >
+                  {brand.contactEmail}
                 </a>
               </li>
               <li className="flex items-center gap-2.5">
                 <Phone className="h-4 w-4 shrink-0 text-[var(--accent)]" />
-                <a href="tel:0321456789" className="hover:text-[var(--accent)]">
-                  0321 456 789
+                <a
+                  href={`tel:${brand.contactPhone.replace(/\s/g, "")}`}
+                  className="hover:text-[var(--accent)]"
+                >
+                  {brand.contactPhone}
                 </a>
               </li>
               <li className="flex items-start gap-2.5">
                 <Clock className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" />
-                <span>Thứ 2 – Chủ Nhật 8:00 – 22:00</span>
+                <span>{brand.contactHours}</span>
               </li>
             </ul>
           </div>
@@ -220,7 +238,9 @@ export function Footer() {
 
       <div className="border-t border-black/5">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-3 px-4 py-5 text-xs text-neutral-500 md:flex-row md:items-center md:px-6">
-          <p>© {new Date().getFullYear()} VIZFAS. Tất cả quyền được bảo lưu.</p>
+          <p>
+            © {new Date().getFullYear()} {`${brandName}. Tất cả quyền được bảo lưu.`}
+          </p>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <Link href="/chinh-sach/dieu-khoan" className="hover:text-neutral-800">
               Điều khoản sử dụng

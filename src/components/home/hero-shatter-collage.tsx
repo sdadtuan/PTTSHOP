@@ -46,8 +46,8 @@ export function HeroShatterCollage({
 }: Props) {
   const reduced = usePrefersReducedMotion();
   const mobile = useIsMobile();
-  const cols = mobile ? HERO_GRID.mobile.cols : HERO_GRID.desktop.cols;
-  const rows = mobile ? HERO_GRID.mobile.rows : HERO_GRID.desktop.rows;
+  const cols: number = mobile ? HERO_GRID.mobile.cols : HERO_GRID.desktop.cols;
+  const rows: number = mobile ? HERO_GRID.mobile.rows : HERO_GRID.desktop.rows;
   const count = cols * rows;
   const [tick, setTick] = useState(0);
 

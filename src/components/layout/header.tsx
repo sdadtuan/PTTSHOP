@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Heart, Menu, Search, ShoppingBag, User, X } from "lucide-react";
 import { useCart } from "@/components/cart/cart-context";
+import { useSiteBrand } from "@/components/cms/site-brand-context";
 import { cn } from "@/lib/utils";
 
 const primaryNav = [
@@ -25,9 +26,11 @@ const mobileNav = [
 export function Header() {
   const pathname = usePathname();
   const { count } = useCart();
+  const brand = useSiteBrand();
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [q, setQ] = useState("");
+  const brandName = brand.brandName || "VIZFAS";
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -57,9 +60,18 @@ export function Header() {
           className="absolute left-1/2 -translate-x-1/2"
           onClick={() => setOpen(false)}
         >
-          <span className="font-[family-name:var(--font-display)] text-2xl font-extrabold tracking-[0.22em] text-neutral-900 md:text-[1.75rem]">
-            VIZFAS
-          </span>
+          {brand.logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={brand.logoUrl}
+              alt={brandName}
+              className="h-8 w-auto object-contain md:h-10"
+            />
+          ) : (
+            <span className="font-[family-name:var(--font-display)] text-2xl font-extrabold tracking-[0.22em] text-neutral-900 md:text-[1.75rem]">
+              {brandName}
+            </span>
+          )}
         </Link>
 
         <div className="ml-auto flex items-center gap-0.5 sm:gap-1">

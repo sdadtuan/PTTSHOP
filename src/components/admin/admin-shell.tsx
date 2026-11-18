@@ -17,6 +17,7 @@ import {
   X,
   Store,
   ImageIcon,
+  PanelsTopLeft,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
@@ -27,6 +28,11 @@ const nav = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/orders", label: "Đơn hàng", icon: ShoppingBag },
   { href: "/admin/products", label: "Sản phẩm", icon: Package },
+  {
+    href: "/admin/giao-dien",
+    label: "Quản lý giao diện",
+    icon: PanelsTopLeft,
+  },
   { href: "/admin/banners", label: "Banner trang chủ", icon: ImageIcon },
   { href: "/admin/categories", label: "Danh mục", icon: FolderTree },
   { href: "/admin/customers", label: "Khách hàng", icon: Users },

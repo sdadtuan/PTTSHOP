@@ -329,3 +329,49 @@ model Newsletter {
   email     String   @unique
   createdAt DateTime @default(now())
 }
+
+/// Global brand / footer settings — published fields are live; draftJson is WIP.
+model SiteSettings {
+  id              String    @id @default("default")
+  brandName       String    @default("VIZFAS")
+  brandColor      String    @default("#f97316")
+  logoUrl         String?
+  footerTagline   String?
+  contactAddress  String?
+  contactEmail    String?
+  contactPhone    String?
+  contactHours    String?
+  socialInstagram String?
+  socialFacebook  String?
+  socialTiktok    String?
+  socialYoutube   String?
+  /// Draft override blob (JSON). When set, admin edits draft; publish copies into columns.
+  draftJson       String?
+  publishedAt     DateTime?
+  updatedAt       DateTime  @updatedAt
+}
+
+/// Homepage section CMS — draft* for WIP, contentJson/isEnabled for published.
+model HomepageSection {
+  id               String   @id @default(cuid())
+  key              String   @unique
+  label            String
+  sortOrder        Int      @default(0)
+  draftSortOrder   Int      @default(0)
+  isEnabled        Boolean  @default(true)
+  draftEnabled     Boolean  @default(true)
+  contentJson      String   @default("{}")
+  draftContentJson String   @default("{}")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+/// Version history snapshots of published homepage + site settings.
+model HomepageVersion {
+  id           String   @id @default(cuid())
+  version      Int
+  label        String?
+  snapshotJson String
+  createdAt    DateTime @default(now())
+  createdById  String?
+}

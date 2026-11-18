@@ -20,6 +20,7 @@ export type UploadValidationOk = {
   kind: UploadKind;
   ext: string;
   maxBytes: number;
+  detectedMime?: string;
 };
 
 export type UploadValidationErr = {
@@ -55,14 +56,83 @@ function expectedExtForMime(mime: string): string[] {
   }
 }
 
+/** Detect real MIME from magic bytes (defense against spoofed Content-Type). */
+export function detectMimeFromBuffer(buf: Uint8Array): string | null {
+  if (buf.length < 12) return null;
+  // JPEG
+  if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return "image/jpeg";
+  // PNG
+  if (
+    buf[0] === 0x89 &&
+    buf[1] === 0x50 &&
+    buf[2] === 0x4e &&
+    buf[3] === 0x47
+  ) {
+    return "image/png";
+  }
+  // GIF
+  if (buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46) return "image/gif";
+  // WEBP: RIFF....WEBP
+  if (
+    buf[0] === 0x52 &&
+    buf[1] === 0x49 &&
+    buf[2] === 0x46 &&
+    buf[3] === 0x46 &&
+    buf[8] === 0x57 &&
+    buf[9] === 0x45 &&
+    buf[10] === 0x42 &&
+    buf[11] === 0x50
+  ) {
+    return "image/webp";
+  }
+  // MP4 / ISO BMFF — ftyp at offset 4
+  if (buf[4] === 0x66 && buf[5] === 0x74 && buf[6] === 0x79 && buf[7] === 0x70) {
+    return "video/mp4";
+  }
+  // WebM (EBML)
+  if (buf[0] === 0x1a && buf[1] === 0x45 && buf[2] === 0xdf && buf[3] === 0xa3) {
+    return "video/webm";
+  }
+  return null;
+}
+
 export function validateUploadFile(input: {
   mime: string;
   size: number;
   name?: string;
+  buffer?: Uint8Array;
 }): UploadValidationResult {
-  const mime = (input.mime || "").toLowerCase();
+  let mime = (input.mime || "").toLowerCase();
   const name = input.name || "";
   const ext = extFromName(name);
+
+  let detectedMime: string | undefined;
+  if (input.buffer && input.buffer.length > 0) {
+    const detected = detectMimeFromBuffer(input.buffer);
+    if (!detected) {
+      return {
+        ok: false,
+        status: 400,
+        error: "Không nhận diện được định dạng file thật (magic bytes)",
+      };
+    }
+    detectedMime = detected;
+    if (mime && mime !== detected && !(mime === "image/jpg" && detected === "image/jpeg")) {
+      // Prefer real MIME; reject if client claimed a different family
+      const claimedImage = IMAGE_MIME.has(mime);
+      const claimedVideo = VIDEO_MIME.has(mime);
+      const realImage = IMAGE_MIME.has(detected);
+      const realVideo = VIDEO_MIME.has(detected);
+      if ((claimedImage && !realImage) || (claimedVideo && !realVideo) || (claimedImage && realImage && mime !== detected) || (claimedVideo && realVideo && mime !== detected)) {
+        return {
+          ok: false,
+          status: 400,
+          error: "MIME khai báo không khớp nội dung file",
+        };
+      }
+    }
+    mime = detected;
+  }
 
   const isImage = IMAGE_MIME.has(mime);
   const isVideo = VIDEO_MIME.has(mime);
@@ -120,5 +190,5 @@ export function validateUploadFile(input: {
               ? "webm"
               : "jpg");
 
-  return { ok: true, kind, ext: resolvedExt, maxBytes };
+  return { ok: true, kind, ext: resolvedExt, maxBytes, detectedMime };
 }

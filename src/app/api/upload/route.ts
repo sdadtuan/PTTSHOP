@@ -4,7 +4,7 @@ import path from "path";
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth-guards";
 import { handleApiError } from "@/lib/api";
-import { validateUploadFile } from "@/lib/upload-validate";
+import { VIDEO_MAX_BYTES, validateUploadFile } from "@/lib/upload-validate";
 
 export async function POST(req: Request) {
   try {
@@ -16,10 +16,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Thiếu file" }, { status: 400 });
     }
 
+    // Reject oversize files before reading them into memory.
+    if (file.size > VIDEO_MAX_BYTES) {
+      return NextResponse.json({ error: "File quá lớn" }, { status: 400 });
+    }
+    const buf = Buffer.from(await file.arrayBuffer());
     const result = validateUploadFile({
       mime: file.type,
       size: file.size,
       name: file.name,
+      buffer: buf,
     });
     if (!result.ok) {
       return NextResponse.json(
@@ -31,7 +37,6 @@ export async function POST(req: Request) {
     const name = `${Date.now()}-${randomUUID().slice(0, 8)}.${result.ext}`;
     const dir = path.join(process.cwd(), "public", "uploads");
     await mkdir(dir, { recursive: true });
-    const buf = Buffer.from(await file.arrayBuffer());
     await writeFile(path.join(dir, name), buf);
 
     return NextResponse.json({

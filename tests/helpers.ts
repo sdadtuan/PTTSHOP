@@ -28,6 +28,10 @@ export async function cleanDb(prisma: PrismaClient) {
   await prisma.category.deleteMany();
   await prisma.coupon.deleteMany();
   await prisma.flashSale.deleteMany();
+  await prisma.heroBanner.deleteMany();
+  await prisma.homepageVersion.deleteMany();
+  await prisma.homepageSection.deleteMany();
+  await prisma.siteSettings.deleteMany();
   await prisma.verificationToken.deleteMany();
   await prisma.session.deleteMany();
   await prisma.account.deleteMany();

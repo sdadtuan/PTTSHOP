@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import {
   AdminButton,
@@ -87,7 +88,7 @@ export default function AdminBannersPage() {
     const res = await fetch("/api/admin/hero-banners");
     const data = await res.json();
     if (res.ok) setBanners(data.banners || []);
-    else toast({ title: data.error || "Không tải được banner", tone: "danger" });
+    else toast(data.error || "Không tải được banner", "error");
     setLoading(false);
   }, [toast]);
 
@@ -104,12 +105,9 @@ export default function AdminBannersPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Upload thất bại");
       setDraftUrl(data.url);
-      toast({ title: "Đã upload ảnh", tone: "success" });
+      toast("Đã upload ảnh", "success");
     } catch (e) {
-      toast({
-        title: e instanceof Error ? e.message : "Upload lỗi",
-        tone: "danger",
-      });
+      toast(e instanceof Error ? e.message : "Upload lỗi", "error");
     } finally {
       setBusy(false);
     }
@@ -117,7 +115,7 @@ export default function AdminBannersPage() {
 
   async function createBanner() {
     if (!draftUrl) {
-      toast({ title: "Cần upload ảnh trước", tone: "danger" });
+      toast("Cần upload ảnh trước", "error");
       return;
     }
     setBusy(true);
@@ -139,14 +137,11 @@ export default function AdminBannersPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Tạo banner thất bại");
-      toast({ title: "Đã tạo banner", tone: "success" });
+      toast("Đã tạo banner", "success");
       setDraftUrl("");
       await load();
     } catch (e) {
-      toast({
-        title: e instanceof Error ? e.message : "Lỗi",
-        tone: "danger",
-      });
+      toast(e instanceof Error ? e.message : "Lỗi", "error");
     } finally {
       setBusy(false);
     }
@@ -160,7 +155,7 @@ export default function AdminBannersPage() {
     });
     const data = await res.json();
     if (!res.ok) {
-      toast({ title: data.error || "Cập nhật thất bại", tone: "danger" });
+      toast(data.error || "Cập nhật thất bại", "error");
       return;
     }
     await load();
@@ -172,10 +167,10 @@ export default function AdminBannersPage() {
     });
     if (!res.ok) {
       const data = await res.json();
-      toast({ title: data.error || "Xóa thất bại", tone: "danger" });
+      toast(data.error || "Xóa thất bại", "error");
       return;
     }
-    toast({ title: "Đã xóa banner", tone: "success" });
+    toast("Đã xóa banner", "success");
     await load();
   }
 
@@ -185,8 +180,18 @@ export default function AdminBannersPage() {
         title="Banner trang chủ"
         breadcrumbs={[
           { href: "/admin", label: "Admin" },
+          { href: "/admin/giao-dien", label: "Quản lý giao diện" },
           { label: "Banner trang chủ" },
         ]}
+        description="Ảnh lớn cho hiệu ứng vỡ mảnh (shatter) ở Hero. Tiêu đề, mô tả và nút của Hero chỉnh trong Quản lý giao diện → Hero."
+        actions={
+          <Link
+            href="/admin/giao-dien"
+            className="inline-flex h-10 items-center rounded-[var(--admin-radius-md)] border border-[var(--admin-border)] bg-white px-4 text-sm font-medium hover:bg-[var(--admin-surface-muted)]"
+          >
+            ← Quản lý giao diện
+          </Link>
+        }
       />
 
       <AdminCard>
