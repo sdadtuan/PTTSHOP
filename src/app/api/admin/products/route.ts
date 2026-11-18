@@ -2,12 +2,18 @@ import { z } from "zod";
 import { handleApiError, jsonError, jsonOk } from "@/lib/api";
 import { requireAdmin } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
-import { saveProductFull } from "@/lib/product-save";
+import { resolveProductSlug, saveProductFull } from "@/lib/product-save";
 
 export async function GET(req: Request) {
   try {
     await requireAdmin();
-    const id = new URL(req.url).searchParams.get("id");
+    const params = new URL(req.url).searchParams;
+    const id = params.get("id");
+    if (params.get("fields") === "slug") {
+      // lightweight list for the editor's live "slug already used" hint
+      const slugs = await prisma.product.findMany({ select: { id: true, slug: true } });
+      return jsonOk({ slugs });
+    }
     if (id) {
       const product = await prisma.product.findUnique({
         where: { id },
@@ -46,7 +52,7 @@ const variantSchema = z.object({
 
 const createSchema = z.object({
   name: z.string().min(2),
-  slug: z.string().min(2),
+  slug: z.string().max(300).optional(),
   description: z.string().optional(),
   material: z.string().optional(),
   fit: z.string().optional(),
@@ -74,15 +80,12 @@ export async function POST(req: Request) {
   try {
     await requireAdmin();
     const body = createSchema.parse(await req.json());
-    const existing = await prisma.product.findUnique({
-      where: { slug: body.slug },
-    });
-    if (existing) return jsonError("Slug đã tồn tại", 409);
+    const slug = await resolveProductSlug(prisma, { slug: body.slug, name: body.name });
 
     const product = await prisma.product.create({
       data: {
         name: body.name,
-        slug: body.slug,
+        slug,
         description: body.description,
         material: body.material,
         fit: body.fit,

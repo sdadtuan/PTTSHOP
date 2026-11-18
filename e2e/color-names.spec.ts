@@ -128,7 +128,8 @@ test.describe("Colour names → correct swatches", () => {
     const res = await page.goto("/san-pham/ao-hoodie-brown-layer-club");
     test.skip(res?.status() === 404, "product not present");
     const dots = page.getByTestId("pdp-color-dot");
-    await expect(dots).toHaveCount(4);
+    // real product: admin may add more colours later — the 4 split colours must still be there
+    await expect.poll(() => dots.count()).toBeGreaterThanOrEqual(4);
     for (const [name, hex] of EXPECTED) {
       await expect(page.locator(`[data-testid="pdp-color-dot"][data-color="${name}"] span`)).toHaveCSS("background-color", rgb(hex));
     }

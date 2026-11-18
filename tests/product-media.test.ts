@@ -202,8 +202,11 @@ describe("saveProductFull (DB)", () => {
     expect(await prisma.product.count({ where: { slug: "test-media-product" } })).toBe(0);
   });
 
-  it("slug conflict → 409 and nothing changes", async () => {
-    await expect(saveProductFull(prisma, basePayload({ slug: "test-tee" }))).rejects.toMatchObject({ status: 409 });
+  it("slug conflict → saved with a unique suffix, the other product is untouched", async () => {
+    const before = await prisma.product.findUniqueOrThrow({ where: { slug: "test-tee" } });
+    const { productId } = await saveProductFull(prisma, basePayload({ slug: "test-tee" }));
+    expect((await prisma.product.findUniqueOrThrow({ where: { id: productId } })).slug).toBe("test-tee-2");
+    expect((await prisma.product.findUniqueOrThrow({ where: { id: before.id } })).slug).toBe("test-tee");
   });
 });
 

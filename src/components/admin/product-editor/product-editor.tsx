@@ -17,6 +17,7 @@ import {
   useAdminToast,
 } from "@/components/admin/ui";
 import { HEX_RE } from "@/lib/product-media";
+import { slugify, uniqueSlugSync } from "@/lib/slug";
 import { cn } from "@/lib/utils";
 import {
   AUTO_UNKNOWN_HEX,
@@ -74,14 +75,9 @@ const EMPTY_INFO: Info = {
 const IMAGE_ACCEPT = "image/jpeg,image/png,image/webp,image/gif";
 const VIDEO_ACCEPT = "video/mp4,video/webm";
 
-function slugify(s: string) {
-  return s
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/đ/gi, "d")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+/** Slug generated from the product name ("" while the name is empty). */
+function slugFromName(name: string) {
+  return name.trim() ? slugify(name) : "";
 }
 
 async function uploadFile(file: File) {
@@ -119,6 +115,8 @@ export function ProductEditor({ productId }: { productId?: string }) {
   const [media, setMedia] = useState<EditorMedia[]>([]);
   const [colors, setColors] = useState<EditorColor[]>(isNew ? [defaultColor()] : []);
   const [savedSlug, setSavedSlug] = useState("");
+  // other products' slugs → live "already used" hint (server makes the final slug unique too)
+  const [otherSlugs, setOtherSlugs] = useState<Set<string>>(new Set());
 
   function applyProduct(p: LoadedProduct) {
     setInfo({
@@ -134,6 +132,8 @@ export function ProductEditor({ productId }: { productId?: string }) {
       isBestSeller: Boolean(p.isBestSeller),
     });
     setSavedSlug(p.slug || "");
+    // saved products keep their slug: editing the name never rewrites it (clear the field to re-generate)
+    setSlugTouched(Boolean(p.slug));
     setMedia(mediaFromApi(p));
     setColors(colorsFromApi(p));
   }
@@ -144,6 +144,12 @@ export function ProductEditor({ productId }: { productId?: string }) {
       const cRes = await fetch("/api/admin/categories");
       const cData = await cRes.json().catch(() => ({}));
       if (!cancelled && cRes.ok) setCategories(cData.categories || []);
+      void fetch("/api/admin/products?fields=slug")
+        .then((r) => (r.ok ? r.json() : { slugs: [] }))
+        .then((d: { slugs?: { id: string; slug: string }[] }) => {
+          if (!cancelled) setOtherSlugs(new Set((d.slugs || []).filter((x) => x.id !== productId).map((x) => x.slug)));
+        })
+        .catch(() => {});
       if (!productId) return;
       const res = await fetch(`/api/admin/products?id=${encodeURIComponent(productId)}`);
       const data = await res.json().catch(() => ({}));
@@ -298,11 +304,13 @@ export function ProductEditor({ productId }: { productId?: string }) {
       return;
     }
     setSaving(true);
+    // unchanged stored slug is sent as-is; anything else is normalised (server also dedupes)
+    const sentSlug = !isNew && info.slug === savedSlug ? savedSlug : slugify(info.slug || info.name);
     const payload = buildSavePayload(
       {
         id: productId,
         name: info.name.trim(),
-        slug: info.slug.trim() || slugify(info.name),
+        slug: sentSlug,
         description: info.description,
         material: info.material || null,
         fit: info.fit || null,
@@ -332,13 +340,19 @@ export function ProductEditor({ productId }: { productId?: string }) {
       return;
     }
     const kept = (data.keptVariantIds || []).length;
-    toast(kept ? `Đã lưu. ${kept} biến thể đã có đơn được giữ lại (tồn 0).` : "Đã lưu sản phẩm");
+    const finalSlug: string = data.product?.slug || "";
+    const slugNote = finalSlug && finalSlug !== sentSlug ? ` · Slug đã có, dùng: ${finalSlug}` : "";
+    toast((kept ? `Đã lưu. ${kept} biến thể đã có đơn được giữ lại (tồn 0).` : "Đã lưu sản phẩm") + slugNote);
     if (isNew) {
       router.replace(`/admin/products/${data.product.id}`);
       return;
     }
     applyProduct(data.product);
   }
+
+  const slugPreview = !isNew && info.slug === savedSlug ? savedSlug : slugify(info.slug || info.name, { fallback: "" });
+  const slugConflict =
+    slugPreview && otherSlugs.has(slugPreview) ? uniqueSlugSync(slugPreview, otherSlugs) : "";
 
   const crumbs = [
     { href: "/admin", label: "Admin" },
@@ -433,7 +447,7 @@ export function ProductEditor({ productId }: { productId?: string }) {
               data-testid="pe-name"
               onChange={(e) => {
                 const name = e.target.value;
-                setInfo((p) => ({ ...p, name, slug: isNew && !slugTouched ? slugify(name) : p.slug }));
+                setInfo((p) => ({ ...p, name, slug: slugTouched ? p.slug : slugFromName(name) }));
               }}
             />
             <AdminInput
@@ -441,10 +455,26 @@ export function ProductEditor({ productId }: { productId?: string }) {
               label="Slug (URL)"
               value={info.slug}
               data-testid="pe-slug"
-              hint={isNew ? "Tự tạo từ tên, có thể sửa" : "Đổi slug sẽ đổi link sản phẩm"}
+              hint={
+                slugConflict
+                  ? `Slug đã có — khi lưu sẽ dùng: ${slugConflict}`
+                  : isNew
+                    ? "Tự tạo từ tên, có thể sửa"
+                    : "Đổi slug sẽ đổi link sản phẩm"
+              }
               onChange={(e) => {
-                setSlugTouched(true);
-                setInfo((p) => ({ ...p, slug: e.target.value }));
+                // live-sanitise manual input (keep one trailing "-" so words can be typed)
+                const slug = e.target.value ? slugify(e.target.value, { fallback: "", keepTrailingDash: true }) : "";
+                // cleared → back to automatic (from the name); otherwise manual, never overwritten
+                setSlugTouched(slug !== "");
+                setInfo((p) => ({ ...p, slug }));
+              }}
+              onBlur={() => {
+                setInfo((p) => {
+                  if (!isNew && p.slug === savedSlug) return p;
+                  const slug = p.slug ? slugify(p.slug) : slugFromName(p.name);
+                  return slug === p.slug ? p : { ...p, slug };
+                });
               }}
             />
             <AdminSelect

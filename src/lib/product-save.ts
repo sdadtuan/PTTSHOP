@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { PrismaClient } from "@prisma/client";
 import { ApiError } from "@/lib/api";
 import { HEX_RE, isVideoMedia, skuPart } from "@/lib/product-media";
+import { slugify, uniqueSlug } from "@/lib/slug";
 
 /**
  * Full product save (basic info + all media + all colour/size variants) in one
@@ -50,11 +51,8 @@ export const productSaveSchema = z
   .object({
     id: z.string().optional(),
     name: z.string().trim().min(2),
-    slug: z
-      .string()
-      .trim()
-      .min(2)
-      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug chỉ gồm a-z, 0-9 và dấu -"),
+    // Optional: empty/invalid → generated from the name; duplicates get -2, -3… (see resolveProductSlug)
+    slug: z.string().trim().max(300).optional().nullable(),
     description: z.string().optional().nullable(),
     material: z.string().optional().nullable(),
     fit: z.string().optional().nullable(),
@@ -100,6 +98,29 @@ export type ProductSaveResult = {
   keptVariantIds: string[];
 };
 
+type SlugLookup = Pick<PrismaClient, "product">;
+
+/**
+ * Final slug for a create/update:
+ * - edit + slug unchanged → the stored slug is kept as-is (old products are never rewritten)
+ * - otherwise slugify(slug || name), then make it unique (-2, -3…) excluding the product itself
+ */
+export async function resolveProductSlug(
+  db: SlugLookup,
+  { id, slug, name }: { id?: string | null; slug?: string | null; name: string },
+): Promise<string> {
+  const wanted = (slug ?? "").trim();
+  if (id) {
+    const current = await db.product.findUnique({ where: { id }, select: { slug: true } });
+    if (current && wanted && wanted === current.slug) return current.slug;
+  }
+  const base = slugify(wanted || name);
+  return uniqueSlug(base, async (s) => {
+    const owner = await db.product.findUnique({ where: { slug: s }, select: { id: true } });
+    return Boolean(owner && owner.id !== id);
+  });
+}
+
 export async function saveProductFull(
   prisma: PrismaClient,
   raw: unknown,
@@ -114,12 +135,11 @@ export async function saveProductFull(
   ];
 
   return prisma.$transaction(async (tx) => {
-    const slugOwner = await tx.product.findUnique({ where: { slug: input.slug } });
-    if (slugOwner && slugOwner.id !== input.id) throw new ApiError("Slug đã tồn tại", 409);
+    const slug = await resolveProductSlug(tx, { id: input.id, slug: input.slug, name: input.name });
 
     const data = {
       name: input.name,
-      slug: input.slug,
+      slug,
       description: input.description ?? null,
       material: input.material ?? null,
       fit: input.fit ?? null,

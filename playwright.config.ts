@@ -1,8 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3000";
-// Extra device projects only run the responsive specs (full suite stays chromium + mobile).
-const RESPONSIVE = /responsive.*\.spec\.ts/;
+// Extra device projects only run the responsive specs + the admin slug form check
+// (full suite stays chromium + mobile).
+const RESPONSIVE = /(responsive.*|product-slug)\.spec\.ts/;
 
 export default defineConfig({
   testDir: "e2e",
