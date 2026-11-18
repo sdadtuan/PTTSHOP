@@ -155,6 +155,14 @@ model Product {
   isBestSeller Boolean             @default(false)
   rating       Float               @default(0)
   reviewCount  Int                 @default(0)
+  /// PDP "Chi tiết" bullets (JSON string[]). Null = generated from fit.
+  detailBulletsJson    String?
+  /// PDP "Chất liệu" bullets (JSON string[]). Null = generated from material.
+  materialBulletsJson  String?
+  /// PDP size chart {columns, rows, note}. Null = built-in chart.
+  sizeChartJson        String?
+  /// PDP shipping bullets for this product only. Null = site default.
+  shippingOverrideJson String?
   createdAt    DateTime            @default(now())
   updatedAt    DateTime            @updatedAt
 }
@@ -347,6 +355,8 @@ model SiteSettings {
   socialFacebook  String?
   socialTiktok    String?
   socialYoutube   String?
+  /// PDP "Vận chuyển & Đổi trả" bullets (JSON string[]). Null = built-in copy.
+  shippingPolicyJson String?
   /// Draft override blob (JSON). When set, admin edits draft; publish copies into columns.
   draftJson       String?
   publishedAt     DateTime?

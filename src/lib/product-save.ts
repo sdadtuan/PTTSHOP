@@ -2,6 +2,8 @@ import { z } from "zod";
 import type { PrismaClient } from "@prisma/client";
 import { ApiError } from "@/lib/api";
 import { HEX_RE, isVideoMedia, skuPart } from "@/lib/product-media";
+import { sanitizePlainText } from "@/lib/cms/validate";
+import { bulletsToJson, sizeChartToJson, type SizeChart } from "@/lib/pdp-tabs";
 import { slugify, uniqueSlug } from "@/lib/slug";
 
 /**
@@ -56,6 +58,21 @@ export const productSaveSchema = z
     description: z.string().optional().nullable(),
     material: z.string().optional().nullable(),
     fit: z.string().optional().nullable(),
+    origin: z.union([z.string().max(200), z.null()]).optional(),
+    thickness: z.union([z.string().max(200), z.null()]).optional(),
+    detailBullets: z.union([z.array(z.string().max(2000)).max(30), z.null()]).optional(),
+    materialBullets: z.union([z.array(z.string().max(2000)).max(30), z.null()]).optional(),
+    sizeChart: z
+      .union([
+        z.object({
+          columns: z.array(z.string().max(200)).min(1).max(8),
+          rows: z.array(z.array(z.string().max(200))).min(1).max(40),
+          note: z.string().max(500).optional(),
+        }),
+        z.null(),
+      ])
+      .optional(),
+    shippingBullets: z.union([z.array(z.string().max(2000)).max(30), z.null()]).optional(),
     gender: z.enum(["MALE", "FEMALE", "UNISEX"]).default("UNISEX"),
     categoryId: z.string().optional().nullable(),
     isFeatured: z.boolean().optional(),
@@ -137,6 +154,11 @@ export async function saveProductFull(
   return prisma.$transaction(async (tx) => {
     const slug = await resolveProductSlug(tx, { id: input.id, slug: input.slug, name: input.name });
 
+    const plainOrNull = (value: string | null | undefined) => {
+      if (value == null) return null;
+      return sanitizePlainText(value, 80).trim() || null;
+    };
+
     const data = {
       name: input.name,
       slug,
@@ -148,6 +170,14 @@ export async function saveProductFull(
       isFeatured: input.isFeatured ?? false,
       isNew: input.isNew ?? false,
       isBestSeller: input.isBestSeller ?? false,
+      ...(input.origin !== undefined ? { origin: plainOrNull(input.origin) } : {}),
+      ...(input.thickness !== undefined ? { thickness: plainOrNull(input.thickness) } : {}),
+      ...(input.detailBullets !== undefined ? { detailBulletsJson: bulletsToJson(input.detailBullets) } : {}),
+      ...(input.materialBullets !== undefined ? { materialBulletsJson: bulletsToJson(input.materialBullets) } : {}),
+      ...(input.sizeChart !== undefined
+        ? { sizeChartJson: sizeChartToJson(input.sizeChart as SizeChart | null) }
+        : {}),
+      ...(input.shippingBullets !== undefined ? { shippingOverrideJson: bulletsToJson(input.shippingBullets) } : {}),
     };
 
     let productId: string;

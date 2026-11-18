@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { ProductGallery, type GalleryImage } from "@/components/product/product-gallery";
 import { ProductPurchase } from "@/components/product/product-purchase";
 import { isVideoMedia, visibleMedia } from "@/lib/product-media";
+import { resolvePdpTabs, type SizeChart } from "@/lib/pdp-tabs";
 
 type Variant = {
   id: string;
@@ -31,7 +32,12 @@ type Props = {
     reviewCount: number;
     images: GalleryImage[];
     variants: Variant[];
+    detailBulletsJson?: string | null;
+    materialBulletsJson?: string | null;
+    sizeChartJson?: string | null;
+    shippingOverrideJson?: string | null;
   };
+  shippingPolicyJson?: string | null;
 };
 
 const TABS = [
@@ -41,7 +47,7 @@ const TABS = [
   { id: "shipping", label: "Vận chuyển & Đổi trả" },
 ] as const;
 
-export function ProductDetailClient({ product }: Props) {
+export function ProductDetailClient({ product, shippingPolicyJson }: Props) {
   const initialColor = product.variants[0]?.color ?? "";
   const [color, setColorState] = useState(initialColor);
   const [colorPickNonce, setColorPickNonce] = useState(0);
@@ -50,6 +56,10 @@ export function ProductDetailClient({ product }: Props) {
     setColorPickNonce((n) => n + 1);
   };
   const [tab, setTab] = useState<(typeof TABS)[number]["id"]>("details");
+  const resolved = useMemo(
+    () => resolvePdpTabs(product, shippingPolicyJson),
+    [product, shippingPolicyJson],
+  );
 
   const detailImage = useMemo(() => {
     const photos = visibleMedia(product.images).filter(
@@ -76,6 +86,7 @@ export function ProductDetailClient({ product }: Props) {
           product={product}
           color={color}
           onColorChange={setColor}
+          sizeChart={resolved.sizeCustom ? resolved.sizeChart : null}
         />
       </div>
 
@@ -86,6 +97,7 @@ export function ProductDetailClient({ product }: Props) {
               key={t.id}
               type="button"
               onClick={() => setTab(t.id)}
+              data-testid={`pdp-tab-${t.id}`}
               className={
                 tab === t.id
                   ? "border-b-2 border-neutral-900 pb-3 text-sm font-semibold text-neutral-900"
@@ -97,9 +109,21 @@ export function ProductDetailClient({ product }: Props) {
           ))}
         </div>
 
-        <div className="mt-8 grid gap-8 md:grid-cols-2">
-          <div className="text-sm leading-relaxed text-neutral-600">
+        <div className="mt-8 grid min-w-0 gap-8 md:grid-cols-2">
+          <div className="min-w-0 break-words text-sm leading-relaxed text-neutral-600" data-testid="pdp-tab-panel">
             {tab === "details" ? (
+              resolved.detailCustom ? (
+                <>
+                  <p>{product.description}</p>
+                  <ul className="mt-4 list-disc space-y-2 pl-5">
+                    {resolved.detailBullets.map((line, i) => (
+                      <li key={i}>{line}</li>
+                    ))}
+                    <li>Xuất xứ: {resolved.origin}</li>
+                    <li>Độ dày: {resolved.thickness}</li>
+                  </ul>
+                </>
+              ) : (
               <>
                 <p>{product.description}</p>
                 <ul className="mt-4 list-disc space-y-2 pl-5">
@@ -110,16 +134,28 @@ export function ProductDetailClient({ product }: Props) {
                   <li>Độ dày: {product.thickness || "Trung bình"}</li>
                 </ul>
               </>
+              )
             ) : null}
             {tab === "material" ? (
+              resolved.materialCustom ? (
+                <ul className="list-disc space-y-2 pl-5">
+                  {resolved.materialBullets.map((line, i) => (
+                    <li key={i}>{line}</li>
+                  ))}
+                </ul>
+              ) : (
               <ul className="list-disc space-y-2 pl-5">
                 <li>Chất liệu: {product.material || "Cotton / nỉ cao cấp"}</li>
                 <li>Mềm, dày vừa, ít xù sau giặt</li>
                 <li>Thấm hút tốt, mặc cả ngày vẫn thoải mái</li>
                 <li>Bo tay và gấu áo co giãn nhẹ</li>
               </ul>
+              )
             ) : null}
             {tab === "size" ? (
+              resolved.sizeCustom ? (
+                <SizeChartTable chart={resolved.sizeChart} />
+              ) : (
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[320px] border-collapse text-left text-sm">
                   <thead>
@@ -152,17 +188,26 @@ export function ProductDetailClient({ product }: Props) {
                   Form oversize — nếu thích mặc vừa, chọn nhỏ hơn 1 size.
                 </p>
               </div>
+              )
             ) : null}
             {tab === "shipping" ? (
+              resolved.shippingCustom ? (
+                <ul className="list-disc space-y-2 pl-5">
+                  {resolved.shippingBullets.map((line, i) => (
+                    <li key={i}>{line}</li>
+                  ))}
+                </ul>
+              ) : (
               <ul className="list-disc space-y-2 pl-5">
                 <li>Giao hàng toàn quốc 2–5 ngày làm việc</li>
                 <li>Miễn phí đổi size trong 30 ngày nếu còn tem/tag</li>
                 <li>Hoàn tiền theo chính sách cửa hàng khi lỗi sản xuất</li>
                 <li>Thanh toán COD hoặc chuyển khoản an toàn</li>
               </ul>
+              )
             ) : null}
           </div>
-          <div className="relative min-h-[320px] overflow-hidden rounded-sm bg-neutral-100 md:min-h-[380px]">
+          <div className="relative min-h-[320px] min-w-0 overflow-hidden rounded-sm bg-neutral-100 md:min-h-[380px]">
             <Image
               src={detailImage || "/images/ai-hoodies/kem-fabric.jpg"}
               alt={`Chi tiết chất liệu ${color}`}
@@ -175,5 +220,38 @@ export function ProductDetailClient({ product }: Props) {
         </div>
       </section>
     </>
+  );
+}
+
+function SizeChartTable({ chart }: { chart: SizeChart }) {
+  return (
+    <div className="max-w-full overflow-x-auto">
+      <table className="w-full border-collapse text-left text-sm">
+        <thead>
+          <tr className="border-b border-neutral-200 text-neutral-900">
+            {chart.columns.map((col, i) => (
+              <th
+                key={i}
+                className={i === chart.columns.length - 1 ? "py-2 font-semibold" : "py-2 pr-3 font-semibold"}
+              >
+                {col}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {chart.rows.map((row, ri) => (
+            <tr key={ri} className="border-b border-neutral-100">
+              {chart.columns.map((_, ci) => (
+                <td key={ci} className="py-2 pr-3">
+                  {row[ci] ?? ""}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {chart.note ? <p className="mt-3 text-xs text-neutral-500">{chart.note}</p> : null}
+    </div>
   );
 }

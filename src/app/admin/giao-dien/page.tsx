@@ -13,6 +13,7 @@ import {
 } from "@/components/admin/ui";
 import { CmsFieldList, ImageField, setPath } from "@/components/cms/cms-fields";
 import { LAYOUT_SECTIONS, SECTION_FIELDS, SECTION_HELP } from "@/lib/cms/admin-fields";
+import { ShippingPolicyCard } from "@/components/admin/shipping-policy-card";
 import type { HomepageSectionKey, SiteSettingsData } from "@/lib/cms/types";
 
 type CmsSection = {
@@ -327,6 +328,8 @@ export default function AdminGiaoDienPage() {
           ) : null}
         </div>
       </AdminCard>
+
+      <ShippingPolicyCard />
 
       <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
         <div className="min-w-0" data-testid="admin-sections">

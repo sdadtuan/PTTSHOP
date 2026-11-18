@@ -47,6 +47,8 @@ type Props = {
   };
   color: string;
   onColorChange: (color: string) => void;
+  /** Custom chart. Omitted = the original built-in popup. */
+  sizeChart?: { columns: string[]; rows: string[][]; note: string } | null;
 };
 
 const SIZE_ORDER = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL", "3XL", "4XL"];
@@ -55,7 +57,7 @@ function sizeRank(size: string) {
   return i === -1 ? 100 + (Number.parseInt(size, 10) || 0) : i;
 }
 
-export function ProductPurchase({ product, color, onColorChange }: Props) {
+export function ProductPurchase({ product, color, onColorChange, sizeChart }: Props) {
   const { addItem } = useCart();
   const { status } = useSession();
   const [wishSaved, setWishSaved] = useState(false);
@@ -242,6 +244,33 @@ export function ProductPurchase({ product, color, onColorChange }: Props) {
           </button>
         </div>
         {showChart ? (
+          sizeChart ? (
+            <div className="mb-3 max-w-full overflow-x-auto border border-neutral-100 bg-white p-3 text-xs text-neutral-600">
+              <table className="min-w-full text-left">
+                <thead>
+                  <tr className="border-b border-neutral-100">
+                    {sizeChart.columns.map((col, i) => (
+                      <th key={i} className="py-1 pr-4">
+                        {col}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {sizeChart.rows.map((row, ri) => (
+                    <tr key={ri} className="border-b border-neutral-50">
+                      {sizeChart.columns.map((_, ci) => (
+                        <td key={ci} className="py-1 pr-4">
+                          {row[ci] ?? ""}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {sizeChart.note ? <p className="mt-2 text-[11px] text-neutral-500">{sizeChart.note}</p> : null}
+            </div>
+          ) : (
           <div className="mb-3 overflow-x-auto border border-neutral-100 bg-white p-3 text-xs text-neutral-600">
             <table className="min-w-full text-left" id="bang-size">
               <thead>
@@ -271,6 +300,7 @@ export function ProductPurchase({ product, color, onColorChange }: Props) {
               </tbody>
             </table>
           </div>
+          )
         ) : null}
         <div className="flex flex-wrap gap-2">
           {sizesForColor.map((v) => (

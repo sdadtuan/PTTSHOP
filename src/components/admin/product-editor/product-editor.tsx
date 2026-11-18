@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Plus, Star, Trash2, Upload } from "lucide-react";
@@ -36,6 +36,15 @@ import {
   type EditorColor,
   type EditorMedia,
 } from "./editor-state";
+import { PdpTabFields } from "./pdp-tab-fields";
+import {
+  DEFAULT_SHIPPING_BULLETS,
+  defaultDetailBullets,
+  defaultMaterialBullets,
+  draftFromProduct,
+  tabPayload,
+  type PdpTabDraft,
+} from "@/lib/pdp-tabs";
 
 type Category = { id: string; name: string };
 
@@ -56,7 +65,13 @@ type LoadedProduct = ApiProduct & Partial<Omit<Info, "description" | "material" 
   description?: string | null;
   material?: string | null;
   fit?: string | null;
+  origin?: string | null;
+  thickness?: string | null;
   categoryId?: string | null;
+  detailBulletsJson?: string | null;
+  materialBulletsJson?: string | null;
+  sizeChartJson?: string | null;
+  shippingOverrideJson?: string | null;
 };
 
 const EMPTY_INFO: Info = {
@@ -115,10 +130,13 @@ export function ProductEditor({ productId }: { productId?: string }) {
   const [media, setMedia] = useState<EditorMedia[]>([]);
   const [colors, setColors] = useState<EditorColor[]>(isNew ? [defaultColor()] : []);
   const [savedSlug, setSavedSlug] = useState("");
+  const [tabs, setTabs] = useState<PdpTabDraft>(() => draftFromProduct({}, [...DEFAULT_SHIPPING_BULLETS]));
+  const [siteShipping, setSiteShipping] = useState<string[]>([...DEFAULT_SHIPPING_BULLETS]);
+  const siteShippingRef = useRef(siteShipping);
   // other products' slugs → live "already used" hint (server makes the final slug unique too)
   const [otherSlugs, setOtherSlugs] = useState<Set<string>>(new Set());
 
-  function applyProduct(p: LoadedProduct) {
+  function applyProduct(p: LoadedProduct, site = siteShippingRef.current) {
     setInfo({
       name: p.name || "",
       slug: p.slug || "",
@@ -136,14 +154,29 @@ export function ProductEditor({ productId }: { productId?: string }) {
     setSlugTouched(Boolean(p.slug));
     setMedia(mediaFromApi(p));
     setColors(colorsFromApi(p));
+    setTabs(draftFromProduct(p, site));
   }
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const cRes = await fetch("/api/admin/categories");
+      const [cRes, shipRes] = await Promise.all([
+        fetch("/api/admin/categories"),
+        fetch("/api/admin/shipping-policy"),
+      ]);
       const cData = await cRes.json().catch(() => ({}));
       if (!cancelled && cRes.ok) setCategories(cData.categories || []);
+      let site = [...DEFAULT_SHIPPING_BULLETS];
+      if (shipRes.ok) {
+        const ship = await shipRes.json().catch(() => ({}));
+        if (Array.isArray(ship.effective) && ship.effective.length && ship.effective.every((x: unknown) => typeof x === "string")) {
+          site = ship.effective as string[];
+        }
+      }
+      if (cancelled) return;
+      siteShippingRef.current = site;
+      setSiteShipping(site);
+      if (!productId) setTabs((t) => (t.shippingTouched ? t : { ...t, shippingBullets: [...site] }));
       void fetch("/api/admin/products?fields=slug")
         .then((r) => (r.ok ? r.json() : { slugs: [] }))
         .then((d: { slugs?: { id: string; slug: string }[] }) => {
@@ -158,7 +191,7 @@ export function ProductEditor({ productId }: { productId?: string }) {
         setNotFound(true);
         setError(data.error || "Không tìm thấy sản phẩm");
       } else {
-        applyProduct(data.product);
+        applyProduct(data.product, site);
       }
       setLoading(false);
     })();
@@ -319,6 +352,7 @@ export function ProductEditor({ productId }: { productId?: string }) {
         isFeatured: info.isFeatured,
         isNew: info.isNew,
         isBestSeller: info.isBestSeller,
+        ...tabPayload(tabs),
       },
       media,
       colors,
@@ -504,13 +538,21 @@ export function ProductEditor({ productId }: { productId?: string }) {
               name="material"
               label="Chất liệu"
               value={info.material}
-              onChange={(e) => setInfo((p) => ({ ...p, material: e.target.value }))}
+              onChange={(e) => {
+                const material = e.target.value;
+                setInfo((p) => ({ ...p, material }));
+                setTabs((t) => (t.materialTouched ? t : { ...t, materialBullets: defaultMaterialBullets(material) }));
+              }}
             />
             <AdminInput
               name="fit"
               label="Form"
               value={info.fit}
-              onChange={(e) => setInfo((p) => ({ ...p, fit: e.target.value }))}
+              onChange={(e) => {
+                const fit = e.target.value;
+                setInfo((p) => ({ ...p, fit }));
+                setTabs((t) => (t.detailTouched ? t : { ...t, detailBullets: defaultDetailBullets(fit) }));
+              }}
             />
             <div className="flex flex-wrap items-end gap-4 pb-2 text-sm sm:col-span-2">
               {(
@@ -540,6 +582,20 @@ export function ProductEditor({ productId }: { productId?: string }) {
               />
             </div>
           </div>
+        </AdminCard>
+
+        <AdminCard>
+          <h2 className="mb-1 font-semibold">Nội dung tab trang sản phẩm</h2>
+          <p className="mb-4 text-xs text-[var(--admin-text-muted)]">
+            Sản phẩm chưa chỉnh vẫn hiện đúng nội dung hiện tại. Chỉ những phần bạn sửa mới được lưu riêng.
+          </p>
+          <PdpTabFields
+            draft={tabs}
+            fit={info.fit}
+            material={info.material}
+            siteShipping={siteShipping}
+            onChange={setTabs}
+          />
         </AdminCard>
 
         <AdminCard>

@@ -7,7 +7,7 @@ export function AdminTabs({
   value,
   onChange,
 }: {
-  items: { id: string; label: string }[];
+  items: { id: string; label: string; testId?: string }[];
   value: string;
   onChange: (id: string) => void;
 }) {
@@ -25,6 +25,7 @@ export function AdminTabs({
             type="button"
             role="tab"
             aria-selected={active}
+            data-testid={item.testId}
             tabIndex={active ? 0 : -1}
             className={cn(
               "rounded-[var(--admin-radius-sm)] px-3 py-1.5 text-sm font-medium transition",

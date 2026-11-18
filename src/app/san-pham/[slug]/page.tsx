@@ -34,6 +34,11 @@ export default async function ProductDetailPage({ params }: Props) {
 
   if (!product) notFound();
 
+  const shippingRow = await prisma.siteSettings.findUnique({
+    where: { id: "default" },
+    select: { shippingPolicyJson: true },
+  });
+
   const related = await prisma.product.findMany({
     where: {
       id: { not: product.id },
@@ -75,7 +80,7 @@ export default async function ProductDetailPage({ params }: Props) {
         <span className="text-neutral-800">{product.name}</span>
       </nav>
 
-      <ProductDetailClient product={product} />
+      <ProductDetailClient product={product} shippingPolicyJson={shippingRow?.shippingPolicyJson ?? null} />
 
       <ProductReviews productId={product.id} />
 
