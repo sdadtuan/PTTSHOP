@@ -21,7 +21,7 @@ export default function CheckoutPage() {
   if (items.length === 0) {
     return (
       <div className="mx-auto max-w-xl px-4 py-24 text-center">
-        <h1 className="text-2xl font-bold">Chưa có sản phẩm để thanh toán</h1>
+        <h1 className="type-title text-2xl font-bold">Chưa có sản phẩm để thanh toán</h1>
         <Link href="/san-pham" className="mt-6 inline-block text-[var(--accent)]">
           Quay lại mua sắm
         </Link>
@@ -88,7 +88,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 md:px-6 md:py-14">
-      <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold">
+      <h1 className="type-title text-3xl font-bold">
         Thanh toán
       </h1>
 

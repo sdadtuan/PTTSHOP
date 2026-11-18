@@ -84,7 +84,7 @@ export function AdminModal({
         )}
       >
         <div className="flex items-start justify-between gap-3 border-b border-[var(--admin-border)] px-5 py-4">
-          <h2 id={titleId} className="font-[family-name:var(--font-display)] text-lg font-semibold">
+          <h2 id={titleId} className="type-title text-lg font-semibold">
             {title}
           </h2>
           <AdminButton variant="ghost" size="sm" aria-label="Đóng" onClick={onClose}>

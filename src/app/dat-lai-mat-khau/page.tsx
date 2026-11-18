@@ -73,7 +73,7 @@ function ResetForm() {
 export default function ResetPasswordPage() {
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-4 py-16">
-      <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold">
+      <h1 className="type-title text-3xl font-bold">
         Đặt lại mật khẩu
       </h1>
       <Suspense fallback={<p className="mt-8 text-sm text-neutral-500">Đang tải...</p>}>

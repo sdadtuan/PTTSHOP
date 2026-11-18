@@ -87,7 +87,7 @@ export default async function ProductDetailPage({ params }: Props) {
       {related.length > 0 ? (
         <section className="mt-16">
           <div className="mb-6 flex items-end justify-between">
-            <h2 className="font-[family-name:var(--font-display)] text-2xl font-extrabold">
+            <h2 className="type-title text-2xl font-extrabold">
               Có Thể Bạn Cũng Thích
             </h2>
             <Link href="/san-pham" className="text-sm text-[var(--accent)]">

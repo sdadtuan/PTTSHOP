@@ -26,7 +26,7 @@ export default async function CollectionsPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 md:px-6 md:py-14">
-      <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold md:text-4xl">
+      <h1 className="type-title text-3xl font-bold md:text-4xl">
         Bộ sưu tập
       </h1>
       <p className="mt-2 text-sm text-neutral-500">
@@ -56,7 +56,7 @@ export default async function CollectionsPage() {
               <p className="text-xs tracking-[0.25em] uppercase text-white/70">
                 Collection
               </p>
-              <h2 className="mt-2 font-[family-name:var(--font-display)] text-2xl font-bold">
+              <h2 className="mt-2 type-title text-2xl font-bold">
                 {c.name}
               </h2>
               {c.description ? (

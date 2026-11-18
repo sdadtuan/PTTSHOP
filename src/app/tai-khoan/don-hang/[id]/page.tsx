@@ -31,7 +31,7 @@ export default async function OrderDetailPage({ params }: Props) {
       <Link href="/tai-khoan/don-hang" className="text-sm text-neutral-500 hover:text-neutral-800">
         ← Quay lại đơn hàng
       </Link>
-      <h1 className="mt-4 font-[family-name:var(--font-display)] text-3xl font-extrabold">
+      <h1 className="mt-4 type-title text-3xl font-extrabold">
         {order.orderNumber}
       </h1>
       <p className="mt-2 text-sm text-neutral-500">

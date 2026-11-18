@@ -160,7 +160,7 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
             Mới về
           </span>
         ) : null}
-        <h1 className="mt-3 font-[family-name:var(--font-display)] text-3xl font-extrabold tracking-tight text-neutral-900 md:text-4xl">
+        <h1 className="mt-3 type-title text-3xl font-extrabold text-neutral-900 md:text-4xl">
           {product.name}
         </h1>
         <div className="mt-3 flex items-center gap-2 text-sm text-neutral-500">

@@ -153,7 +153,7 @@ export default async function HomePage() {
               </p>
             </div>
             <h1
-              className="w-full font-[family-name:var(--font-display)] leading-[0.95] font-black tracking-tight text-neutral-900"
+              className="type-display w-full text-neutral-900"
               style={{ fontSize: TYPE_SCALE.heroH1.css }}
               data-testid="hero-h1"
             >
@@ -250,7 +250,7 @@ export default async function HomePage() {
           {/* Title above images; starts clear of left photo */}
           <div className="relative z-40 ml-[22%] w-[58%] max-w-[760px] pt-[10%]">
             <h2
-              className="font-[family-name:var(--font-display)] leading-[0.95] font-black tracking-tight text-neutral-900"
+              className="type-display text-neutral-900"
               style={{ fontSize: TYPE_SCALE.bannerH2.css }}
               data-testid="banner-title"
             >
@@ -330,7 +330,7 @@ export default async function HomePage() {
             </div>
           </div>
           <h2
-            className="font-[family-name:var(--font-display)] text-[clamp(1.75rem,8vw,2.5rem)] leading-[1.05] font-black tracking-tight break-words text-neutral-900"
+            className="type-display text-[clamp(1.75rem,8vw,2.5rem)] break-words text-neutral-900"
             data-testid="banner-title-mobile"
           >
             <span className="block">{dual.titleLine1}</span>
@@ -351,7 +351,7 @@ export default async function HomePage() {
           <div>
             <p className="mb-2 text-sm font-bold text-[var(--accent)]">{col.eyebrow}</p>
             <h2
-              className="font-[family-name:var(--font-display)] leading-[1.02] font-black"
+              className="type-display"
               style={{ fontSize: TYPE_SCALE.collectionsH2.css }}
             >
               <span className="block text-neutral-900">{col.titleLine1}</span>
@@ -390,7 +390,7 @@ export default async function HomePage() {
             />
             <div className="absolute top-5 left-5 z-10 max-w-[70%]">
               <p
-                className="font-[family-name:var(--font-display)] font-black text-neutral-900"
+                className="type-display text-neutral-900"
                 style={{ fontSize: TYPE_SCALE.tileLabel.css }}
               >
                 {col.tiles[0]?.title || mosaicCats.ao?.name || "Áo Thun"}
@@ -423,7 +423,7 @@ export default async function HomePage() {
             />
             <div className="absolute top-4 left-4 z-10 max-w-[65%]">
               <p
-                className="font-[family-name:var(--font-display)] font-black text-neutral-900"
+                className="type-display text-neutral-900"
                 style={{ fontSize: TYPE_SCALE.tileLabel.css }}
               >
                 {col.tiles[1]?.title || mosaicCats.quan?.name || "Quần"}
@@ -456,7 +456,7 @@ export default async function HomePage() {
             />
             <div className="absolute top-4 left-4 z-10 max-w-[65%]">
               <p
-                className="font-[family-name:var(--font-display)] font-black text-neutral-900"
+                className="type-display text-neutral-900"
                 style={{ fontSize: TYPE_SCALE.tileLabel.css }}
               >
                 {col.tiles[2]?.title || mosaicCats.pk?.name || "Phụ Kiện"}
@@ -484,7 +484,7 @@ export default async function HomePage() {
             <div className="relative flex min-h-[480px] items-start gap-3 md:min-h-[560px]">
               <div className="relative z-20 min-w-0 flex-1 pr-[36%] md:pr-[38%]">
                 <h2
-                  className="font-[family-name:var(--font-display)] leading-[1.02] font-black tracking-tight text-neutral-900"
+                  className="type-display text-neutral-900"
                   style={{ fontSize: TYPE_SCALE.diverseH2.css }}
                   data-testid="diverse-title"
                 >
@@ -539,7 +539,7 @@ export default async function HomePage() {
         <div className="mx-auto max-w-7xl px-4 md:px-6">
           <div className="mb-10 flex items-end justify-between gap-4">
             <h2
-              className="font-[family-name:var(--font-display)] font-black"
+              className="type-display"
               style={{ fontSize: TYPE_SCALE.featuredH2.css }}
             >
               {featuredCms.titlePrefix}{" "}
@@ -614,7 +614,7 @@ export default async function HomePage() {
               />
             </div>
             <div className="min-w-0 flex-1">
-              <h2 className="font-[family-name:var(--font-display)] text-3xl font-black">
+              <h2 className="type-display text-3xl">
                 {promo.title}
               </h2>
               <p className="mt-2 text-neutral-300">{promo.subtitle}</p>
@@ -650,7 +650,7 @@ export default async function HomePage() {
 
           <div className="relative z-20 min-w-0 pt-1 lg:[grid-area:copy]">
             <h2
-              className="font-[family-name:var(--font-display)] font-black leading-snug text-neutral-900"
+              className="type-display text-neutral-900"
               style={{ fontSize: TYPE_SCALE.phoiXuHuong.css }}
             >
               {colorPlay.headline}
@@ -694,7 +694,7 @@ export default async function HomePage() {
             >
               <span className="w-1.5 flex-1 rounded-full bg-[var(--accent)]" aria-hidden />
               <p
-                className="my-2 rotate-180 whitespace-nowrap font-black tracking-[0.22em] text-[var(--accent)] [writing-mode:vertical-rl]"
+                className="type-vertical my-2 rotate-180 whitespace-nowrap text-[var(--accent)] [writing-mode:vertical-rl]"
                 style={{ fontSize: TYPE_SCALE.verticalLabel.css }}
               >
                 {colorPlay.verticalLabel}

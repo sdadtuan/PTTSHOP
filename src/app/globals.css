@@ -8,6 +8,12 @@
   --surface: #ffffff;
   --muted: #737373;
   --tile-gap: 0.5rem;
+  /* Display and UI share Be Vietnam Pro (set on <html> as --font-body). */
+  --font-display: var(--font-body);
+  --type-display-leading: 1.15;
+  --type-display-tracking: -0.02em;
+  --type-stack-leading: 1.12;
+  --type-stack-tracking: 0em;
 }
 
 @theme inline {
@@ -15,7 +21,7 @@
   --color-foreground: var(--foreground);
   --color-accent: var(--accent);
   --font-sans: var(--font-body);
-  --font-display: var(--font-display);
+  --font-display: var(--font-body);
 }
 
 html {
@@ -26,8 +32,62 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-body), system-ui, sans-serif;
+  font-synthesis: none;
   overflow-x: hidden;
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Shared heading face. Line box stays tall enough for Vietnamese marks
+   (horn, circumflex, dot-below) without clipping or colliding. */
+.type-display {
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-weight: 900;
+  font-synthesis: none;
+  letter-spacing: var(--type-display-tracking);
+  line-height: var(--type-display-leading);
+  overflow: visible;
+}
+
+.type-title {
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-synthesis: none;
+  letter-spacing: var(--type-display-tracking);
+  line-height: 1.25;
+  overflow: visible;
+}
+
+/* Giant stacked words (PHỐI / MÀU / TẠO / CHẤT). Padding keeps dấu inside
+   the background-clip text box; size stays on the element. */
+.type-stack {
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-weight: 900;
+  font-synthesis: none;
+  letter-spacing: var(--type-stack-tracking);
+  line-height: var(--type-stack-leading);
+  overflow: visible;
+  /* Ố's stacked dấu sits ~0.12em above the em box. Keep it inside this box. */
+  padding-top: 0.16em;
+}
+
+.type-stack-line {
+  display: block;
+  line-height: var(--type-stack-leading);
+  padding-top: 0.07em;
+  padding-bottom: 0.08em;
+  padding-inline: 0.03em;
+  overflow: visible;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.type-vertical {
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-weight: 900;
+  font-synthesis: none;
+  letter-spacing: 0.22em;
+  line-height: 1.35;
+  overflow: visible;
+  padding-inline: 0.15em;
 }
 
 ::selection {

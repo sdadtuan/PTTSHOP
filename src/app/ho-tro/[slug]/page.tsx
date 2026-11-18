@@ -53,7 +53,7 @@ export default async function SupportPage({ params }: Props) {
   if (!page) notFound();
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 md:px-6">
-      <h1 className="font-[family-name:var(--font-display)] text-3xl font-extrabold">
+      <h1 className="type-title text-3xl font-extrabold">
         {page.title}
       </h1>
       <ul className="mt-6 list-disc space-y-3 pl-5 text-sm text-neutral-600">

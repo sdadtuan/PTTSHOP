@@ -12,7 +12,7 @@ export default async function OrderSuccessPage({ searchParams }: Props) {
       <p className="text-sm tracking-[0.25em] text-[var(--accent)] uppercase">
         VIZFAS
       </p>
-      <h1 className="mt-3 font-[family-name:var(--font-display)] text-3xl font-bold">
+      <h1 className="mt-3 type-title text-3xl font-bold">
         Đặt hàng thành công
       </h1>
       {order ? (

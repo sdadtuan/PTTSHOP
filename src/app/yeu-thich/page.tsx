@@ -70,7 +70,7 @@ export default function WishlistPage() {
   if (items.length === 0) {
     return (
       <div className="mx-auto max-w-xl px-4 py-24 text-center">
-        <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold">
+        <h1 className="type-title text-3xl font-bold">
           Yêu thích
         </h1>
         <p className="mt-3 text-sm text-neutral-500">
@@ -88,7 +88,7 @@ export default function WishlistPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 md:px-6">
-      <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold">
+      <h1 className="type-title text-3xl font-bold">
         Yêu thích
       </h1>
       {status !== "authenticated" ? (

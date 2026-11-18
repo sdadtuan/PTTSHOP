@@ -59,7 +59,7 @@ export function ProductReviews({ productId }: { productId: string }) {
 
   return (
     <section className="mt-16 border-t border-neutral-100 pt-10">
-      <h2 className="font-[family-name:var(--font-display)] text-xl font-bold">
+      <h2 className="type-title text-xl font-bold">
         Đánh giá ({reviews.length})
       </h2>
 

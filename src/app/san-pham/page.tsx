@@ -89,7 +89,7 @@ export default async function ProductsPage({
     <div className="mx-auto max-w-7xl px-4 py-10 md:px-6 md:py-14">
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold md:text-4xl">
+          <h1 className="type-title text-3xl font-bold md:text-4xl">
             Sản phẩm
           </h1>
           <p className="mt-2 text-sm text-neutral-500">

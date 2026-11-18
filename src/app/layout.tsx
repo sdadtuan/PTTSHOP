@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import type { Metadata } from "next";
-import { Be_Vietnam_Pro, Outfit } from "next/font/google";
+import { Be_Vietnam_Pro } from "next/font/google";
 import { CartProvider } from "@/components/cart/cart-context";
 import { SiteBrandProvider } from "@/components/cms/site-brand-context";
 import { FloatingSocial } from "@/components/layout/floating-social";
@@ -11,16 +11,16 @@ import { getSiteSettingsForRequest } from "@/lib/cms/published";
 import { DEFAULT_SITE_SETTINGS } from "@/lib/cms/types";
 import "./globals.css";
 
-const body = Be_Vietnam_Pro({
+/**
+ * One family for body and display. Outfit has no Vietnamese subset, so dấu
+ * (ố ạ ấ …) fell back to another face and weight 900 was synthesized.
+ * Be Vietnam Pro covers latin + vietnamese at every weight the UI uses.
+ */
+const sans = Be_Vietnam_Pro({
   variable: "--font-body",
   subsets: ["latin", "vietnamese"],
-  weight: ["400", "500", "600", "700"],
-});
-
-const display = Outfit({
-  variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["600", "700", "800"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -46,7 +46,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         } as CSSProperties);
 
   return (
-    <html lang="vi" className={`${body.variable} ${display.variable} h-full`}>
+    <html lang="vi" className={`${sans.variable} h-full`}>
       <body
         className="flex min-h-full flex-col antialiased"
         style={brandStyle}

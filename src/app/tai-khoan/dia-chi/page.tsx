@@ -82,7 +82,7 @@ export default function AddressBookPage() {
         <span>/</span>
         <span className="text-neutral-800">Sổ địa chỉ</span>
       </div>
-      <h1 className="font-[family-name:var(--font-display)] text-3xl font-extrabold">
+      <h1 className="type-title text-3xl font-extrabold">
         Sổ địa chỉ
       </h1>
       {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}

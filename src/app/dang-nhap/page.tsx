@@ -70,7 +70,7 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-4 py-16">
-      <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold">
+      <h1 className="type-title text-3xl font-bold">
         Đăng nhập
       </h1>
       <p className="mt-2 text-sm text-neutral-500">

@@ -38,7 +38,7 @@ export function AdminKpiCard({
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm text-[var(--admin-text-muted)]">{label}</p>
-          <p className="mt-2 font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight text-[var(--admin-text)] md:text-3xl">
+          <p className="mt-2 type-title text-2xl font-bold text-[var(--admin-text)] md:text-3xl">
             {value}
           </p>
           {hint ? (

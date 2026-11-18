@@ -6,7 +6,7 @@ export const metadata = {
 export default function AboutPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 md:px-6">
-      <h1 className="font-[family-name:var(--font-display)] text-3xl font-extrabold md:text-4xl">
+      <h1 className="type-title text-3xl font-extrabold md:text-4xl">
         Về VIZFAS
       </h1>
       <p className="mt-4 text-sm leading-relaxed text-neutral-600 md:text-base">

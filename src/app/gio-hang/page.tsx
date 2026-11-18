@@ -12,7 +12,7 @@ export default function CartPage() {
   if (loading) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-24 text-center">
-        <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold">
+        <h1 className="type-title text-3xl font-bold">
           Giỏ hàng
         </h1>
         <p className="mt-3 text-neutral-500">Đang tải…</p>
@@ -23,7 +23,7 @@ export default function CartPage() {
   if (items.length === 0) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-24 text-center">
-        <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold">
+        <h1 className="type-title text-3xl font-bold">
           Giỏ hàng trống
         </h1>
         <p className="mt-3 text-neutral-500">
@@ -44,7 +44,7 @@ export default function CartPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 md:px-6 md:py-14">
-      <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold">
+      <h1 className="type-title text-3xl font-bold">
         Giỏ hàng
       </h1>
 
@@ -119,7 +119,7 @@ export default function CartPage() {
         </ul>
 
         <aside className="h-fit min-w-0 border border-neutral-100 bg-white p-6">
-          <h2 className="font-[family-name:var(--font-display)] text-lg font-bold">
+          <h2 className="type-title text-lg font-bold">
             Tóm tắt đơn hàng
           </h2>
           <dl className="mt-5 space-y-3 text-sm">

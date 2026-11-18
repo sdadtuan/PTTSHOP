@@ -23,7 +23,7 @@ export function AdminPageHeader({
     >
       <div className="min-w-0 space-y-2">
         {breadcrumbs?.length ? <AdminBreadcrumb items={breadcrumbs} /> : null}
-        <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight text-[var(--admin-text)] md:text-3xl">
+        <h1 className="type-title text-2xl font-bold text-[var(--admin-text)] md:text-3xl">
           {title}
         </h1>
         {description ? (

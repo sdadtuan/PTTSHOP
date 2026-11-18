@@ -26,7 +26,7 @@ export default async function OrdersPage() {
         <span>/</span>
         <span className="text-neutral-800">Đơn hàng</span>
       </div>
-      <h1 className="font-[family-name:var(--font-display)] text-3xl font-extrabold">
+      <h1 className="type-title text-3xl font-extrabold">
         Lịch sử đơn hàng
       </h1>
 

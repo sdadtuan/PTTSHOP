@@ -3,7 +3,7 @@
 export default function ContactPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 md:px-6">
-      <h1 className="font-[family-name:var(--font-display)] text-3xl font-extrabold md:text-4xl">
+      <h1 className="type-title text-3xl font-extrabold md:text-4xl">
         Liên hệ
       </h1>
       <p className="mt-3 text-sm text-neutral-600">

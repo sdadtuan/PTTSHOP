@@ -23,7 +23,7 @@ export default async function AccountPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 md:px-6">
-      <h1 className="font-[family-name:var(--font-display)] text-3xl font-extrabold">
+      <h1 className="type-title text-3xl font-extrabold">
         Tài khoản
       </h1>
       <p className="mt-2 text-sm text-neutral-500">

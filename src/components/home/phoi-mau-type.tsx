@@ -19,19 +19,19 @@ export function PhoiMauType({ fillImage }: { fillImage?: string } = {}) {
 
   return (
     <div
-      className="pointer-events-none font-[family-name:var(--font-display)] leading-[0.84] font-black tracking-tight select-none"
+      className="type-stack pointer-events-none select-none"
       style={{ fontSize: TYPE_SCALE.phoiType.css }}
       aria-hidden
       data-testid="phoi-mau-type"
     >
-      <span className="block text-neutral-900">PHỐI</span>
-      <span className="mt-0.5 block" style={textured}>
+      <span className="type-stack-line text-neutral-900">PHỐI</span>
+      <span className="type-stack-line" style={textured}>
         MÀU
       </span>
-      <span className="mt-0.5 block" style={textured}>
+      <span className="type-stack-line" style={textured}>
         TẠO
       </span>
-      <span className="mt-0.5 block" style={textured}>
+      <span className="type-stack-line" style={textured}>
         CHẤT
       </span>
     </div>
