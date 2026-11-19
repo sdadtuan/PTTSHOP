@@ -48,7 +48,8 @@ export function DemoStyleTabs({ products }: { products: StyleTabProduct[] }) {
     const list = !active?.slug
       ? products
       : products.filter((p) => p.category?.slug === active.slug);
-    return list.slice(0, 6);
+    // One compact row (~5) on desktop; tabs + cart still work
+    return list.slice(0, 5);
   }, [products, tab]);
 
   return (

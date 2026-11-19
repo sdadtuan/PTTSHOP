@@ -94,7 +94,7 @@ export default async function DemoV2HomePage() {
     );
   }
 
-  const pool = padProducts(selectedFeatured, 6, catalog);
+  const pool = padProducts(selectedFeatured, 5, catalog);
 
   return (
     <>

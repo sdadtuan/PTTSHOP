@@ -68,11 +68,17 @@ describe("demo-v2 isolation", () => {
       expect(read(f).length).toBeGreaterThan(100);
     }
     expect(read("src/components/demo-v2/demo-style-tabs.tsx")).toContain("addItem");
-    expect(read("src/components/demo-v2/demo-phoi-mau.tsx")).toContain(
-      "demo-v2-phoi-vertical-label",
+    const phoi = read("src/components/demo-v2/demo-phoi-mau.tsx");
+    expect(phoi).toContain("demo-v2-phoi-vertical-label");
+    expect(phoi).toContain("demo-v2-phoi-intro");
+    expect(phoi).toContain("Xem Gợi Ý Phối Đồ");
+    // Single merged section — not two sibling <section> blocks
+    expect((phoi.match(/<section/g) || []).length).toBe(1);
+    expect(read("src/components/demo-v2/demo-featured.tsx")).not.toContain(
+      "featured-glance",
     );
-    expect(read("src/components/demo-v2/demo-phoi-mau.tsx")).toContain(
-      "demo-v2-phoi-intro",
+    expect(read("src/components/demo-v2/demo-style-tabs.tsx")).toContain(
+      "slice(0, 5)",
     );
   });
 

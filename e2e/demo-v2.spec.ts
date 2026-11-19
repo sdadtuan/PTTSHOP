@@ -15,8 +15,12 @@ test.describe("Demo V2 storefront", () => {
     await expect(page.getByRole("tab", { name: /Tất cả/i })).toBeVisible();
     await expect(page.getByTestId("demo-v2-featured")).toBeVisible();
     await expect(page.getByTestId("demo-v2-phoi-mau")).toBeVisible();
-    await expect(page.getByTestId("demo-v2-color-play")).toBeVisible();
+    await expect(page.getByTestId("demo-v2-phoi-mau")).toHaveCount(1);
+    await expect(page.getByTestId("demo-v2-phoi-cta")).toBeVisible();
     await expect(page.getByTestId("demo-v2-phoi-intro")).toBeVisible();
+    await expect(page.getByTestId("demo-v2-color-play")).toBeVisible();
+    await expect(page.getByTestId("demo-v2-phoi-vertical-label")).toBeVisible();
+    await expect(page.getByTestId("demo-v2-featured-glance")).toHaveCount(0);
     await expect(page.getByTestId("demo-v2-footer")).toBeVisible();
     await expect(page.getByTestId("floating-social")).toBeVisible();
     await expect(page.getByTestId("demo-v2-nav-danh-gia")).toHaveText("ĐÁNH GIÁ");
