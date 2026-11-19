@@ -2,8 +2,10 @@
 
 import { MessageCircle, Phone } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
-const items = [
+/** Shared contact destinations — Version A + demo-v2 reuse the same links. */
+export const FLOATING_SOCIAL_ITEMS = [
   {
     href: "https://facebook.com",
     label: "Facebook",
@@ -32,25 +34,40 @@ const items = [
     className: "bg-[var(--accent)] text-white",
     icon: <Phone className="h-4 w-4" />,
   },
-];
+] as const;
 
 export function FloatingSocial() {
   const pathname = usePathname();
-  if (pathname?.startsWith("/admin") || pathname?.startsWith("/demo-v2")) return null;
+  if (pathname?.startsWith("/admin")) return null;
+
+  const isDemoV2 = pathname?.startsWith("/demo-v2");
 
   return (
     <div
-      className="pointer-events-none fixed top-1/2 right-3 z-40 hidden -translate-y-1/2 flex-col gap-2 md:right-4 lg:flex"
+      data-testid="floating-social"
+      data-demo-v2={isDemoV2 ? "true" : "false"}
+      className={cn(
+        "pointer-events-none fixed z-40 flex-col gap-2",
+        // Version A: desktop-only stack (unchanged breakpoint)
+        !isDemoV2 &&
+          "top-1/2 right-3 hidden -translate-y-1/2 md:right-4 lg:flex",
+        // Version B: fixed right on desktop + mobile; scoped via .dv2-float
+        isDemoV2 && "dv2-float flex",
+      )}
       aria-label="Liên hệ nhanh"
     >
-      {items.map((item) => (
+      {FLOATING_SOCIAL_ITEMS.map((item) => (
         <a
           key={item.label}
           href={item.href}
           target={item.href.startsWith("tel:") ? undefined : "_blank"}
           rel={item.href.startsWith("tel:") ? undefined : "noopener noreferrer"}
           aria-label={item.label}
-          className={`pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full shadow-md transition hover:scale-105 ${item.className}`}
+          className={cn(
+            "pointer-events-auto flex items-center justify-center rounded-full shadow-md transition hover:scale-105",
+            isDemoV2 ? "dv2-float__btn h-10 w-10 md:h-11 md:w-11" : "h-11 w-11",
+            item.className,
+          )}
         >
           {item.icon}
         </a>

@@ -905,3 +905,43 @@
     transition: none !important;
   }
 }
+
+/*
+ * Floating contact stack on /demo-v2 (FloatingSocial + .dv2-float).
+ * Lives outside .demo-v2 root (root layout sibling) — styles ride this file
+ * which only loads with the demo-v2 layout. Version A does not use .dv2-float.
+ */
+.dv2-float {
+  top: 50%;
+  right: max(0.75rem, env(safe-area-inset-right, 0px));
+  transform: translateY(-50%);
+  /* Keep stack below sticky header cart and above bottom safe area / CTAs */
+  max-height: calc(
+    100dvh - 7.5rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)
+  );
+  z-index: 55;
+}
+
+.dv2-float__btn {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+  flex-shrink: 0;
+}
+
+@media (max-width: 389px), (max-height: 640px) {
+  .dv2-float {
+    gap: 0.4rem;
+    /* Nudge slightly up so bottom phone FAB clears thumbs / bottom UI */
+    top: calc(48% - 0.5rem);
+  }
+
+  .dv2-float__btn {
+    width: 2.35rem;
+    height: 2.35rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .dv2-float {
+    right: max(1rem, env(safe-area-inset-right, 0px));
+  }
+}
