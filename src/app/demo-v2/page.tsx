@@ -5,6 +5,7 @@ import { DemoHero } from "@/components/demo-v2/demo-hero";
 import { DemoPhoiMau } from "@/components/demo-v2/demo-phoi-mau";
 import { DemoPhongCach } from "@/components/demo-v2/demo-phong-cach";
 import { DemoPromo } from "@/components/demo-v2/demo-promo";
+import { DemoReviews } from "@/components/demo-v2/demo-reviews";
 import { DemoTrustBar } from "@/components/demo-v2/demo-trust-bar";
 import { getHomeSectionsForRequest } from "@/lib/cms/published";
 import type {
@@ -33,26 +34,45 @@ function padProducts<T extends { id: string }>(list: T[], need: number, pool: T[
 }
 
 export default async function DemoV2HomePage() {
-  const [{ sections, settings }, categories, featured, catalog] = await Promise.all([
-    getHomeSectionsForRequest(),
-    prisma.category.findMany({ orderBy: { sortOrder: "asc" }, take: 6 }),
-    prisma.product.findMany({
-      where: { isFeatured: true },
-      include: { images: { orderBy: { sortOrder: "asc" } }, variants: true },
-      take: 12,
-    }),
-    prisma.product.findMany({
-      include: {
-        images: { orderBy: { sortOrder: "asc" } },
-        variants: true,
-        category: { select: { slug: true } },
-      },
-      take: 24,
-      orderBy: [{ isNew: "desc" }, { createdAt: "desc" }],
-    }),
-  ]);
+  const [{ sections, settings }, categories, featured, catalog, reviewRows] =
+    await Promise.all([
+      getHomeSectionsForRequest(),
+      prisma.category.findMany({ orderBy: { sortOrder: "asc" }, take: 6 }),
+      prisma.product.findMany({
+        where: { isFeatured: true },
+        include: { images: { orderBy: { sortOrder: "asc" } }, variants: true },
+        take: 12,
+      }),
+      prisma.product.findMany({
+        include: {
+          images: { orderBy: { sortOrder: "asc" } },
+          variants: true,
+          category: { select: { slug: true } },
+        },
+        take: 24,
+        orderBy: [{ isNew: "desc" }, { createdAt: "desc" }],
+      }),
+      prisma.review.findMany({
+        include: {
+          user: { select: { name: true } },
+          product: { select: { name: true, slug: true } },
+        },
+        orderBy: { createdAt: "desc" },
+        take: 12,
+      }),
+    ]);
 
   void settings;
+
+  const reviews = reviewRows.map((r) => ({
+    id: r.id,
+    rating: r.rating,
+    comment: r.comment,
+    createdAt: r.createdAt,
+    userName: r.user.name || "Khách VIZFAS",
+    productName: r.product.name,
+    productSlug: r.product.slug,
+  }));
 
   const hero = sections.hero.content as HeroContent;
   const dual = sections.dual_banner.content as DualBannerContent;
@@ -114,6 +134,8 @@ export default async function DemoV2HomePage() {
       {sections.promo_banner.isEnabled ? <DemoPromo content={promo} /> : null}
 
       {sections.color_play.isEnabled ? <DemoPhoiMau content={colorPlay} /> : null}
+
+      <DemoReviews reviews={reviews} />
     </>
   );
 }

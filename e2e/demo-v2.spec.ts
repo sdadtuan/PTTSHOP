@@ -19,6 +19,30 @@ test.describe("Demo V2 storefront", () => {
     await expect(page.getByTestId("demo-v2-phoi-intro")).toBeVisible();
     await expect(page.getByTestId("demo-v2-footer")).toBeVisible();
     await expect(page.getByTestId("floating-social")).toBeVisible();
+    await expect(page.getByTestId("demo-v2-nav-danh-gia")).toHaveText("ĐÁNH GIÁ");
+    await expect(page.getByTestId("demo-v2-reviews")).toContainText(
+      /Khách Hàng Nói Gì Về VIZFAS/i,
+    );
+  });
+
+  test("ĐÁNH GIÁ nav scrolls to reviews and underlines active", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/demo-v2");
+    const nav = page.getByTestId("demo-v2-nav-danh-gia");
+    await expect(nav).toHaveText("ĐÁNH GIÁ");
+    await nav.click();
+    await expect(page).toHaveURL(/#danh-gia/);
+    await expect(nav).toHaveAttribute("data-active", "true");
+    await expect(page.getByTestId("demo-v2-reviews")).toBeInViewport();
+    const cards = page.getByTestId("demo-v2-review-card");
+    const empty = page.getByTestId("demo-v2-reviews-empty");
+    const cardCount = await cards.count();
+    if (cardCount > 0) {
+      await expect(cards.first()).toBeVisible();
+      await expect(cards.first().locator(".dv2-reviews__stars")).toBeVisible();
+    } else {
+      await expect(empty).toBeVisible();
+    }
   });
 
   test("header search and wishlist affordances work", async ({ page }) => {
