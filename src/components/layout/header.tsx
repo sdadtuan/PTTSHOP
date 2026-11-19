@@ -39,7 +39,7 @@ export function Header() {
     };
   }, [open]);
 
-  if (pathname?.startsWith("/admin")) return null;
+  if (pathname?.startsWith("/admin") || pathname?.startsWith("/demo-v2")) return null;
 
   return (
     <header className="sticky top-0 z-50 border-b border-black/5 bg-[var(--background)]/95 backdrop-blur-md">
