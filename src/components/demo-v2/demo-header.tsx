@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { Menu, Search, ShoppingBag, User, X } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, type FormEvent } from "react";
+import { Heart, Menu, Search, ShoppingBag, User, X } from "lucide-react";
 import { useCart } from "@/components/cart/cart-context";
 
-const nav = [
+const primaryNav = [
   { href: "/demo-v2", label: "Trang Chủ", match: "/demo-v2" },
   { href: "/bo-suu-tap", label: "Bộ Sưu Tập" },
   { href: "/san-pham", label: "Sản Phẩm" },
@@ -14,10 +14,28 @@ const nav = [
   { href: "/lien-he", label: "Liên Hệ" },
 ];
 
-export function DemoHeader() {
+const mobileNav = [
+  ...primaryNav,
+  { href: "/san-pham?gender=MALE", label: "Nam" },
+  { href: "/san-pham?gender=FEMALE", label: "Nữ" },
+  { href: "/tai-khoan", label: "Tài khoản" },
+  { href: "/yeu-thich", label: "Yêu thích" },
+];
+
+export function DemoHeader({ brandName = "VIZFAS" }: { brandName?: string }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { count } = useCart();
   const [open, setOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [q, setQ] = useState("");
+
+  function onSearch(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const query = q.trim();
+    setSearchOpen(false);
+    router.push(query ? `/san-pham?q=${encodeURIComponent(query)}` : "/san-pham");
+  }
 
   return (
     <header className="dv2-header" data-testid="demo-v2-header">
@@ -33,18 +51,19 @@ export function DemoHeader() {
         </button>
 
         <Link href="/demo-v2" className="dv2-logo" onClick={() => setOpen(false)}>
-          VIZFAS<span>®</span>
+          {brandName}
+          <span>®</span>
         </Link>
 
         <nav className="dv2-nav" aria-label="Điều hướng chính">
-          {nav.map((item) => {
+          {primaryNav.map((item) => {
             const active =
               item.match != null
                 ? pathname === item.match
                 : pathname === item.href || pathname?.startsWith(`${item.href}/`);
             return (
               <Link
-                key={item.href}
+                key={item.href + item.label}
                 href={item.href}
                 data-active={active ? "true" : "false"}
               >
@@ -55,11 +74,23 @@ export function DemoHeader() {
         </nav>
 
         <div className="dv2-utils">
-          <Link href="/san-pham" className="dv2-icon-btn" aria-label="Tìm kiếm">
+          <button
+            type="button"
+            className="dv2-icon-btn"
+            aria-label="Tìm kiếm"
+            onClick={() => setSearchOpen((v) => !v)}
+          >
             <Search className="h-4 w-4" />
-          </Link>
+          </button>
           <Link href="/tai-khoan" className="dv2-icon-btn" aria-label="Tài khoản">
             <User className="h-4 w-4" />
+          </Link>
+          <Link
+            href="/yeu-thich"
+            className="dv2-icon-btn dv2-icon-btn--wish"
+            aria-label="Yêu thích"
+          >
+            <Heart className="h-4 w-4" />
           </Link>
           <Link href="/gio-hang" className="dv2-icon-btn" aria-label="Giỏ hàng">
             <ShoppingBag className="h-4 w-4" />
@@ -68,16 +99,34 @@ export function DemoHeader() {
         </div>
       </div>
 
+      {searchOpen ? (
+        <form
+          className="dv2-search"
+          data-testid="demo-v2-search"
+          onSubmit={onSearch}
+        >
+          <input
+            name="q"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Tìm sản phẩm..."
+            aria-label="Tìm sản phẩm"
+            autoFocus
+          />
+          <button type="submit">Tìm</button>
+        </form>
+      ) : null}
+
       {open ? (
         <nav className="dv2-mobile-nav" aria-label="Menu di động">
-          {nav.map((item) => {
+          {mobileNav.map((item) => {
             const active =
-              item.match != null
+              "match" in item && item.match != null
                 ? pathname === item.match
                 : pathname === item.href || pathname?.startsWith(`${item.href}/`);
             return (
               <Link
-                key={item.href}
+                key={item.href + item.label}
                 href={item.href}
                 data-active={active ? "true" : "false"}
                 onClick={() => setOpen(false)}

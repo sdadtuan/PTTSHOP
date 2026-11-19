@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { DemoFooter } from "@/components/demo-v2/demo-footer";
 import { DemoHeader } from "@/components/demo-v2/demo-header";
+import { getSiteSettingsForRequest } from "@/lib/cms/published";
 import "@/components/demo-v2/demo-v2.css";
 
 export const metadata: Metadata = {
@@ -14,12 +15,18 @@ export const metadata: Metadata = {
   },
 };
 
-export default function DemoV2Layout({ children }: { children: React.ReactNode }) {
+export default async function DemoV2Layout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const settings = await getSiteSettingsForRequest();
+
   return (
     <div className="demo-v2" data-testid="demo-v2-root">
-      <DemoHeader />
+      <DemoHeader brandName={settings.brandName || "VIZFAS"} />
       {children}
-      <DemoFooter />
+      <DemoFooter settings={settings} />
     </div>
   );
 }

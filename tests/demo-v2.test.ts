@@ -11,6 +11,9 @@ function read(rel: string) {
 describe("demo-v2 isolation", () => {
   it("owns a dedicated route and components under demo-v2", () => {
     expect(read("src/app/demo-v2/page.tsx")).toContain("DemoHero");
+    expect(read("src/app/demo-v2/page.tsx")).toContain("DemoPhongCach");
+    expect(read("src/app/demo-v2/page.tsx")).toContain("DemoDiverse");
+    expect(read("src/app/demo-v2/page.tsx")).toContain("getHomeSectionsForRequest");
     expect(read("src/app/demo-v2/layout.tsx")).toContain("robots");
     expect(read("src/app/demo-v2/layout.tsx")).toMatch(/index:\s*false/);
     expect(read("src/components/demo-v2/demo-v2.css")).toContain(".demo-v2");
@@ -49,5 +52,26 @@ describe("demo-v2 isolation", () => {
       /startsWith\("\/admin"\)\s*\|\|\s*pathname\?\.startsWith\("\/demo-v2"\)/,
     );
     expect(read("src/components/demo-v2/demo-v2.css")).toContain(".dv2-float");
+  });
+
+  it("implements A section parity modules for B", () => {
+    const files = [
+      "src/components/demo-v2/demo-phong-cach.tsx",
+      "src/components/demo-v2/demo-diverse.tsx",
+      "src/components/demo-v2/demo-style-tabs.tsx",
+      "src/components/demo-v2/demo-phoi-mau.tsx",
+      "src/components/demo-v2/demo-featured.tsx",
+      "src/components/demo-v2/demo-promo.tsx",
+    ];
+    for (const f of files) {
+      expect(read(f).length).toBeGreaterThan(100);
+    }
+    expect(read("src/components/demo-v2/demo-style-tabs.tsx")).toContain("addItem");
+    expect(read("src/components/demo-v2/demo-phoi-mau.tsx")).toContain(
+      "demo-v2-phoi-vertical-label",
+    );
+    expect(read("src/components/demo-v2/demo-phoi-mau.tsx")).toContain(
+      "demo-v2-phoi-intro",
+    );
   });
 });

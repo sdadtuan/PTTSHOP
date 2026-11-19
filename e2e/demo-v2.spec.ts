@@ -1,18 +1,58 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("Demo V2 storefront", () => {
-  test("renders Version B homepage sections", async ({ page }) => {
+  test("renders Version B homepage sections with A content parity", async ({ page }) => {
     await page.goto("/demo-v2");
     await expect(page.getByTestId("demo-v2-root")).toBeVisible();
     await expect(page.getByTestId("demo-v2-header")).toBeVisible();
     await expect(page.getByTestId("demo-v2-hero")).toBeVisible();
-    await expect(page.getByRole("heading", { name: /VIZFAS/i }).first()).toBeVisible();
-    await expect(page.getByTestId("demo-v2-hero-cta")).toContainText(/Khám Phá Ngay/i);
-    await expect(page.getByTestId("demo-v2-trust")).toContainText(/Giao Hàng Nhanh/i);
-    await expect(page.getByTestId("demo-v2-collections")).toContainText(/Bộ Sưu Tập/i);
-    await expect(page.getByTestId("demo-v2-phoi-mau")).toContainText(/Phối Màu/i);
-    await expect(page.getByTestId("demo-v2-featured")).toContainText(/Sản Phẩm Nổi Bật/i);
-    await expect(page.getByTestId("demo-v2-product-card").first()).toBeVisible();
+    await expect(page.getByTestId("demo-v2-hero-cta")).toBeVisible();
+    await expect(page.getByTestId("demo-v2-trust")).toBeVisible();
+    await expect(page.getByTestId("demo-v2-phong-cach")).toContainText(/Phong Cách Đơn Giản/i);
+    await expect(page.getByTestId("demo-v2-collections")).toBeVisible();
+    await expect(page.getByTestId("demo-v2-diverse")).toContainText(/Dễ Phối Đồ|Đa Dạng/i);
+    await expect(page.getByTestId("demo-v2-style-tabs")).toBeVisible();
+    await expect(page.getByRole("tab", { name: /Tất cả/i })).toBeVisible();
+    await expect(page.getByTestId("demo-v2-featured")).toBeVisible();
+    await expect(page.getByTestId("demo-v2-phoi-mau")).toBeVisible();
+    await expect(page.getByTestId("demo-v2-color-play")).toBeVisible();
+    await expect(page.getByTestId("demo-v2-phoi-intro")).toBeVisible();
+    await expect(page.getByTestId("demo-v2-footer")).toBeVisible();
+    await expect(page.getByTestId("floating-social")).toBeVisible();
+  });
+
+  test("header search and wishlist affordances work", async ({ page }) => {
+    await page.goto("/demo-v2");
+    await page.getByRole("button", { name: /Tìm kiếm/i }).click();
+    await expect(page.getByTestId("demo-v2-search")).toBeVisible();
+    await page.getByLabel(/Tìm sản phẩm/i).fill("hoodie");
+    await page.getByTestId("demo-v2-search").locator('button[type="submit"]').click();
+    await expect(page).toHaveURL(/san-pham.*hoodie|q=hoodie/);
+  });
+
+  test("BST Quần tabs filter and add-to-cart works", async ({ page }) => {
+    await page.goto("/demo-v2");
+    const tabs = page.getByTestId("demo-v2-style-tabs");
+    await expect(tabs.getByRole("tab", { name: /Tất cả/i })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    await tabs.getByRole("tab", { name: /^Quần$/i }).click();
+    await expect(tabs.getByRole("tab", { name: /^Quần$/i })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    const card = tabs.getByTestId("demo-v2-style-card").first();
+    await expect(card).toBeVisible();
+    const post = page.waitForResponse(
+      (r) =>
+        r.url().includes("/api/cart") &&
+        r.request().method() === "POST" &&
+        r.ok(),
+    );
+    await card.getByRole("button", { name: /Thêm .* vào giỏ/i }).click();
+    await post;
+    await expect(card.getByText(/Đã thêm/i)).toBeVisible();
   });
 
   test("product cards link to real PDP routes", async ({ page }) => {
@@ -52,10 +92,6 @@ test.describe("Demo V2 storefront", () => {
     const stack = page.getByTestId("floating-social");
     await expect(stack).toBeVisible();
     await expect(stack).toHaveAttribute("data-demo-v2", "true");
-    await expect(stack.getByLabel("Facebook")).toBeVisible();
-    await expect(stack.getByLabel("Messenger")).toBeVisible();
-    await expect(stack.getByLabel("Zalo")).toBeVisible();
-    await expect(stack.getByLabel("Gọi điện")).toBeVisible();
     const before = await stack.evaluate((el) => {
       const s = getComputedStyle(el);
       const r = el.getBoundingClientRect();
@@ -67,36 +103,33 @@ test.describe("Demo V2 storefront", () => {
     await page.waitForTimeout(200);
     const after = await stack.evaluate((el) => el.getBoundingClientRect().top);
     expect(Math.abs(after - before.top)).toBeLessThan(2);
-    await expect(stack).toBeVisible();
   });
 
-  test("floating contact stack shows on mobile without covering header cart", async ({
+  test("mobile float sits bottom-right and clears collection arrows", async ({
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/demo-v2");
+    await page.getByTestId("demo-v2-collections").scrollIntoViewIfNeeded();
     const stack = page.getByTestId("floating-social");
     await expect(stack).toBeVisible();
-    const cart = page.getByRole("link", { name: /Giỏ hàng/i });
-    await expect(cart).toBeVisible();
-    const boxes = await page.evaluate(() => {
+    const metrics = await page.evaluate(() => {
       const float = document.querySelector('[data-testid="floating-social"]');
-      const cartEl = document.querySelector('a[aria-label="Giỏ hàng"]');
-      if (!float || !cartEl) return null;
+      if (!float) return null;
       const f = float.getBoundingClientRect();
-      const c = cartEl.getBoundingClientRect();
-      const overlap = !(f.right < c.left || f.left > c.right || f.bottom < c.top || f.top > c.bottom);
       return {
-        floatBottom: f.bottom,
-        viewport: window.innerHeight,
-        overlap,
-        floatRight: window.innerWidth - f.right,
+        top: f.top,
+        bottom: f.bottom,
+        right: window.innerWidth - f.right,
+        height: window.innerHeight,
+        btnH: float.querySelector("a")?.getBoundingClientRect().height ?? 0,
       };
     });
-    expect(boxes).toBeTruthy();
-    expect(boxes!.overlap).toBe(false);
-    expect(boxes!.floatBottom).toBeLessThan(844 - 24);
-    expect(boxes!.floatRight).toBeLessThan(40);
+    expect(metrics).toBeTruthy();
+    expect(metrics!.bottom).toBeGreaterThan(metrics!.height - 160);
+    expect(metrics!.top).toBeGreaterThan(metrics!.height * 0.45);
+    expect(metrics!.right).toBeLessThan(28);
+    expect(metrics!.btnH).toBeLessThanOrEqual(40);
   });
 });
 

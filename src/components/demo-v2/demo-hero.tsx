@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useState } from "react";
+import { homeImages } from "@/config/home-images";
 
 type Slide = {
   eyebrow: string;
@@ -16,43 +17,61 @@ type Slide = {
   sideB: string;
 };
 
-const SLIDES: Slide[] = [
-  {
-    eyebrow: "NEW COLLECTION",
-    title: "VIZFAS",
-    subtitle: "Streetwear hiện đại / Cho phong cách của riêng bạn.",
-    ctaHref: "/san-pham",
-    ctaLabel: "Khám Phá Ngay",
-    main: "/images/home-v2/hero-main.jpg",
-    sideA: "/images/home-v2/featured-hoodie.jpg",
-    sideB: "/images/home-v2/mix-model.jpg",
-  },
-  {
-    eyebrow: "ESSENTIALS",
-    title: "VIZFAS",
-    subtitle: "Form rộng, chất dày — dễ mặc mỗi ngày.",
-    ctaHref: "/san-pham?category=hoodie",
-    ctaLabel: "Khám Phá Ngay",
-    main: "/images/home-v2/featured-1.jpg",
-    sideA: "/images/home-v2/featured-jacket.jpg",
-    sideB: "/images/home-v2/phoi-mau-main.jpg",
-  },
-  {
-    eyebrow: "COLOR PLAY",
-    title: "VIZFAS",
-    subtitle: "Phối màu tạo chất — nổi bật mà vẫn tối giản.",
-    ctaHref: "/bo-suu-tap",
-    ctaLabel: "Khám Phá Ngay",
-    main: "/images/home-v2/featured-2.jpg",
-    sideA: "/images/home-v2/phoi-mau-3.jpg",
-    sideB: "/images/home-v2/banner-right.jpg",
-  },
-];
+type Props = {
+  eyebrow?: string;
+  title?: string;
+  subtitle?: string;
+  ctaHref?: string;
+  ctaLabel?: string;
+  image?: string | null;
+};
 
-export function DemoHero() {
+export function DemoHero({
+  eyebrow = "NEW COLLECTION",
+  title = "VIZFAS",
+  subtitle = "Streetwear hiện đại / Cho phong cách của riêng bạn.",
+  ctaHref = "/san-pham",
+  ctaLabel = "Khám Phá Ngay",
+  image,
+}: Props) {
+  const primary: Slide = {
+    eyebrow,
+    title: title.includes("VIZFAS") ? "VIZFAS" : title,
+    subtitle,
+    ctaHref,
+    ctaLabel,
+    main: image || homeImages.hero.main,
+    sideA: homeImages.featured.small[0],
+    sideB: homeImages.diverse.model,
+  };
+
+  const slides: Slide[] = [
+    primary,
+    {
+      eyebrow: "ESSENTIALS",
+      title: "VIZFAS",
+      subtitle: "Form rộng, chất dày — dễ mặc mỗi ngày.",
+      ctaHref: "/san-pham?category=hoodie",
+      ctaLabel: ctaLabel,
+      main: homeImages.featured.large[0],
+      sideA: homeImages.featured.small[1],
+      sideB: homeImages.colorPlay.main,
+    },
+    {
+      eyebrow: "COLOR PLAY",
+      title: "VIZFAS",
+      subtitle: "Phối màu tạo chất — nổi bật mà vẫn tối giản.",
+      ctaHref: "/bo-suu-tap",
+      ctaLabel: ctaLabel,
+      main: homeImages.featured.large[1],
+      sideA: homeImages.colorPlay.grid[2],
+      sideB: homeImages.dualBanner.right,
+    },
+  ];
+
   const [index, setIndex] = useState(0);
-  const slide = SLIDES[index] ?? SLIDES[0];
-  const total = SLIDES.length;
+  const slide = slides[index] ?? slides[0];
+  const total = slides.length;
   const label = String(index + 1).padStart(2, "0");
 
   return (
@@ -85,7 +104,7 @@ export function DemoHero() {
               {label} / {String(total).padStart(2, "0")}
             </span>
             <div className="dv2-slider__bars" aria-hidden>
-              {SLIDES.map((_, i) => (
+              {slides.map((_, i) => (
                 <span
                   key={i}
                   className="dv2-slider__bar"
