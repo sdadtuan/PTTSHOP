@@ -55,16 +55,18 @@ export function AdminTd({
 export function AdminTr({
   children,
   className,
+  ...rest
 }: {
   children: React.ReactNode;
   className?: string;
-}) {
+} & React.HTMLAttributes<HTMLTableRowElement>) {
   return (
     <tr
       className={cn(
         "border-b border-[var(--admin-border)]/70 transition-colors last:border-0 hover:bg-[var(--admin-accent-soft)]/40",
         className,
       )}
+      {...rest}
     >
       {children}
     </tr>

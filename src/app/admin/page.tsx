@@ -21,7 +21,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
   const session = await auth();
-  if (!session?.user) redirect("/dang-nhap");
+  if (!session?.user) redirect("/dang-nhap?callbackUrl=/admin");
   if (session.user.role !== "ADMIN") redirect("/");
 
   const since = new Date();

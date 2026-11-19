@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Pencil, Trash2, Film } from "lucide-react";
+import { ChevronDown, ChevronRight, Plus, Pencil, Trash2, Film } from "lucide-react";
 import {
   AdminBadge,
   AdminButton,
@@ -22,6 +22,10 @@ import {
   paginate,
   useAdminToast,
 } from "@/components/admin/ui";
+import {
+  groupVariantsByColor,
+  summarizeVariants,
+} from "@/lib/admin-product-summary";
 import { formatVnd } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -56,7 +60,6 @@ type Product = {
 
 type Category = { id: string; name: string };
 
-
 export default function AdminProductsPage() {
   const { toast } = useAdminToast();
   const router = useRouter();
@@ -71,6 +74,7 @@ export default function AdminProductsPage() {
   const [page, setPage] = useState(1);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
 
   async function load() {
     setLoading(true);
@@ -111,6 +115,15 @@ export default function AdminProductsPage() {
   }, [products, q]);
 
   const paged = paginate(filtered, page, 8);
+
+  function toggleExpand(id: string) {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
 
   async function uploadFile(file: File) {
     const upload = new FormData();
@@ -266,125 +279,124 @@ export default function AdminProductsPage() {
         </p>
       ) : null}
 
-
       {managed ? (
         <div className="mb-6" data-testid="admin-video-manager">
-        <AdminCard>
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <h2 className="font-semibold">Video / media — {managed.name}</h2>
-            <AdminButton variant="ghost" size="sm" onClick={() => setManageId(null)}>
-              Đóng
-            </AdminButton>
-          </div>
-          <div
-            className={cn(
-              "rounded-[var(--admin-radius-md)] border border-dashed p-4",
-              dragOver
-                ? "border-[var(--admin-accent)] bg-[var(--admin-accent-soft)]"
-                : "border-[var(--admin-border-strong)]",
-            )}
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDragOver(true);
-            }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={(e) => {
-              e.preventDefault();
-              setDragOver(false);
-              if (e.dataTransfer.files?.length) {
-                void handleVideoFiles(e.dataTransfer.files, {
-                  productId: managed.id,
-                });
-              }
-            }}
-          >
-            <p className="text-sm">Kéo-thả hoặc chọn video MP4/WebM</p>
-            <input
-              type="file"
-              accept="video/mp4,video/webm"
-              className="mt-2 block text-sm"
-              data-testid="admin-manage-video-file"
-              disabled={videoBusy}
-              onChange={(e) => {
-                if (e.target.files?.length) {
-                  void handleVideoFiles(e.target.files, {
+          <AdminCard>
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 className="font-semibold">Video / media — {managed.name}</h2>
+              <AdminButton variant="ghost" size="sm" onClick={() => setManageId(null)}>
+                Đóng
+              </AdminButton>
+            </div>
+            <div
+              className={cn(
+                "rounded-[var(--admin-radius-md)] border border-dashed p-4",
+                dragOver
+                  ? "border-[var(--admin-accent)] bg-[var(--admin-accent-soft)]"
+                  : "border-[var(--admin-border-strong)]",
+              )}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragOver(true);
+              }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragOver(false);
+                if (e.dataTransfer.files?.length) {
+                  void handleVideoFiles(e.dataTransfer.files, {
                     productId: managed.id,
                   });
-                  e.target.value = "";
                 }
               }}
-            />
-          </div>
-          <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-            {managed.images.map((img) => (
-              <li
-                key={img.id}
-                className="rounded-[var(--admin-radius-md)] border border-[var(--admin-border)] p-3"
-              >
-                {img.type === "video" ? (
-                  <video
-                    src={img.url}
-                    poster={img.posterUrl || undefined}
-                    muted
-                    playsInline
-                    preload="metadata"
-                    className="mb-2 aspect-video w-full rounded bg-[var(--admin-surface-muted)] object-cover"
-                  />
-                ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={img.url}
-                    alt={img.alt || ""}
-                    className="mb-2 aspect-video w-full rounded bg-[var(--admin-surface-muted)] object-cover"
-                  />
-                )}
-                <p className="mb-2 text-sm font-medium">
-                  {img.type === "video" ? "Video" : "Ảnh"} · sort {img.sortOrder}
-                </p>
-                <div className="space-y-2">
-                  <AdminInput
-                    label="Màu"
-                    defaultValue={img.color || ""}
-                    onBlur={(e) =>
-                      void patchImage(img.id, {
-                        color: e.target.value.trim() || null,
-                      })
-                    }
-                  />
+            >
+              <p className="text-sm">Kéo-thả hoặc chọn video MP4/WebM</p>
+              <input
+                type="file"
+                accept="video/mp4,video/webm"
+                className="mt-2 block text-sm"
+                data-testid="admin-manage-video-file"
+                disabled={videoBusy}
+                onChange={(e) => {
+                  if (e.target.files?.length) {
+                    void handleVideoFiles(e.target.files, {
+                      productId: managed.id,
+                    });
+                    e.target.value = "";
+                  }
+                }}
+              />
+            </div>
+            <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+              {managed.images.map((img) => (
+                <li
+                  key={img.id}
+                  className="rounded-[var(--admin-radius-md)] border border-[var(--admin-border)] p-3"
+                >
                   {img.type === "video" ? (
+                    <video
+                      src={img.url}
+                      poster={img.posterUrl || undefined}
+                      muted
+                      playsInline
+                      preload="metadata"
+                      className="mb-2 aspect-video w-full rounded bg-[var(--admin-surface-muted)] object-cover"
+                    />
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={img.url}
+                      alt={img.alt || ""}
+                      className="mb-2 aspect-video w-full rounded bg-[var(--admin-surface-muted)] object-cover"
+                    />
+                  )}
+                  <p className="mb-2 text-sm font-medium">
+                    {img.type === "video" ? "Video" : "Ảnh"} · sort {img.sortOrder}
+                  </p>
+                  <div className="space-y-2">
                     <AdminInput
-                      label="Poster URL"
-                      defaultValue={img.posterUrl || ""}
+                      label="Màu"
+                      defaultValue={img.color || ""}
                       onBlur={(e) =>
                         void patchImage(img.id, {
-                          posterUrl: e.target.value.trim() || null,
+                          color: e.target.value.trim() || null,
                         })
                       }
                     />
-                  ) : null}
-                  <AdminInput
-                    label="Sort"
-                    type="number"
-                    defaultValue={img.sortOrder}
-                    onBlur={(e) =>
-                      void patchImage(img.id, {
-                        sortOrder: Number(e.target.value),
-                      })
-                    }
-                  />
-                  <AdminButton
-                    variant="ghost"
-                    size="sm"
-                    className="text-[var(--admin-danger)]"
-                    onClick={() => void removeImage(img.id)}
-                  >
-                    Xóa
-                  </AdminButton>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </AdminCard>
+                    {img.type === "video" ? (
+                      <AdminInput
+                        label="Poster URL"
+                        defaultValue={img.posterUrl || ""}
+                        onBlur={(e) =>
+                          void patchImage(img.id, {
+                            posterUrl: e.target.value.trim() || null,
+                          })
+                        }
+                      />
+                    ) : null}
+                    <AdminInput
+                      label="Sort"
+                      type="number"
+                      defaultValue={img.sortOrder}
+                      onBlur={(e) =>
+                        void patchImage(img.id, {
+                          sortOrder: Number(e.target.value),
+                        })
+                      }
+                    />
+                    <AdminButton
+                      variant="ghost"
+                      size="sm"
+                      className="text-[var(--admin-danger)]"
+                      onClick={() => void removeImage(img.id)}
+                    >
+                      Xóa
+                    </AdminButton>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </AdminCard>
         </div>
       ) : null}
 
@@ -402,12 +414,14 @@ export default function AdminProductsPage() {
         />
       ) : (
         <>
+          <div data-testid="admin-products-table">
           <AdminTable>
             <thead>
               <tr>
+                <AdminTh className="w-10" />
                 <AdminTh>Sản phẩm</AdminTh>
                 <AdminTh>Danh mục</AdminTh>
-                <AdminTh>Biến thể / tồn</AdminTh>
+                <AdminTh>Tóm tắt</AdminTh>
                 <AdminTh>Thẻ</AdminTh>
                 <AdminTh />
               </tr>
@@ -415,109 +429,192 @@ export default function AdminProductsPage() {
             <tbody>
               {paged.items.map((p) => {
                 const thumb = p.images.find((i) => i.type !== "video")?.url;
+                const summary = summarizeVariants(p.variants);
+                const expanded = expandedIds.has(p.id);
+                const byColor = expanded ? groupVariantsByColor(p.variants) : [];
+                const priceLabel =
+                  summary.minPrice == null
+                    ? "—"
+                    : summary.minPrice === summary.maxPrice
+                      ? formatVnd(summary.minPrice)
+                      : `${formatVnd(summary.minPrice)} – ${formatVnd(summary.maxPrice!)}`;
+
                 return (
-                  <AdminTr key={p.id}>
-                    <AdminTd>
-                      <div className="flex items-center gap-3">
-                        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-[var(--admin-radius-sm)] bg-[var(--admin-surface-muted)] ring-1 ring-[var(--admin-border)]">
-                          {thumb ? (
-                            <Image
-                              src={thumb}
-                              alt={p.name}
-                              fill
-                              className="object-cover"
-                              sizes="48px"
-                              unoptimized
-                            />
-                          ) : null}
+                  <Fragment key={p.id}>
+                    <AdminTr
+                      className={cn(expanded && "bg-[var(--admin-accent-soft)]/30")}
+                      data-testid={`product-row-${p.slug}`}
+                    >
+                      <AdminTd className="w-10 pr-0">
+                        <button
+                          type="button"
+                          aria-expanded={expanded}
+                          aria-label={expanded ? "Thu gọn biến thể" : "Mở biến thể Màu × Size"}
+                          data-testid={`expand-product-${p.slug}`}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--admin-radius-sm)] text-[var(--admin-text-muted)] hover:bg-[var(--admin-surface-muted)] hover:text-[var(--admin-accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--admin-accent)]/30"
+                          onClick={() => toggleExpand(p.id)}
+                        >
+                          {expanded ? (
+                            <ChevronDown className="h-4 w-4" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4" />
+                          )}
+                        </button>
+                      </AdminTd>
+                      <AdminTd>
+                        <div className="flex items-center gap-3">
+                          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-[var(--admin-radius-sm)] bg-[var(--admin-surface-muted)] ring-1 ring-[var(--admin-border)]">
+                            {thumb ? (
+                              <Image
+                                src={thumb}
+                                alt={p.name}
+                                fill
+                                className="object-cover"
+                                sizes="48px"
+                                unoptimized
+                              />
+                            ) : null}
+                          </div>
+                          <div className="min-w-0">
+                            <Link
+                              href={`/admin/products/${p.id}`}
+                              className="font-medium hover:text-[var(--admin-accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--admin-accent)]/30"
+                            >
+                              {p.name}
+                            </Link>
+                            <p className="truncate text-xs text-[var(--admin-text-muted)]">
+                              {p.slug}
+                            </p>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <Link
-                            href={`/admin/products/${p.id}`}
-                            className="font-medium hover:text-[var(--admin-accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--admin-accent)]/30"
-                          >
-                            {p.name}
-                          </Link>
-                          <p className="truncate text-xs text-[var(--admin-text-muted)]">
-                            {p.slug}
+                      </AdminTd>
+                      <AdminTd>{p.category?.name ?? "—"}</AdminTd>
+                      <AdminTd>
+                        <div className="space-y-0.5 text-xs text-[var(--admin-text-muted)]">
+                          <p>
+                            <span className="font-medium text-[var(--admin-text)]">
+                              {summary.variantCount}
+                            </span>{" "}
+                            biến thể · {summary.colorCount} màu · {summary.sizeCount} size
+                          </p>
+                          <p>
+                            Tồn{" "}
+                            <span className="font-medium text-[var(--admin-text)]">
+                              {summary.totalStock}
+                            </span>
+                            {" · "}
+                            {priceLabel}
                           </p>
                         </div>
-                      </div>
-                    </AdminTd>
-                    <AdminTd>{p.category?.name ?? "—"}</AdminTd>
-                    <AdminTd>
-                      <ul className="space-y-1">
-                        {p.variants.slice(0, 4).map((v) => (
-                          <li key={v.id} className="flex items-center gap-2 text-xs">
-                            <span>
-                              {v.color}/{v.size} · {formatVnd(v.price)}
-                            </span>
-                            <input
-                              type="number"
-                              defaultValue={v.stock}
-                              aria-label={`Tồn ${v.color} ${v.size}`}
-                              className="w-16 rounded border border-[var(--admin-border)] px-1 py-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--admin-accent)]/25"
-                              onBlur={(e) =>
-                                void updateStock(v.id, Number(e.target.value))
-                              }
-                            />
-                          </li>
-                        ))}
-                        {p.variants.length > 4 ? (
-                          <li className="text-xs text-[var(--admin-text-subtle)]">
-                            +{p.variants.length - 4} biến thể
-                          </li>
-                        ) : null}
-                      </ul>
-                    </AdminTd>
-                    <AdminTd>
-                      <div className="flex flex-wrap gap-1">
-                        {p.isNew ? <AdminBadge tone="accent">Mới</AdminBadge> : null}
-                        {p.isBestSeller ? (
-                          <AdminBadge tone="success">Bán chạy</AdminBadge>
-                        ) : null}
-                        {p.isFeatured ? (
-                          <AdminBadge tone="info">Nổi bật</AdminBadge>
-                        ) : null}
-                        {p.images.some((i) => i.type === "video") ? (
-                          <AdminBadge tone="accent">Video</AdminBadge>
-                        ) : null}
-                      </div>
-                    </AdminTd>
-                    <AdminTd>
-                      <div className="flex flex-col items-start gap-1">
-                        <Link
-                          href={`/admin/products/${p.id}`}
-                          className="inline-flex items-center gap-1 text-sm font-medium text-[var(--admin-text-muted)] hover:text-[var(--admin-accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--admin-accent)]/30"
-                        >
-                          <Pencil className="h-4 w-4" />
-                          Sửa
-                        </Link>
-                        <AdminButton
-                          variant="ghost"
-                          size="sm"
-                          className="h-auto px-0 text-[var(--admin-accent)]"
-                          data-testid={`manage-media-${p.slug}`}
-                          onClick={() => setManageId(p.id)}
-                        >
-                          <Film className="h-3.5 w-3.5" />
-                          Video / media
-                        </AdminButton>
-                        <AdminButton
-                          variant="ghost"
-                          size="sm"
-                          aria-label="Xóa"
-                          onClick={() => setDeleteId(p.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-[var(--admin-danger)]" />
-                        </AdminButton>
-                      </div>
-                    </AdminTd>
-                  </AdminTr>
+                      </AdminTd>
+                      <AdminTd>
+                        <div className="flex flex-wrap gap-1">
+                          {p.isNew ? <AdminBadge tone="accent">Mới</AdminBadge> : null}
+                          {p.isBestSeller ? (
+                            <AdminBadge tone="success">Bán chạy</AdminBadge>
+                          ) : null}
+                          {p.isFeatured ? (
+                            <AdminBadge tone="info">Nổi bật</AdminBadge>
+                          ) : null}
+                          {p.images.some((i) => i.type === "video") ? (
+                            <AdminBadge tone="accent">Video</AdminBadge>
+                          ) : null}
+                        </div>
+                      </AdminTd>
+                      <AdminTd>
+                        <div className="flex flex-col items-start gap-1">
+                          <Link
+                            href={`/admin/products/${p.id}`}
+                            className="inline-flex items-center gap-1 text-sm font-medium text-[var(--admin-text-muted)] hover:text-[var(--admin-accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--admin-accent)]/30"
+                          >
+                            <Pencil className="h-4 w-4" />
+                            Sửa
+                          </Link>
+                          <AdminButton
+                            variant="ghost"
+                            size="sm"
+                            className="h-auto px-0 text-[var(--admin-accent)]"
+                            data-testid={`manage-media-${p.slug}`}
+                            onClick={() => setManageId(p.id)}
+                          >
+                            <Film className="h-3.5 w-3.5" />
+                            Video / media
+                          </AdminButton>
+                          <AdminButton
+                            variant="ghost"
+                            size="sm"
+                            aria-label="Xóa"
+                            onClick={() => setDeleteId(p.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-[var(--admin-danger)]" />
+                          </AdminButton>
+                        </div>
+                      </AdminTd>
+                    </AdminTr>
+                    {expanded ? (
+                      <tr
+                        className="border-b border-[var(--admin-border)]/70 bg-[var(--admin-surface-muted)]/60"
+                        data-testid={`product-expand-${p.slug}`}
+                      >
+                        <td colSpan={6} className="px-4 py-4">
+                          {p.variants.length === 0 ? (
+                            <p className="text-sm text-[var(--admin-text-muted)]">
+                              Chưa có biến thể Màu × Size.
+                            </p>
+                          ) : (
+                            <div className="space-y-4">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--admin-text-muted)]">
+                                Biến thể Màu × Size
+                              </p>
+                              {byColor.map(({ color, items }) => (
+                                <div key={color}>
+                                  <p className="mb-2 text-sm font-medium text-[var(--admin-text)]">
+                                    {color}
+                                  </p>
+                                  <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                                    {items.map((v) => (
+                                      <li
+                                        key={v.id}
+                                        className="flex items-center justify-between gap-3 rounded-[var(--admin-radius-md)] border border-[var(--admin-border)] bg-white px-3 py-2 text-xs"
+                                      >
+                                        <span className="min-w-0 truncate">
+                                          <span className="font-medium">{v.size}</span>
+                                          {" · "}
+                                          {formatVnd(v.price)}
+                                          <span className="mt-0.5 block truncate text-[var(--admin-text-subtle)]">
+                                            {v.sku}
+                                          </span>
+                                        </span>
+                                        <label className="flex shrink-0 items-center gap-1.5">
+                                          <span className="text-[var(--admin-text-muted)]">
+                                            Tồn
+                                          </span>
+                                          <input
+                                            type="number"
+                                            defaultValue={v.stock}
+                                            aria-label={`Tồn ${v.color} ${v.size}`}
+                                            className="w-16 rounded border border-[var(--admin-border)] px-1 py-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--admin-accent)]/25"
+                                            onBlur={(e) =>
+                                              void updateStock(v.id, Number(e.target.value))
+                                            }
+                                          />
+                                        </label>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    ) : null}
+                  </Fragment>
                 );
               })}
             </tbody>
           </AdminTable>
+          </div>
           <div className="mt-4">
             <AdminPagination
               page={paged.page}

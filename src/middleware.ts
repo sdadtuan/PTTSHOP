@@ -25,7 +25,9 @@ export default auth((req) => {
 
   if (!req.auth?.user) {
     const url = new URL("/dang-nhap", req.nextUrl.origin);
-    url.searchParams.set("callbackUrl", path);
+    // Relative path only — avoids absolute callbackUrl loops with Auth.js.
+    const returnTo = `${path}${req.nextUrl.search}`;
+    url.searchParams.set("callbackUrl", returnTo.startsWith("/admin") ? returnTo : "/admin");
     return NextResponse.redirect(url);
   }
 
@@ -37,5 +39,5 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/", "/admin/:path*"],
+  matcher: ["/", "/admin", "/admin/:path*"],
 };
