@@ -632,7 +632,7 @@ export default async function HomePage() {
   // PHỐI MÀU — model full height; type clear; lưới spans under CHẤT (not over type)
   blocks["color_play"] = colorSec.isEnabled ? (
       <section className="relative mx-auto max-w-7xl overflow-hidden px-4 py-14 md:px-6 md:py-20">
-        <div className="relative grid grid-cols-1 gap-x-3 gap-y-4 lg:grid-cols-[minmax(200px,0.26fr)_minmax(220px,0.3fr)_minmax(0,0.44fr)] lg:[grid-template-areas:'model_type_copy'_'model_grid_grid'] lg:pr-14">
+        <div className="relative grid grid-cols-1 gap-x-3 gap-y-4 md:pr-11 lg:grid-cols-[minmax(200px,0.26fr)_minmax(220px,0.3fr)_minmax(0,0.44fr)] lg:[grid-template-areas:'model_type_copy'_'model_grid_grid'] lg:pr-14">
           <div className="relative z-10 h-[420px] lg:h-auto lg:[grid-area:model]">
             <Image
               src={colorPlay.mainImage || homeImages.colorPlay.main}
@@ -648,7 +648,7 @@ export default async function HomePage() {
             <PhoiMauType fillImage={colorPlay.typeFillImage} />
           </div>
 
-          <div className="relative z-20 min-w-0 pt-1 lg:[grid-area:copy]">
+          <div className="relative z-20 flex min-h-0 min-w-0 flex-col pt-1 lg:[grid-area:copy]">
             <h2
               className="type-display text-neutral-900"
               style={{ fontSize: TYPE_SCALE.phoiXuHuong.css }}
@@ -661,6 +661,40 @@ export default async function HomePage() {
             <p className="mt-3 text-sm leading-relaxed text-neutral-600 md:text-[15px]">
               {colorPlay.paragraph2}
             </p>
+            {/* Two CMS intro frames fill the empty copy column under the paragraphs */}
+            <div
+              className="mt-5 grid grid-cols-2 gap-2 md:mt-6 md:gap-3 lg:mt-auto lg:min-h-[11rem] lg:flex-1 lg:pt-5"
+              data-testid="phoi-intro-images"
+            >
+              {(
+                [
+                  {
+                    src: colorPlay.introImage1 || homeImages.colorPlay.intro[0],
+                    alt: colorPlay.introImage1Alt || "Look phối màu — khung 1",
+                  },
+                  {
+                    src: colorPlay.introImage2 || homeImages.colorPlay.intro[1],
+                    alt: colorPlay.introImage2Alt || "Look phối màu — khung 2",
+                  },
+                ] as const
+              ).map((img, i) => (
+                <div
+                  key={`phoi-intro-${i}-${img.src}`}
+                  className="relative aspect-[3/4] overflow-hidden bg-neutral-100 lg:aspect-auto lg:h-full lg:min-h-[10rem]"
+                  data-testid={`phoi-intro-cell-${i + 1}`}
+                >
+                  <Image
+                    src={img.src}
+                    alt={img.alt}
+                    fill
+                    sizes="(max-width:1024px) 45vw, 18vw"
+                    className="object-cover"
+                    style={{ objectPosition: OBJECT_POSITION.phoiGrid }}
+                    loading="eager"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="relative z-10 w-full lg:[grid-area:grid]">
@@ -687,23 +721,24 @@ export default async function HomePage() {
                 </div>
               ))}
             </div>
-            {/* Vertical label = đúng cao lưới + vạch cam; 1 dòng nowrap */}
-            <div
-              className="pointer-events-none absolute inset-y-0 -right-3 z-20 hidden flex-col items-center justify-center md:flex lg:-right-5 xl:-right-6"
-              data-testid="phoi-vertical-label"
+          </div>
+
+          {/* Vertical label centered on the full block (intro + grid); hidden below md */}
+          <div
+            className="pointer-events-none absolute inset-y-2 right-0 z-20 hidden max-h-full w-10 flex-col items-center justify-center md:flex lg:inset-y-3 lg:w-11"
+            data-testid="phoi-vertical-label"
+          >
+            <span className="w-1.5 min-h-3 flex-1 rounded-full bg-[var(--accent)]" aria-hidden />
+            <p
+              className="type-vertical my-1.5 shrink-0 rotate-180 whitespace-nowrap text-[var(--accent)] [writing-mode:vertical-rl]"
+              style={{
+                fontSize: TYPE_SCALE.verticalLabel.css,
+                letterSpacing: TYPE_SCALE.verticalLabel.letterSpacing,
+              }}
             >
-              <span className="w-1.5 min-h-3 flex-1 rounded-full bg-[var(--accent)]" aria-hidden />
-              <p
-                className="type-vertical my-1.5 shrink-0 rotate-180 whitespace-nowrap text-[var(--accent)] [writing-mode:vertical-rl]"
-                style={{
-                  fontSize: TYPE_SCALE.verticalLabel.css,
-                  letterSpacing: TYPE_SCALE.verticalLabel.letterSpacing,
-                }}
-              >
-                {colorPlay.verticalLabel}
-              </p>
-              <span className="w-1.5 min-h-3 flex-1 rounded-full bg-[var(--accent)]" aria-hidden />
-            </div>
+              {colorPlay.verticalLabel}
+            </p>
+            <span className="w-1.5 min-h-3 flex-1 rounded-full bg-[var(--accent)]" aria-hidden />
           </div>
         </div>
       </section>

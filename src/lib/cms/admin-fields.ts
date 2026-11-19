@@ -11,7 +11,8 @@ export const SECTION_HELP: Partial<Record<HomepageSectionKey, string>> = {
   collections: "Lưới 3 bộ sưu tập (Áo Thun / Quần / Phụ Kiện) — chọn danh mục có sẵn cho từng ô.",
   diverse: "Khối “Đa Dạng Kiểu Dáng – Dễ Phối Đồ” với ảnh người mẫu và chữ nền WEARLY.",
   featured: "Sản phẩm nổi bật (2 khung lớn + 4 khung nhỏ).",
-  color_play: "Khối PHỐI MÀU TẠO CHẤT với ảnh lớn, lưới ảnh và chữ dọc.",
+  color_play:
+    "Khối PHỐI MÀU TẠO CHẤT: ảnh lớn, 2 ảnh dưới đoạn “Xu Hướng”, lưới ảnh và chữ dọc.",
   promo_banner: "Banner quảng cáo tùy chọn (mặc định tắt để giữ đúng bố cục hiện tại).",
   footer: "Chân trang: mô tả, liên hệ, mạng xã hội (cố định ở cuối mọi trang).",
 };
@@ -72,6 +73,19 @@ export const SECTION_FIELDS: Partial<Record<HomepageSectionKey, FieldDef[]>> = {
     { path: "headline", label: "Tiêu đề", kind: "textarea" },
     { path: "paragraph1", label: "Đoạn 1", kind: "textarea" },
     { path: "paragraph2", label: "Đoạn 2", kind: "textarea" },
+    {
+      path: "introImage1",
+      label: "Ảnh intro 1 (dưới đoạn văn)",
+      kind: "image",
+      hint: "Hai ảnh dưới “Xu Hướng Màu Sắc” — thay bằng tải lên hoặc URL /uploads/…",
+    },
+    { path: "introImage1Alt", label: "Alt ảnh intro 1", kind: "text" },
+    {
+      path: "introImage2",
+      label: "Ảnh intro 2 (dưới đoạn văn)",
+      kind: "image",
+    },
+    { path: "introImage2Alt", label: "Alt ảnh intro 2", kind: "text" },
     { path: "verticalLabel", label: "Chữ dọc", kind: "text" },
     { path: "mainImage", label: "Ảnh lớn", kind: "image" },
     { path: "typeFillImage", label: "Ảnh lấp chữ MÀU / TẠO / CHẤT", kind: "image" },

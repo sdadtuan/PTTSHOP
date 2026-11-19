@@ -44,6 +44,8 @@ export const homeImages = {
     main: `${HV2}/phoi-mau-main.jpg`,
     /** Photo fill clipped inside large “PHỐI” letterforms — not a product tile. */
     typeFill: `${HV2}/phoi-mau-type.jpg`,
+    /** Two lifestyle frames under “Xu Hướng Màu Sắc” intro copy (CMS-replaceable). */
+    intro: [`${HV2}/phoi-mau-2.jpg`, `${HV2}/phoi-mau-5.jpg`] as const,
     grid: [
       `${HV2}/phoi-mau-1.jpg`,
       `${HV2}/phoi-mau-2.jpg`,

@@ -14,6 +14,8 @@ describe("homeImages config", () => {
     expect(homeImages.colorPlay.typeFill).toBe(
       "/images/home-v2/phoi-mau-type.jpg",
     );
+    expect(homeImages.colorPlay.intro).toHaveLength(2);
+    expect(homeImages.colorPlay.intro[0]).toContain("/images/home-v2/");
     expect(homeImages.colorPlay.grid).toHaveLength(6);
   });
 });

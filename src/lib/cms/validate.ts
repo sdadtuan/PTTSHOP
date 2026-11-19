@@ -166,6 +166,10 @@ const colorPlayContentSchema = z.object({
   headline: plain.pipe(z.string().max(200)),
   paragraph1: plain.pipe(z.string().max(600)),
   paragraph2: plain.pipe(z.string().max(600)),
+  introImage1: safeMedia,
+  introImage2: safeMedia,
+  introImage1Alt: plain.pipe(z.string().max(160)),
+  introImage2Alt: plain.pipe(z.string().max(160)),
   verticalLabel: plain.pipe(z.string().max(80)),
 });
 

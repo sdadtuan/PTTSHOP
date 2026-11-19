@@ -102,6 +102,11 @@ export type ColorPlayContent = {
   headline: string;
   paragraph1: string;
   paragraph2: string;
+  /** Two images under the intro paragraphs (fill empty copy column). */
+  introImage1: string;
+  introImage2: string;
+  introImage1Alt: string;
+  introImage2Alt: string;
   verticalLabel: string;
 };
 
@@ -289,6 +294,10 @@ export function defaultSectionContent(
           "Từ kem trung tính đến đen tối giản hay cam nổi bật — VIZFAS giúp bạn phối màu tạo chất mà vẫn mặc được mỗi ngày.",
         paragraph2:
           "Chọn một item Essential, thêm phụ kiện, và hoàn thiện look trong vài phút — giữ form sạch, điểm nhấn rõ.",
+        introImage1: homeImages.colorPlay.intro[0],
+        introImage2: homeImages.colorPlay.intro[1],
+        introImage1Alt: "Look phối màu — khung 1",
+        introImage2Alt: "Look phối màu — khung 2",
         verticalLabel: "BỘ SƯU TẬP MỚI",
       } satisfies ColorPlayContent;
     case "promo_banner":
