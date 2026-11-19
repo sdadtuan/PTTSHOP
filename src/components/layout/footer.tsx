@@ -94,7 +94,7 @@ const columns = [
 export function Footer() {
   const pathname = usePathname();
   const brand = useSiteBrand();
-  if (pathname?.startsWith("/admin")) return null;
+  if (pathname?.startsWith("/admin") || pathname?.startsWith("/demo-v2")) return null;
 
   const social = [
     { href: brand.socialInstagram || "https://instagram.com", label: "Instagram", Icon: InstagramIcon },
