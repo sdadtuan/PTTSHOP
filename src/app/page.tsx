@@ -689,17 +689,20 @@ export default async function HomePage() {
             </div>
             {/* Vertical label = đúng cao lưới + vạch cam; 1 dòng nowrap */}
             <div
-              className="pointer-events-none absolute inset-y-0 -right-3 z-20 hidden flex-col items-center md:flex lg:-right-6"
+              className="pointer-events-none absolute inset-y-0 -right-3 z-20 hidden flex-col items-center justify-center md:flex lg:-right-5 xl:-right-6"
               data-testid="phoi-vertical-label"
             >
-              <span className="w-1.5 flex-1 rounded-full bg-[var(--accent)]" aria-hidden />
+              <span className="w-1.5 min-h-3 flex-1 rounded-full bg-[var(--accent)]" aria-hidden />
               <p
-                className="type-vertical my-2 rotate-180 whitespace-nowrap text-[var(--accent)] [writing-mode:vertical-rl]"
-                style={{ fontSize: TYPE_SCALE.verticalLabel.css }}
+                className="type-vertical my-1.5 shrink-0 rotate-180 whitespace-nowrap text-[var(--accent)] [writing-mode:vertical-rl]"
+                style={{
+                  fontSize: TYPE_SCALE.verticalLabel.css,
+                  letterSpacing: TYPE_SCALE.verticalLabel.letterSpacing,
+                }}
               >
                 {colorPlay.verticalLabel}
               </p>
-              <span className="w-1.5 flex-1 rounded-full bg-[var(--accent)]" aria-hidden />
+              <span className="w-1.5 min-h-3 flex-1 rounded-full bg-[var(--accent)]" aria-hidden />
             </div>
           </div>
         </div>

@@ -91,7 +91,8 @@ export const TYPE_SCALE = {
   },
   verticalLabel: {
     label: "BỘ SƯU TẬP MỚI dọc",
-    desktopPx: 40,
-    css: "2.5rem", // 40px
+    desktopPx: 28,
+    css: "clamp(1.125rem, 1.6vw + 0.55rem, 1.75rem)",
+    letterSpacing: "0.1em",
   },
 } as const;
