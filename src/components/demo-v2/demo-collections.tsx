@@ -44,7 +44,7 @@ export function DemoCollections({
 
   return (
     <section
-      className="dv2-section"
+      className="dv2-section dv2-reveal"
       data-testid="demo-v2-collections"
       aria-labelledby="dv2-collections-title"
     >

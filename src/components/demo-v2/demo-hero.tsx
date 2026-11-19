@@ -75,8 +75,9 @@ export function DemoHero({
   const label = String(index + 1).padStart(2, "0");
 
   return (
-    <section className="dv2-hero" data-testid="demo-v2-hero" aria-label="Hero">
+    <section className="dv2-hero dv2-hero--strike" data-testid="demo-v2-hero" aria-label="Hero">
       <div className="dv2-hero__v" aria-hidden />
+      <div className="dv2-hero__grain" aria-hidden />
       <div className="dv2-wrap dv2-hero__inner">
         <div className="dv2-hero__copy">
           <p className="dv2-kicker">{slide.eyebrow}</p>
@@ -132,7 +133,7 @@ export function DemoHero({
               alt="Mẫu streetwear VIZFAS"
               fill
               priority
-              sizes="(max-width:900px) 80vw, 420px"
+              sizes="(max-width:900px) 85vw, 48vw"
               className="dv2-hero__media"
             />
           </div>
@@ -141,7 +142,7 @@ export function DemoHero({
               src={slide.sideA}
               alt=""
               fill
-              sizes="160px"
+              sizes="180px"
               className="dv2-hero__media"
             />
           </div>
@@ -150,7 +151,7 @@ export function DemoHero({
               src={slide.sideB}
               alt=""
               fill
-              sizes="160px"
+              sizes="180px"
               className="dv2-hero__media"
             />
           </div>

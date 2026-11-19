@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import {
-  DemoProductCard,
-  type DemoProduct,
-} from "@/components/demo-v2/demo-product-card";
+import { DemoFeaturedCarousel } from "@/components/demo-v2/demo-featured-carousel";
+import type { DemoProduct } from "@/components/demo-v2/demo-product-card";
 import { homeImages } from "@/config/home-images";
 import type { FeaturedContent } from "@/lib/cms/types";
 
@@ -21,13 +19,11 @@ export function DemoFeatured({
     ? content.smallImages
     : [...homeImages.featured.small];
   const overrides = [...largeImages, ...smallImages];
-
-  // One compact row (~5) — no duplicate glance / oversized 2+4 stack
-  const row = products.slice(0, 5);
+  const row = products.slice(0, 8);
 
   return (
     <section
-      className="dv2-section"
+      className="dv2-section dv2-reveal"
       data-testid="demo-v2-featured"
       aria-labelledby="dv2-featured-title"
     >
@@ -44,15 +40,7 @@ export function DemoFeatured({
           </Link>
         </div>
 
-        <div className="dv2-products dv2-products--compact">
-          {row.map((product, i) => (
-            <DemoProductCard
-              key={`feat-${product.id}-${i}`}
-              product={product}
-              imageOverride={overrides[i]}
-            />
-          ))}
-        </div>
+        <DemoFeaturedCarousel products={row} overrides={overrides} />
       </div>
     </section>
   );
