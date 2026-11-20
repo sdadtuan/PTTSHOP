@@ -41,6 +41,11 @@ yarn-error.log*
 *.db
 *.db-journal
 prisma/dev.db
+prisma/dev.db.bak-*
+
+# local runtime / diagnostics (do not commit)
+dev.log
+scripts/check-users.ts
 
 # vercel
 .vercel
