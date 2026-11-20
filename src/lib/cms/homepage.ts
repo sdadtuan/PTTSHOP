@@ -158,19 +158,16 @@ async function seedInner() {
     });
   }
 
-  const settings = await prisma.siteSettings.findUnique({ where: { id: "default" } });
-  if (!settings) {
-    await prisma.siteSettings.upsert({
-      where: { id: "default" },
-      update: {},
-      create: {
-        id: "default",
-        ...settingsColumns(DEFAULT_SITE_SETTINGS),
-        draftJson: JSON.stringify(DEFAULT_SITE_SETTINGS),
-        publishedAt: new Date(),
-      },
-    });
-  }
+  await prisma.siteSettings.upsert({
+    where: { id: "default" },
+    update: {},
+    create: {
+      id: "default",
+      ...settingsColumns(DEFAULT_SITE_SETTINGS),
+      draftJson: JSON.stringify(DEFAULT_SITE_SETTINGS),
+      publishedAt: new Date(),
+    },
+  });
 
   if ((await prisma.homepageVersion.count()) === 0) {
     await prisma.homepageVersion.create({

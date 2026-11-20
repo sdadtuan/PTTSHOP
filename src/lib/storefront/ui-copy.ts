@@ -33,7 +33,17 @@ const REVALIDATE_PATHS = [
   "/ve-chung-toi",
 ];
 
+let uiCopySeeding: Promise<void> | null = null;
+
 export async function ensureStorefrontUiSeeded() {
+  if (uiCopySeeding) return uiCopySeeding;
+  uiCopySeeding = seedStorefrontUiInner().finally(() => {
+    uiCopySeeding = null;
+  });
+  return uiCopySeeding;
+}
+
+async function seedStorefrontUiInner() {
   const json = JSON.stringify(DEFAULT_STOREFRONT_UI);
   await prisma.storefrontUiCopy.upsert({
     where: { id: "default" },

@@ -27,6 +27,17 @@ describe("storefront static pages", () => {
     expect(page?.title).toBe("Về VIZFAS");
     expect(page?.body.some((l) => l.includes("VIZFAS là thương hiệu"))).toBe(true);
   });
+
+  it("concurrent lazy seed does not throw unique errors", async () => {
+    await Promise.all([
+      ensureStorefrontPagesSeeded(),
+      ensureStorefrontPagesSeeded(),
+      getStorefrontPageBySlug("tin-tuc"),
+      getStorefrontPageBySlug("tuyen-dung"),
+    ]);
+    const row = await prisma.storefrontPage.findUnique({ where: { slug: "tin-tuc" } });
+    expect(row?.title).toBe("Tin tức");
+  });
 });
 
 describe("extended CMS defaults validate", () => {

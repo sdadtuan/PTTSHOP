@@ -23,24 +23,34 @@ function parseBody(raw: string | null | undefined): string[] {
   }
 }
 
+let pagesSeeding: Promise<void> | null = null;
+
+/** Idempotent: inserts default static pages only when missing; safe under concurrent first requests. */
 export async function ensureStorefrontPagesSeeded() {
+  if (pagesSeeding) return pagesSeeding;
+  pagesSeeding = seedStorefrontPagesInner().finally(() => {
+    pagesSeeding = null;
+  });
+  return pagesSeeding;
+}
+
+async function seedStorefrontPagesInner() {
   for (const seed of STOREFRONT_PAGE_SEEDS) {
     const bodyJson = JSON.stringify(seed.body);
-    const existing = await prisma.storefrontPage.findUnique({ where: { slug: seed.slug } });
-    if (!existing) {
-      await prisma.storefrontPage.create({
-        data: {
-          slug: seed.slug,
-          title: seed.title,
-          description: seed.description ?? null,
-          bodyJson,
-          draftTitle: seed.title,
-          draftDescription: seed.description ?? null,
-          draftBodyJson: bodyJson,
-          sortOrder: seed.sortOrder,
-        },
-      });
-    }
+    await prisma.storefrontPage.upsert({
+      where: { slug: seed.slug },
+      update: {},
+      create: {
+        slug: seed.slug,
+        title: seed.title,
+        description: seed.description ?? null,
+        bodyJson,
+        draftTitle: seed.title,
+        draftDescription: seed.description ?? null,
+        draftBodyJson: bodyJson,
+        sortOrder: seed.sortOrder,
+      },
+    });
   }
 }
 
