@@ -69,6 +69,11 @@ export const TYPE_SCALE = {
     desktopPx: 120,
     css: "clamp(3.5rem, 9.5vw, 7.5rem)",
   },
+  phoiTypeMobile: {
+    label: "PHỐI/MÀU/TẠO/CHẤT (mobile side column)",
+    desktopPx: 34,
+    css: "clamp(1.15rem, 5.4vw, 2rem)",
+  },
   phoiXuHuong: {
     label: "Xu Hướng Màu Sắc",
     desktopPx: 28,

@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode } from "react";
+import { Fragment, type CSSProperties, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -636,38 +636,44 @@ export default async function HomePage() {
   // PHỐI MÀU — model full height; type clear; lưới spans under CHẤT (not over type)
   blocks["color_play"] = colorSec.isEnabled ? (
       <section className="relative mx-auto max-w-7xl overflow-hidden px-4 py-10 md:px-6 md:py-20">
-        <div className="relative grid grid-cols-1 gap-x-3 gap-y-4 md:pr-11 lg:grid-cols-[minmax(200px,0.26fr)_minmax(220px,0.3fr)_minmax(0,0.44fr)] lg:[grid-template-areas:'model_type_copy'_'model_grid_grid'] lg:pr-14">
-          <div className="relative z-10 aspect-[3/4] max-h-[min(44vh,350px)] w-full md:aspect-auto md:h-[420px] md:max-h-none lg:h-auto lg:[grid-area:model]">
+        <div className="relative grid grid-cols-1 gap-x-3 gap-y-4 max-md:grid-cols-[minmax(0,47fr)_minmax(0,53fr)] max-md:items-start md:pr-11 lg:grid-cols-[minmax(200px,0.26fr)_minmax(220px,0.3fr)_minmax(0,0.44fr)] lg:[grid-template-areas:'model_type_copy'_'model_grid_grid'] lg:pr-14">
+          <div className="relative z-10 aspect-[3/4] w-full max-md:col-start-2 max-md:row-span-2 max-md:row-start-1 max-md:max-h-none max-md:self-start md:aspect-auto md:h-[420px] md:max-h-none lg:h-auto lg:[grid-area:model]">
             <Image
               src={colorPlay.mainImage || homeImages.colorPlay.main}
               alt="Phối màu tạo chất"
               fill
-              sizes="(max-width:1024px) 100vw, 26vw"
+              sizes="(max-width:768px) 48vw, (max-width:1024px) 100vw, 26vw"
               className="object-cover object-top max-md:[object-position:50%_12%]"
               priority
             />
           </div>
 
-          <div className="relative z-30 lg:[grid-area:type]">
+          <div className="relative z-30 max-md:col-start-1 max-md:row-start-1 max-md:pr-0.5 lg:[grid-area:type]">
             <PhoiMauType fillImage={colorPlay.typeFillImage} />
           </div>
 
-          <div className="relative z-20 flex min-h-0 min-w-0 flex-col pt-1 lg:[grid-area:copy]">
-            <h2
-              className="type-display text-neutral-900"
-              style={{ fontSize: TYPE_SCALE.phoiXuHuong.css }}
-            >
-              {colorPlay.headline}
-            </h2>
-            <p className="mt-4 text-sm leading-relaxed text-neutral-600 md:text-[15px]">
-              {colorPlay.paragraph1}
-            </p>
-            <p className="mt-3 text-sm leading-relaxed text-neutral-600 md:text-[15px]">
-              {colorPlay.paragraph2}
-            </p>
+          <div className="relative z-20 flex min-h-0 min-w-0 flex-col pt-1 max-md:contents lg:[grid-area:copy]">
+            <div className="max-md:col-start-1 max-md:row-start-2 max-md:flex max-md:flex-col max-md:gap-2 max-md:pr-0.5 md:flex md:flex-col">
+              <h2
+                className="type-display phoi-xu-huong-headline text-neutral-900 max-md:leading-snug"
+                style={
+                  {
+                    ["--phoi-xh-fs" as string]: TYPE_SCALE.phoiXuHuong.css,
+                  } as CSSProperties
+                }
+              >
+                {colorPlay.headline}
+              </h2>
+              <p className="text-xs leading-relaxed text-neutral-600 max-md:mt-0 md:mt-4 md:text-[15px] max-md:text-[11px] max-md:leading-[1.45]">
+                {colorPlay.paragraph1}
+              </p>
+              <p className="text-xs leading-relaxed text-neutral-600 max-md:mt-0 md:mt-3 md:text-[15px] max-md:text-[11px] max-md:leading-[1.45]">
+                {colorPlay.paragraph2}
+              </p>
+            </div>
             {/* Two CMS intro frames fill the empty copy column under the paragraphs */}
             <div
-              className="mt-5 grid grid-cols-2 gap-2 md:mt-6 md:gap-3 lg:mt-auto lg:min-h-[11rem] lg:flex-1 lg:pt-5"
+              className="mt-5 grid grid-cols-2 gap-2 max-md:col-span-2 max-md:row-start-3 md:mt-6 md:gap-3 lg:mt-auto lg:min-h-[11rem] lg:flex-1 lg:pt-5"
               data-testid="phoi-intro-images"
             >
               {(
@@ -701,7 +707,7 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <div className="relative z-10 w-full lg:[grid-area:grid]">
+          <div className="relative z-10 w-full max-md:col-span-2 max-md:row-start-4 lg:[grid-area:grid]">
             <div className="grid grid-cols-3 gap-1 md:gap-1.5">
               {(colorPlay.gridImages.length
                 ? colorPlay.gridImages

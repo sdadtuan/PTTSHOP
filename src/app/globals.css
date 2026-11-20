@@ -80,6 +80,25 @@ body {
   box-decoration-break: clone;
 }
 
+/* Phối màu stacked type: compact in mobile side column; full scale from md */
+.phoi-mau-type-stack {
+  font-size: var(--phoi-type-fs-mobile);
+}
+@media (min-width: 768px) {
+  .phoi-mau-type-stack {
+    font-size: var(--phoi-type-fs);
+  }
+}
+
+.phoi-xu-huong-headline {
+  font-size: clamp(0.95rem, 3.6vw, 1.15rem);
+}
+@media (min-width: 768px) {
+  .phoi-xu-huong-headline {
+    font-size: var(--phoi-xh-fs);
+  }
+}
+
 .type-vertical {
   font-family: var(--font-display), system-ui, sans-serif;
   font-weight: 900;

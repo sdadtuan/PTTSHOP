@@ -19,8 +19,13 @@ export function PhoiMauType({ fillImage }: { fillImage?: string } = {}) {
 
   return (
     <div
-      className="type-stack pointer-events-none select-none"
-      style={{ fontSize: TYPE_SCALE.phoiType.css }}
+      className="type-stack phoi-mau-type-stack pointer-events-none select-none"
+      style={
+        {
+          ["--phoi-type-fs" as string]: TYPE_SCALE.phoiType.css,
+          ["--phoi-type-fs-mobile" as string]: TYPE_SCALE.phoiTypeMobile.css,
+        } as CSSProperties
+      }
       aria-hidden
       data-testid="phoi-mau-type"
     >
