@@ -10,6 +10,12 @@ import {
   AdminTextarea,
   useAdminToast,
 } from "@/components/admin/ui";
+import { StorefrontUiEditor, StorefrontUiToolbar } from "@/components/admin/storefront-ui-editor";
+import {
+  DEFAULT_STOREFRONT_UI,
+  type StorefrontUiCopy,
+  type UiCopySectionKey,
+} from "@/lib/storefront/ui-copy-types";
 
 type PageRow = {
   id: string;
@@ -30,6 +36,10 @@ export default function AdminNoiDungPage() {
   const [draftBody, setDraftBody] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [tab, setTab] = useState<"pages" | "ui">("pages");
+  const [uiDraft, setUiDraft] = useState<StorefrontUiCopy>(DEFAULT_STOREFRONT_UI);
+  const [uiHasChanges, setUiHasChanges] = useState(false);
+  const [uiSection, setUiSection] = useState<UiCopySectionKey>("contact");
 
   const selected = pages.find((p) => p.id === selectedId) ?? null;
 
@@ -48,9 +58,22 @@ export default function AdminNoiDungPage() {
     }
   }, [toast]);
 
+  const loadUi = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/storefront-ui", { cache: "no-store" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Không tải được UI copy");
+      setUiDraft(data.draft);
+      setUiHasChanges(data.hasUnpublishedChanges);
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Lỗi tải UI", "error");
+    }
+  }, [toast]);
+
   useEffect(() => {
     void load();
-  }, [load]);
+    void loadUi();
+  }, [load, loadUi]);
 
   useEffect(() => {
     if (!selected) return;
@@ -116,20 +139,111 @@ export default function AdminNoiDungPage() {
     <div className="space-y-6" data-testid="admin-noi-dung">
       <AdminPageHeader
         title="Trang nội dung"
-        description="Chỉnh Về chúng tôi, Hỗ trợ và Chính sách. Lưu nháp rồi Xuất bản để hiện trên site."
+        description="Trang tĩnh (Về chúng tôi, Hỗ trợ, Tin tức…) và copy giao diện cửa hàng (giỏ hàng, đăng nhập, liên hệ…)."
         breadcrumbs={[{ href: "/admin", label: "Admin" }, { label: "Trang nội dung" }]}
         actions={
-          <div className="flex gap-2">
-            <AdminButton variant="secondary" disabled={busy || !selected} onClick={onSave}>
-              Lưu nháp
-            </AdminButton>
-            <AdminButton variant="accent" disabled={busy || !selected} onClick={onPublish}>
-              Xuất bản
-            </AdminButton>
-          </div>
+          tab === "pages" ? (
+            <div className="flex gap-2">
+              <AdminButton variant="secondary" disabled={busy || !selected} onClick={onSave}>
+                Lưu nháp
+              </AdminButton>
+              <AdminButton variant="accent" disabled={busy || !selected} onClick={onPublish}>
+                Xuất bản
+              </AdminButton>
+            </div>
+          ) : (
+            <StorefrontUiToolbar
+              hasChanges={uiHasChanges}
+              busy={busy}
+              onSave={() =>
+                void (async () => {
+                  setBusy(true);
+                  try {
+                    const res = await fetch("/api/admin/storefront-ui", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ action: "save_draft", draft: uiDraft }),
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || "Lỗi");
+                    setUiDraft(data.draft);
+                    setUiHasChanges(data.hasUnpublishedChanges);
+                    toast("Đã lưu nháp copy cửa hàng", "success");
+                  } catch (e) {
+                    toast(e instanceof Error ? e.message : "Lỗi", "error");
+                  } finally {
+                    setBusy(false);
+                  }
+                })()
+              }
+              onPublish={() =>
+                void (async () => {
+                  if (!confirm("Xuất bản toàn bộ copy cửa hàng lên site?")) return;
+                  setBusy(true);
+                  try {
+                    await fetch("/api/admin/storefront-ui", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ action: "save_draft", draft: uiDraft }),
+                    });
+                    const res = await fetch("/api/admin/storefront-ui", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ action: "publish" }),
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || "Lỗi");
+                    setUiDraft(data.draft);
+                    setUiHasChanges(false);
+                    toast("Đã xuất bản copy cửa hàng", "success");
+                  } catch (e) {
+                    toast(e instanceof Error ? e.message : "Lỗi", "error");
+                  } finally {
+                    setBusy(false);
+                  }
+                })()
+              }
+              onDiscard={() =>
+                void (async () => {
+                  if (!confirm("Hủy nháp copy cửa hàng?")) return;
+                  setBusy(true);
+                  try {
+                    const res = await fetch("/api/admin/storefront-ui", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ action: "discard_draft" }),
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || "Lỗi");
+                    setUiDraft(data.draft);
+                    setUiHasChanges(false);
+                  } catch (e) {
+                    toast(e instanceof Error ? e.message : "Lỗi", "error");
+                  } finally {
+                    setBusy(false);
+                  }
+                })()
+              }
+            />
+          )
         }
       />
 
+      <MotionUITabs tab={tab} onTab={setTab} />
+
+      {tab === "ui" ? (
+        <StorefrontUiEditor
+          draft={uiDraft}
+          onChange={(next) => {
+            setUiDraft(next);
+            setUiHasChanges(true);
+          }}
+          selected={uiSection}
+          onSelect={setUiSection}
+        />
+      ) : null}
+
+      {tab === "pages" ? (
       <MotionLayout loading={loading} pages={pages} selectedId={selectedId} onSelect={setSelectedId}>
         {selected ? (
           <div className="space-y-4">
@@ -180,8 +294,32 @@ export default function AdminNoiDungPage() {
           <p className="text-sm text-[var(--admin-text-muted)]">Chọn một trang để chỉnh.</p>
         )}
       </MotionLayout>
+      ) : null}
     </div>
   );
+}
+
+function MotionUITabs({
+  tab,
+  onTab,
+}: {
+  tab: "pages" | "ui";
+  onTab: (t: "pages" | "ui") => void;
+}) {
+  return (
+    <MotionTabRow>
+      <AdminButton variant={tab === "pages" ? "accent" : "secondary"} size="sm" onClick={() => onTab("pages")}>
+        Trang tĩnh
+      </AdminButton>
+      <AdminButton variant={tab === "ui" ? "accent" : "secondary"} size="sm" onClick={() => onTab("ui")}>
+        Copy cửa hàng (A)
+      </AdminButton>
+    </MotionTabRow>
+  );
+}
+
+function MotionTabRow({ children }: { children: React.ReactNode }) {
+  return <div className="flex flex-wrap gap-2">{children}</div>;
 }
 
 function MotionLayout({

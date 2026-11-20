@@ -2,6 +2,7 @@ import { PrismaClient, Gender } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { ensureHomepageCmsSeeded } from "../src/lib/cms/homepage";
 import { ensureStorefrontPagesSeeded } from "../src/lib/storefront/pages";
+import { ensureStorefrontUiSeeded } from "../src/lib/storefront/ui-copy";
 
 const prisma = new PrismaClient();
 
@@ -581,6 +582,7 @@ async function main() {
 
   await ensureHomepageCmsSeeded();
   await ensureStorefrontPagesSeeded();
+  await ensureStorefrontUiSeeded();
 
   console.log(
     "Seed xong: admin@vizfas.vn / admin123 | khach@vizfas.vn / khach123 — ĐỔI mật khẩu admin trước khi dùng chung.",

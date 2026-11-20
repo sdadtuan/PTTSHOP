@@ -8,9 +8,8 @@ import type {
   NavigationContent,
   ReviewsSectionContent,
 } from "@/lib/cms/types";
-import {
-  defaultSectionContent,
-} from "@/lib/cms/types";
+import { defaultSectionContent } from "@/lib/cms/types";
+import { DEFAULT_STOREFRONT_UI, type StorefrontUiCopy } from "@/lib/storefront/ui-copy-types";
 
 export type StorefrontLayoutData = {
   settings: SiteSettingsData;
@@ -18,6 +17,7 @@ export type StorefrontLayoutData = {
   footerLinks: FooterLinksContent;
   floatingContact: FloatingContactContent;
   reviews: ReviewsSectionContent;
+  ui: StorefrontUiCopy;
 };
 
 const defaults: StorefrontLayoutData = {
@@ -26,6 +26,7 @@ const defaults: StorefrontLayoutData = {
   footerLinks: defaultSectionContent("footer_links") as StorefrontLayoutData["footerLinks"],
   floatingContact: defaultSectionContent("floating_contact") as StorefrontLayoutData["floatingContact"],
   reviews: defaultSectionContent("reviews") as StorefrontLayoutData["reviews"],
+  ui: DEFAULT_STOREFRONT_UI,
 };
 
 const StorefrontLayoutContext = createContext<StorefrontLayoutData>(defaults);
@@ -46,4 +47,8 @@ export function StorefrontLayoutProvider({
 
 export function useStorefrontLayout() {
   return useContext(StorefrontLayoutContext);
+}
+
+export function useStorefrontUi() {
+  return useContext(StorefrontLayoutContext).ui;
 }

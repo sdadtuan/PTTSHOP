@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { formatVnd } from "@/lib/format";
 import { WISHLIST_GUEST_KEY } from "@/components/cart/cart-context";
+import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
 
 type WishItem = {
   id?: string;
@@ -20,6 +21,7 @@ type WishItem = {
 };
 
 export default function WishlistPage() {
+  const w = useStorefrontUi().wishlist;
   const { status } = useSession();
   const [items, setItems] = useState<WishItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,7 +64,7 @@ export default function WishlistPage() {
   if (loading) {
     return (
       <div className="mx-auto max-w-xl px-4 py-24 text-center text-sm text-neutral-500">
-        Đang tải...
+        {w.loading}
       </div>
     );
   }
@@ -70,17 +72,13 @@ export default function WishlistPage() {
   if (items.length === 0) {
     return (
       <div className="mx-auto max-w-xl px-4 py-24 text-center">
-        <h1 className="type-title text-3xl font-bold">
-          Yêu thích
-        </h1>
-        <p className="mt-3 text-sm text-neutral-500">
-          Chưa có sản phẩm nào trong danh sách yêu thích.
-        </p>
+        <h1 className="type-title text-3xl font-bold">{w.title}</h1>
+        <p className="mt-3 text-sm text-neutral-500">{w.emptyBody}</p>
         <Link
           href="/san-pham"
           className="mt-8 inline-flex rounded-full bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-white"
         >
-          Khám phá sản phẩm
+          {w.emptyCta}
         </Link>
       </div>
     );
@@ -88,14 +86,12 @@ export default function WishlistPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 md:px-6">
-      <h1 className="type-title text-3xl font-bold">
-        Yêu thích
-      </h1>
+      <h1 className="type-title text-3xl font-bold">{w.title}</h1>
       {status !== "authenticated" ? (
         <p className="mt-2 text-sm text-neutral-500">
-          Đang lưu tạm trên thiết bị.{" "}
+          {w.guestHint}{" "}
           <Link href="/dang-nhap" className="text-[var(--accent)]">
-            Đăng nhập
+            {w.guestLoginLink}
           </Link>{" "}
           để đồng bộ tài khoản.
         </p>
@@ -122,7 +118,7 @@ export default function WishlistPage() {
               onClick={() => void remove(i.variantId)}
               className="self-start text-xs text-neutral-500 hover:text-red-600"
             >
-              Xóa
+              {w.removeLabel}
             </button>
           </li>
         ))}

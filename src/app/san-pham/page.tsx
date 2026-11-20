@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { buildProductWhere, sortProductsByPrice } from "@/lib/products-query";
 import { cn } from "@/lib/utils";
 import type { ProductSort } from "@/lib/validation";
+import { getStorefrontUi } from "@/lib/storefront/ui-copy";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +47,7 @@ export default async function ProductsPage({
   searchParams: SearchParams;
 }) {
   const params = await searchParams;
+  const ui = (await getStorefrontUi()).products;
   const page = Math.max(1, Number(params.page) || 1);
   const pageSize = 12;
   const sort = (sortOptions.some((s) => s.value === params.sort)
@@ -90,10 +92,10 @@ export default async function ProductsPage({
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="type-title text-3xl font-bold md:text-4xl">
-            Sản phẩm
+            {ui.title}
           </h1>
           <p className="mt-2 text-sm text-neutral-500">
-            {total} sản phẩm
+            {total} {ui.countSuffix}
             {params.gender
               ? ` · ${genderLabels[params.gender] ?? params.gender}`
               : ""}
@@ -106,7 +108,7 @@ export default async function ProductsPage({
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 text-sm text-neutral-600">
-          <span>Sắp xếp:</span>
+          <span>{ui.sortLabel}</span>
           {sortOptions.map((o) => (
             <Link
               key={o.value}
@@ -134,7 +136,7 @@ export default async function ProductsPage({
             !params.collection
           }
         >
-          Tất cả
+          {ui.filterAll}
         </FilterChip>
         {categories.map((c) => (
           <FilterChip
@@ -149,19 +151,19 @@ export default async function ProductsPage({
           href={buildQuery({ gender: "MALE", sort })}
           active={params.gender === "MALE"}
         >
-          Nam
+          {ui.filterMen}
         </FilterChip>
         <FilterChip
           href={buildQuery({ gender: "FEMALE", sort })}
           active={params.gender === "FEMALE"}
         >
-          Nữ
+          {ui.filterWomen}
         </FilterChip>
         <FilterChip
           href={buildQuery({ new: "1", sort })}
           active={params.new === "1"}
         >
-          Hàng mới
+          {ui.filterNew}
         </FilterChip>
         {collections.map((c) => (
           <FilterChip
@@ -176,7 +178,7 @@ export default async function ProductsPage({
 
       {products.length === 0 ? (
         <p className="py-20 text-center text-neutral-500">
-          Không tìm thấy sản phẩm phù hợp.
+          {ui.emptyMessage}
         </p>
       ) : (
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 md:gap-6">
@@ -193,18 +195,18 @@ export default async function ProductsPage({
               href={buildQuery({ ...baseParams, page: String(page - 1) })}
               className="rounded border border-neutral-200 px-3 py-1.5 text-sm"
             >
-              Trước
+              {ui.pagePrev}
             </Link>
           ) : null}
           <span className="text-sm text-neutral-500">
-            Trang {page} / {totalPages}
+            {ui.pageOf} {page} / {totalPages}
           </span>
           {page < totalPages ? (
             <Link
               href={buildQuery({ ...baseParams, page: String(page + 1) })}
               className="rounded border border-neutral-200 px-3 py-1.5 text-sm"
             >
-              Sau
+              {ui.pageNext}
             </Link>
           ) : null}
         </div>

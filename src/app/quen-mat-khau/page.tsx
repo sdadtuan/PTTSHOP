@@ -2,8 +2,10 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
+import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
 
 export default function ForgotPasswordPage() {
+  const a = useStorefrontUi().auth;
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -32,12 +34,8 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-4 py-16">
-      <h1 className="type-title text-3xl font-bold">
-        Quên mật khẩu
-      </h1>
-      <p className="mt-2 text-sm text-neutral-500">
-        Nhập email để nhận liên kết đặt lại mật khẩu
-      </p>
+      <h1 className="type-title text-3xl font-bold">{a.forgotTitle}</h1>
+      <p className="mt-2 text-sm text-neutral-500">{a.forgotSubtitle}</p>
 
       <form onSubmit={onSubmit} className="mt-8 space-y-4">
         <label className="block text-sm">
@@ -56,13 +54,13 @@ export default function ForgotPasswordPage() {
           disabled={loading}
           className="w-full rounded bg-neutral-900 py-3 text-sm font-semibold text-white hover:bg-[var(--accent)] disabled:opacity-60"
         >
-          {loading ? "Đang gửi..." : "Gửi liên kết"}
+          {loading ? a.forgotSubmitLoading : a.forgotSubmit}
         </button>
       </form>
 
       <p className="mt-6 text-center text-sm text-neutral-500">
         <Link href="/dang-nhap" className="text-[var(--accent)]">
-          Quay lại đăng nhập
+          {a.forgotBackLogin}
         </Link>
       </p>
     </div>

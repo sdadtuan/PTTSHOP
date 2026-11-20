@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { getCsrfToken, signIn } from "next-auth/react";
 import { safeCallbackUrl } from "@/lib/safe-callback-url";
+import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
 
 async function signInCredentials(email: string, password: string) {
   await getCsrfToken();
@@ -40,6 +41,7 @@ async function waitForSession(timeoutMs = 5_000) {
 }
 
 function LoginForm() {
+  const a = useStorefrontUi().auth;
   const searchParams = useSearchParams();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -112,7 +114,7 @@ function LoginForm() {
       ) : null}
       {!hydrated ? (
         <p className="text-xs text-neutral-500" data-testid="login-hydrate-wait">
-          Đang sẵn sàng form đăng nhập…
+          {a.loginHydrateWait}
         </p>
       ) : null}
       <button
@@ -120,25 +122,19 @@ function LoginForm() {
         disabled={!hydrated || loading}
         className="w-full rounded bg-neutral-900 py-3 text-sm font-semibold text-white hover:bg-[var(--accent)] disabled:opacity-60"
       >
-        {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+        {loading ? a.loginSubmitLoading : a.loginSubmit}
       </button>
     </form>
   );
 }
 
 export default function LoginPage() {
+  const a = useStorefrontUi().auth;
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-4 py-16">
-      <h1 className="type-title text-3xl font-bold">
-        Đăng nhập
-      </h1>
-      <p className="mt-2 text-sm text-neutral-500">
-        Demo: <code>khach@vizfas.vn / khach123</code> hoặc{" "}
-        <code>admin@vizfas.vn / admin123</code>
-      </p>
-      <p className="mt-1 text-xs text-amber-700">
-        Đổi mật khẩu admin mặc định trước khi dùng môi trường chia sẻ.
-      </p>
+      <h1 className="type-title text-3xl font-bold">{a.loginTitle}</h1>
+      <p className="mt-2 text-sm text-neutral-500">{a.loginDemoHint}</p>
+      <p className="mt-1 text-xs text-amber-700">{a.loginAdminWarning}</p>
 
       <Suspense fallback={<p className="mt-8 text-sm text-neutral-500">Đang tải...</p>}>
         <LoginForm />
@@ -146,19 +142,19 @@ export default function LoginPage() {
 
       <div className="mt-6 space-y-2 text-center text-sm text-neutral-500">
         <p>
-          Chưa có tài khoản?{" "}
+          {a.loginNoAccount}{" "}
           <Link href="/dang-ky" className="text-[var(--accent)]">
-            Đăng ký
+            {a.loginRegisterLink}
           </Link>
         </p>
         <p>
           <Link href="/quen-mat-khau" className="text-[var(--accent)]">
-            Quên mật khẩu?
+            {a.loginForgotLink}
           </Link>
         </p>
         <p>
           <Link href="/" className="text-[var(--accent)]">
-            Về trang chủ
+            {a.loginHomeLink}
           </Link>
         </p>
       </div>

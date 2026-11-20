@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { formatVnd } from "@/lib/format";
 import { ORDER_STATUS_LABELS } from "@/lib/order-status";
+import { getStorefrontUi } from "@/lib/storefront/ui-copy";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,7 @@ export default async function AccountPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/dang-nhap?callbackUrl=/tai-khoan");
 
+  const acc = (await getStorefrontUi()).account;
   const [user, orders, addressCount] = await Promise.all([
     prisma.user.findUnique({ where: { id: session.user.id } }),
     prisma.order.findMany({
@@ -23,11 +25,9 @@ export default async function AccountPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 md:px-6">
-      <h1 className="type-title text-3xl font-extrabold">
-        Tài khoản
-      </h1>
+      <h1 className="type-title text-3xl font-extrabold">{acc.title}</h1>
       <p className="mt-2 text-sm text-neutral-500">
-        Xin chào, {user?.name || user?.email}
+        {acc.greeting} {user?.name || user?.email}
       </p>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-3">
@@ -35,34 +35,34 @@ export default async function AccountPage() {
           href="/tai-khoan/don-hang"
           className="border border-neutral-100 bg-white p-5 transition hover:border-neutral-300"
         >
-          <p className="text-sm font-semibold">Đơn hàng</p>
+          <p className="text-sm font-semibold">{acc.cardOrders}</p>
           <p className="mt-1 text-2xl font-bold">{orders.length}+</p>
         </Link>
         <Link
           href="/tai-khoan/dia-chi"
           className="border border-neutral-100 bg-white p-5 transition hover:border-neutral-300"
         >
-          <p className="text-sm font-semibold">Sổ địa chỉ</p>
+          <p className="text-sm font-semibold">{acc.cardAddresses}</p>
           <p className="mt-1 text-2xl font-bold">{addressCount}</p>
         </Link>
         <Link
           href="/yeu-thich"
           className="border border-neutral-100 bg-white p-5 transition hover:border-neutral-300"
         >
-          <p className="text-sm font-semibold">Yêu thích</p>
-          <p className="mt-1 text-sm text-neutral-500">Xem danh sách</p>
+          <p className="text-sm font-semibold">{acc.cardWishlist}</p>
+          <p className="mt-1 text-sm text-neutral-500">{acc.cardWishlistHint}</p>
         </Link>
       </div>
 
       <section className="mt-10">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Đơn gần đây</h2>
+          <h2 className="text-lg font-semibold">{acc.recentOrdersTitle}</h2>
           <Link href="/tai-khoan/don-hang" className="text-sm text-[var(--accent)]">
-            Xem tất cả
+            {acc.recentOrdersLink}
           </Link>
         </div>
         {orders.length === 0 ? (
-          <p className="text-sm text-neutral-500">Chưa có đơn hàng.</p>
+          <p className="text-sm text-neutral-500">{acc.noOrders}</p>
         ) : (
           <div className="overflow-x-auto border border-neutral-100 bg-white">
             <table className="min-w-full text-left text-sm">

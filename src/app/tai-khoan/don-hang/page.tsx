@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { formatVnd } from "@/lib/format";
 import { ORDER_STATUS_LABELS } from "@/lib/order-status";
 import { prisma } from "@/lib/prisma";
+import { getStorefrontUi } from "@/lib/storefront/ui-copy";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,7 @@ export default async function OrdersPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/dang-nhap?callbackUrl=/tai-khoan/don-hang");
 
+  const ord = (await getStorefrontUi()).orders;
   const orders = await prisma.order.findMany({
     where: { userId: session.user.id },
     orderBy: { createdAt: "desc" },
@@ -21,20 +23,18 @@ export default async function OrdersPage() {
     <div className="mx-auto max-w-5xl px-4 py-10 md:px-6">
       <div className="mb-6 flex items-center gap-3 text-sm text-neutral-500">
         <Link href="/tai-khoan" className="hover:text-neutral-800">
-          Tài khoản
+          {ord.breadcrumbAccount}
         </Link>
         <span>/</span>
-        <span className="text-neutral-800">Đơn hàng</span>
+        <span className="text-neutral-800">{ord.breadcrumbCurrent}</span>
       </div>
-      <h1 className="type-title text-3xl font-extrabold">
-        Lịch sử đơn hàng
-      </h1>
+      <h1 className="type-title text-3xl font-extrabold">{ord.title}</h1>
 
       {orders.length === 0 ? (
         <p className="mt-8 text-sm text-neutral-500">
-          Chưa có đơn.{" "}
+          {ord.empty}{" "}
           <Link href="/san-pham" className="text-[var(--accent)]">
-            Mua sắm ngay
+            {ord.emptyCta}
           </Link>
         </p>
       ) : (

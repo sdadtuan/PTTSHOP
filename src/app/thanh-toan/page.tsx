@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/cart/cart-context";
+import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
 import { formatVnd } from "@/lib/format";
 
 export default function CheckoutPage() {
@@ -17,13 +18,14 @@ export default function CheckoutPage() {
   const [couponCode, setCouponCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [couponMsg, setCouponMsg] = useState("");
+  const ck = useStorefrontUi().checkout;
 
   if (items.length === 0) {
     return (
       <div className="mx-auto max-w-xl px-4 py-24 text-center">
-        <h1 className="type-title text-2xl font-bold">Chưa có sản phẩm để thanh toán</h1>
+        <h1 className="type-title text-2xl font-bold">{ck.emptyTitle}</h1>
         <Link href="/san-pham" className="mt-6 inline-block text-[var(--accent)]">
-          Quay lại mua sắm
+          {ck.emptyCta}
         </Link>
       </div>
     );
@@ -89,7 +91,7 @@ export default function CheckoutPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 md:px-6 md:py-14">
       <h1 className="type-title text-3xl font-bold">
-        Thanh toán
+        {ck.title}
       </h1>
 
       <form
@@ -97,15 +99,15 @@ export default function CheckoutPage() {
         className="mt-8 grid gap-10 lg:grid-cols-[1.4fr_0.9fr]"
       >
         <div className="min-w-0 space-y-5 border border-neutral-100 bg-white p-6">
-          <h2 className="font-semibold">Thông tin giao hàng</h2>
+          <h2 className="font-semibold">{ck.shippingSectionTitle}</h2>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Họ tên" name="name" required />
-            <Field label="Số điện thoại" name="phone" required />
+            <Field label={ck.fieldName} name="name" required />
+            <Field label={ck.fieldPhone} name="phone" required />
           </div>
-          <Field label="Email" name="email" type="email" />
-          <Field label="Địa chỉ" name="address" required />
+          <Field label={ck.fieldEmail} name="email" type="email" />
+          <Field label={ck.fieldAddress} name="address" required />
           <label className="block text-sm">
-            <span className="mb-1.5 block text-neutral-600">Ghi chú</span>
+            <span className="mb-1.5 block text-neutral-600">{ck.fieldNote}</span>
             <textarea
               name="note"
               rows={3}
@@ -114,7 +116,7 @@ export default function CheckoutPage() {
           </label>
 
           <div>
-            <p className="mb-2 text-sm font-medium">Phương thức thanh toán</p>
+            <p className="mb-2 text-sm font-medium">{ck.paymentSectionTitle}</p>
             <div className="space-y-2">
               <label className="flex items-center gap-3 border border-neutral-200 p-3 text-sm">
                 <input
@@ -122,7 +124,7 @@ export default function CheckoutPage() {
                   checked={paymentMethod === "COD"}
                   onChange={() => setPaymentMethod("COD")}
                 />
-                Thanh toán khi nhận hàng (COD)
+                {ck.paymentCod}
               </label>
               <label className="flex items-center gap-3 border border-neutral-200 p-3 text-sm">
                 <input
@@ -130,14 +132,16 @@ export default function CheckoutPage() {
                   checked={paymentMethod === "BANK_TRANSFER"}
                   onChange={() => setPaymentMethod("BANK_TRANSFER")}
                 />
-                Chuyển khoản ngân hàng
+                {ck.paymentBank}
               </label>
             </div>
           </div>
         </div>
 
         <aside className="h-fit min-w-0 border border-neutral-100 bg-white p-6">
-          <h2 className="font-semibold">Đơn hàng ({items.length})</h2>
+          <h2 className="font-semibold">
+            {ck.orderSummaryTitle} ({items.length})
+          </h2>
           <ul className="mt-4 space-y-3 text-sm">
             {items.map((i) => (
               <li key={i.variantId} className="flex justify-between gap-3">
@@ -158,7 +162,7 @@ export default function CheckoutPage() {
             <input
               value={couponCode}
               onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-              placeholder="Mã giảm giá"
+              placeholder={ck.couponPlaceholder}
               className="min-w-0 flex-1 rounded border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-neutral-900"
             />
             <button
@@ -166,7 +170,7 @@ export default function CheckoutPage() {
               onClick={() => void applyCoupon()}
               className="rounded border border-neutral-900 px-3 py-2 text-xs font-semibold"
             >
-              Áp dụng
+              {ck.couponApply}
             </button>
           </div>
           {couponMsg ? (
@@ -201,7 +205,7 @@ export default function CheckoutPage() {
             disabled={loading}
             className="mt-6 w-full rounded bg-[var(--accent)] py-3 text-sm font-semibold text-white disabled:opacity-60"
           >
-            {loading ? "Đang xử lý..." : "Đặt hàng"}
+            {loading ? ck.submitLoading : ck.submitLabel}
           </button>
         </aside>
       </form>

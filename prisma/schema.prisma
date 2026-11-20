@@ -380,6 +380,15 @@ model HomepageSection {
   updatedAt        DateTime @updatedAt
 }
 
+/// Customer-facing UI strings (cart, checkout, auth, …) — draft/publish.
+model StorefrontUiCopy {
+  id               String    @id @default("default")
+  contentJson      String    @default("{}")
+  draftContentJson String    @default("{}")
+  publishedAt      DateTime?
+  updatedAt        DateTime  @updatedAt
+}
+
 /// Editable static storefront pages (vé chúng tôi, hỗ trợ, chính sách, …).
 model StorefrontPage {
   id              String   @id @default(cuid())

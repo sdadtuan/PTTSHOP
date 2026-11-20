@@ -4,8 +4,10 @@ import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
 
 export default function RegisterPage() {
+  const a = useStorefrontUi().auth;
   const router = useRouter();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -51,12 +53,8 @@ export default function RegisterPage() {
 
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-4 py-16">
-      <h1 className="type-title text-3xl font-bold">
-        Đăng ký
-      </h1>
-      <p className="mt-2 text-sm text-neutral-500">
-        Tạo tài khoản khách hàng VIZFAS
-      </p>
+      <h1 className="type-title text-3xl font-bold">{a.registerTitle}</h1>
+      <p className="mt-2 text-sm text-neutral-500">{a.registerSubtitle}</p>
 
       <form onSubmit={onSubmit} className="mt-8 space-y-4">
         <Field label="Họ tên" name="name" required />
@@ -69,14 +67,14 @@ export default function RegisterPage() {
           disabled={loading}
           className="w-full rounded bg-neutral-900 py-3 text-sm font-semibold text-white hover:bg-[var(--accent)] disabled:opacity-60"
         >
-          {loading ? "Đang tạo tài khoản..." : "Đăng ký"}
+          {loading ? a.registerSubmitLoading : a.registerSubmit}
         </button>
       </form>
 
       <p className="mt-6 text-center text-sm text-neutral-500">
-        Đã có tài khoản?{" "}
+        {a.registerHasAccount}{" "}
         <Link href="/dang-nhap" className="text-[var(--accent)]">
-          Đăng nhập
+          {a.registerLoginLink}
         </Link>
       </p>
     </div>

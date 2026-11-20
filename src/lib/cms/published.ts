@@ -11,6 +11,7 @@ import {
   type ReviewsSectionContent,
   type SiteSettingsData,
 } from "@/lib/cms/types";
+import { getStorefrontUi } from "@/lib/storefront/ui-copy";
 
 /** Header set by middleware for `/?cmsPreview=draft` requests from an ADMIN session. */
 export const CMS_PREVIEW_HEADER = "x-cms-preview";
@@ -58,13 +59,18 @@ export type StorefrontLayoutSnapshot = {
   footerLinks: FooterLinksContent;
   floatingContact: FloatingContactContent;
   reviews: ReviewsSectionContent;
+  ui: Awaited<ReturnType<typeof getStorefrontUi>>;
 };
 
 export async function getStorefrontLayoutForRequest(): Promise<StorefrontLayoutSnapshot> {
   try {
-    const data = await viewForMode(await resolveHomepageMode());
+    const [data, ui] = await Promise.all([
+      viewForMode(await resolveHomepageMode()),
+      getStorefrontUi("published"),
+    ]);
     return {
       settings: data.settings,
+      ui,
       navigation: (data.sections.navigation?.content ??
         defaultSectionContent("navigation")) as NavigationContent,
       footerLinks: (data.sections.footer_links?.content ??
@@ -75,12 +81,14 @@ export async function getStorefrontLayoutForRequest(): Promise<StorefrontLayoutS
         defaultSectionContent("reviews")) as ReviewsSectionContent,
     };
   } catch {
+    const ui = await getStorefrontUi("published");
     return {
       settings: DEFAULT_SITE_SETTINGS,
       navigation: defaultSectionContent("navigation") as NavigationContent,
       footerLinks: defaultSectionContent("footer_links") as FooterLinksContent,
       floatingContact: defaultSectionContent("floating_contact") as FloatingContactContent,
       reviews: defaultSectionContent("reviews") as ReviewsSectionContent,
+      ui,
     };
   }
 }

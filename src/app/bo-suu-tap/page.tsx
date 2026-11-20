@@ -1,10 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { getStorefrontUi } from "@/lib/storefront/ui-copy";
 
 export const dynamic = "force-dynamic";
 
 export default async function CollectionsPage() {
+  const colUi = (await getStorefrontUi()).collections;
   const collections = await prisma.collection.findMany({
     include: {
       products: {
@@ -27,11 +29,9 @@ export default async function CollectionsPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 md:px-6 md:py-14">
       <h1 className="type-title text-3xl font-bold md:text-4xl">
-        Bộ sưu tập
+        {colUi.title}
       </h1>
-      <p className="mt-2 text-sm text-neutral-500">
-        Khám phá chất liệu bền bỉ cho phong cách của bạn
-      </p>
+      <p className="mt-2 text-sm text-neutral-500">{colUi.subtitle}</p>
 
       <div className="mt-10 grid gap-6 md:grid-cols-2">
         {collections.map((c) => (
@@ -54,7 +54,7 @@ export default async function CollectionsPage() {
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
             <div className="absolute right-0 bottom-0 left-0 p-6 text-white">
               <p className="text-xs tracking-[0.25em] uppercase text-white/70">
-                Collection
+                {colUi.cardEyebrow}
               </p>
               <h2 className="mt-2 type-title text-2xl font-bold">
                 {c.name}

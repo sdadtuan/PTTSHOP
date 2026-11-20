@@ -17,6 +17,8 @@ import { discountPercent, formatVnd } from "@/lib/format";
 import { resolveSwatch, swatchBackground } from "@/lib/color-names";
 import { primaryImage } from "@/lib/product-media";
 import { cn } from "@/lib/utils";
+import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
+import { formatStockTemplate } from "@/lib/storefront/ui-copy-types";
 
 type Variant = {
   id: string;
@@ -58,6 +60,7 @@ function sizeRank(size: string) {
 }
 
 export function ProductPurchase({ product, color, onColorChange, sizeChart }: Props) {
+  const pdp = useStorefrontUi().pdp;
   const { addItem } = useCart();
   const { status } = useSession();
   const [wishSaved, setWishSaved] = useState(false);
@@ -194,7 +197,8 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
 
       <div>
         <p className="mb-2 text-sm font-medium text-neutral-800">
-          Màu sắc: <span className="font-normal text-neutral-500">{color}</span>
+          {pdp.colorLabel}{" "}
+          <span className="font-normal text-neutral-500">{color}</span>
         </p>
         <div className="flex flex-wrap gap-2">
           {colors.map((c) => (
@@ -233,14 +237,14 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
 
       <div>
         <div className="mb-2 flex items-center justify-between">
-          <p className="text-sm font-medium text-neutral-800">Kích thước:</p>
+          <p className="text-sm font-medium text-neutral-800">{pdp.sizeLabel}</p>
           <button
             type="button"
             onClick={() => setShowChart((v) => !v)}
             className="-my-1.5 inline-flex items-center gap-1 py-1.5 text-xs text-neutral-500 underline"
           >
             <Ruler className="h-3.5 w-3.5" />
-            Bảng size
+            {pdp.sizeChartLink}
           </button>
         </div>
         {showChart ? (
@@ -330,9 +334,17 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
       <p className="-mt-3 text-xs text-neutral-500" data-testid="pdp-stock">
         {selected
           ? selected.stock > 0
-            ? `Còn ${selected.stock} sản phẩm (${selected.color} / ${selected.size})`
-            : `Hết hàng (${selected.color} / ${selected.size})`
-          : "Chưa có biến thể"}
+            ? formatStockTemplate(pdp.stockAvailable, {
+                stock: selected.stock,
+                color: selected.color,
+                size: selected.size,
+              })
+            : formatStockTemplate(pdp.stockOut, {
+                stock: selected.stock,
+                color: selected.color,
+                size: selected.size,
+              })
+          : pdp.stockNone}
       </p>
 
       <div className="flex items-center gap-3">
@@ -363,7 +375,7 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
           className="flex flex-1 items-center justify-center gap-2 rounded bg-neutral-900 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-[var(--accent)] disabled:opacity-50"
         >
           <ShoppingBag className="h-4 w-4" />
-          {added ? "Đã thêm!" : "Thêm vào giỏ hàng"}
+          {added ? pdp.addedToCart : pdp.addToCart}
         </button>
 
         <button

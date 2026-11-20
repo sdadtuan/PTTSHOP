@@ -4,18 +4,20 @@ import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useCart } from "@/components/cart/cart-context";
+import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
 import { formatVnd } from "@/lib/format";
 
 export default function CartPage() {
   const { items, subtotal, updateQuantity, removeItem, loading } = useCart();
+  const c = useStorefrontUi().cart;
 
   if (loading) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-24 text-center">
         <h1 className="type-title text-3xl font-bold">
-          Giỏ hàng
+          {c.title}
         </h1>
-        <p className="mt-3 text-neutral-500">Đang tải…</p>
+        <p className="mt-3 text-neutral-500">{c.loading}</p>
       </div>
     );
   }
@@ -24,16 +26,14 @@ export default function CartPage() {
     return (
       <div className="mx-auto max-w-3xl px-4 py-24 text-center">
         <h1 className="type-title text-3xl font-bold">
-          Giỏ hàng trống
+          {c.emptyTitle}
         </h1>
-        <p className="mt-3 text-neutral-500">
-          Hãy chọn vài item VIZFAS để bắt đầu phong cách mới.
-        </p>
+        <p className="mt-3 text-neutral-500">{c.emptyBody}</p>
         <Link
           href="/san-pham"
           className="mt-8 inline-flex rounded-full bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-white"
         >
-          Tiếp tục mua sắm
+          {c.emptyCta}
         </Link>
       </div>
     );
@@ -45,7 +45,7 @@ export default function CartPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 md:px-6 md:py-14">
       <h1 className="type-title text-3xl font-bold">
-        Giỏ hàng
+        {c.title}
       </h1>
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[1.5fr_0.9fr]">
@@ -120,30 +120,30 @@ export default function CartPage() {
 
         <aside className="h-fit min-w-0 border border-neutral-100 bg-white p-6">
           <h2 className="type-title text-lg font-bold">
-            Tóm tắt đơn hàng
+            {c.summaryTitle}
           </h2>
           <dl className="mt-5 space-y-3 text-sm">
             <div className="flex justify-between">
-              <dt className="text-neutral-500">Tạm tính</dt>
+              <dt className="text-neutral-500">{c.subtotalLabel}</dt>
               <dd>{formatVnd(subtotal)}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-neutral-500">Phí vận chuyển</dt>
-              <dd>{shipping === 0 ? "Miễn phí" : formatVnd(shipping)}</dd>
+              <dt className="text-neutral-500">{c.shippingLabel}</dt>
+              <dd>{shipping === 0 ? c.shippingFree : formatVnd(shipping)}</dd>
             </div>
             <div className="flex justify-between border-t border-neutral-100 pt-3 text-base font-semibold">
-              <dt>Tổng</dt>
+              <dt>{c.totalLabel}</dt>
               <dd>{formatVnd(total)}</dd>
             </div>
           </dl>
           <p className="mt-3 text-xs text-neutral-500">
-            Miễn phí ship đơn từ 500.000đ
+            {c.shippingNote}
           </p>
           <Link
             href="/thanh-toan"
             className="mt-6 flex w-full items-center justify-center rounded bg-[var(--accent)] py-3 text-sm font-semibold text-white transition hover:brightness-110"
           >
-            Thanh toán
+            {c.checkoutCta}
           </Link>
         </aside>
       </div>

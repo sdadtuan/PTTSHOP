@@ -8,6 +8,26 @@ export type StorefrontPageSeed = {
 
 export const STOREFRONT_PAGE_SEEDS: StorefrontPageSeed[] = [
   {
+    slug: "tin-tuc",
+    title: "Tin tức",
+    description: "Cập nhật thương hiệu và bộ sưu tập VIZFAS.",
+    body: [
+      "Chào mừng bạn đến với khu vực tin tức VIZFAS.",
+      "Chúng tôi sẽ cập nhật bài viết về bộ sưu tập, sự kiện và mẹo phối đồ tại đây.",
+    ],
+    sortOrder: 5,
+  },
+  {
+    slug: "tuyen-dung",
+    title: "Tuyển dụng",
+    description: "Gia nhập đội ngũ VIZFAS.",
+    body: [
+      "VIZFAS đang tìm kiếm đồng đội yêu thích thời trang và trải nghiệm khách hàng.",
+      "Gửi CV qua hello@vizfas.vn với tiêu đề \"Ứng tuyển VIZFAS\".",
+    ],
+    sortOrder: 6,
+  },
+  {
     slug: "ve-chung-toi",
     title: "Về VIZFAS",
     description: "Câu chuyện thương hiệu VIZFAS.",
