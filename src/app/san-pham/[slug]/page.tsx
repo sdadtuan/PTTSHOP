@@ -57,27 +57,29 @@ export default async function ProductDetailPage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 md:px-6 md:py-12">
-      <nav className="mb-6 text-xs text-neutral-500">
-        <Link href="/" className="hover:text-neutral-800">
-          Trang chủ
-        </Link>
-        <span className="mx-2">/</span>
-        <Link href="/san-pham" className="hover:text-neutral-800">
-          Sản phẩm
-        </Link>
-        {product.category ? (
-          <>
-            <span className="mx-2">/</span>
-            <Link
-              href={`/san-pham?category=${product.category.slug}`}
-              className="hover:text-neutral-800"
-            >
-              {product.category.name}
-            </Link>
-          </>
-        ) : null}
-        <span className="mx-2">/</span>
-        <span className="text-neutral-800">{product.name}</span>
+      <nav className="mb-6 text-xs text-neutral-500 md:text-xs">
+        <div className="-mx-1 flex flex-wrap items-center gap-x-0 gap-y-1 max-md:text-sm max-md:leading-relaxed max-md:py-0.5">
+          <Link href="/" className="rounded px-1 py-1 hover:text-neutral-800 max-md:py-1.5">
+            Trang chủ
+          </Link>
+          <span className="mx-1.5 max-md:mx-2">/</span>
+          <Link href="/san-pham" className="rounded px-1 py-1 hover:text-neutral-800 max-md:py-1.5">
+            Sản phẩm
+          </Link>
+          {product.category ? (
+            <>
+              <span className="mx-1.5 max-md:mx-2">/</span>
+              <Link
+                href={`/san-pham?category=${product.category.slug}`}
+                className="rounded px-1 py-1 hover:text-neutral-800 max-md:py-1.5"
+              >
+                {product.category.name}
+              </Link>
+            </>
+          ) : null}
+          <span className="mx-1.5 max-md:mx-2">/</span>
+          <span className="rounded px-1 py-1 text-neutral-800 max-md:py-1.5">{product.name}</span>
+        </div>
       </nav>
 
       <ProductDetailClient product={product} shippingPolicyJson={shippingRow?.shippingPolicyJson ?? null} />

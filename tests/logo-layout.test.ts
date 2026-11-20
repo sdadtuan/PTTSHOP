@@ -10,11 +10,22 @@ import { DEFAULT_SITE_SETTINGS } from "@/lib/cms/types";
 
 describe("logo layout", () => {
   it("defaults match current header/footer Tailwind sizes", () => {
-    expect(DEFAULT_LOGO_LAYOUT.header.mobile.heightPx).toBe(32);
+    expect(DEFAULT_LOGO_LAYOUT.header.mobile.heightPx).toBe(48);
     expect(DEFAULT_LOGO_LAYOUT.header.desktop.heightPx).toBe(40);
     expect(DEFAULT_LOGO_LAYOUT.footer.mobile.heightPx).toBe(56);
     expect(DEFAULT_LOGO_LAYOUT.footer.desktop.heightPx).toBe(72);
     expect(DEFAULT_LOGO_LAYOUT.footerShowBrandName).toBe(false);
+  });
+
+  it("nâng header mobile dưới 48px lên 48", () => {
+    const low = {
+      ...DEFAULT_LOGO_LAYOUT,
+      header: {
+        ...DEFAULT_LOGO_LAYOUT.header,
+        mobile: { heightPx: 43, maxWidthPx: 97 },
+      },
+    };
+    expect(applyLogoLayoutDefaults(low).header.mobile.heightPx).toBe(48);
   });
 
   it("nâng footer legacy 40/56 lên default mới, giữ chỉnh tay khác legacy", () => {

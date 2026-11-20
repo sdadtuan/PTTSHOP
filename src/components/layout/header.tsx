@@ -38,7 +38,7 @@ export function Header() {
       <div className="relative mx-auto flex h-14 max-w-7xl items-center px-4 md:h-16 md:px-6">
         <button
           type="button"
-          className="rounded-full p-2 text-neutral-700 transition hover:bg-black/5 md:hidden"
+          className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full p-2 text-neutral-700 transition hover:bg-black/5 md:hidden md:min-h-0 md:min-w-0"
           aria-label={open ? "Đóng menu" : "Mở menu"}
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
@@ -63,7 +63,7 @@ export function Header() {
         <div className="ml-auto flex items-center gap-0.5 sm:gap-1">
           <button
             type="button"
-            className="rounded-full p-2 text-neutral-700 transition hover:bg-black/5"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full p-2 text-neutral-700 transition hover:bg-black/5 md:min-h-0 md:min-w-0"
             aria-label="Tìm kiếm"
             onClick={() => setSearchOpen((v) => !v)}
           >
@@ -71,7 +71,7 @@ export function Header() {
           </button>
           <Link
             href="/tai-khoan"
-            className="rounded-full p-2 text-neutral-700 transition hover:bg-black/5"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full p-2 text-neutral-700 transition hover:bg-black/5 md:min-h-0 md:min-w-0"
             aria-label="Tài khoản"
           >
             <User className="h-5 w-5" />
@@ -85,7 +85,7 @@ export function Header() {
           </Link>
           <Link
             href="/gio-hang"
-            className="relative rounded-full p-2 text-neutral-700 transition hover:bg-black/5"
+            className="relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-full p-2 text-neutral-700 transition hover:bg-black/5 md:min-h-0 md:min-w-0"
             aria-label="Giỏ hàng"
           >
             <ShoppingBag className="h-5 w-5" />

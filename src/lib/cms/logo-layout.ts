@@ -25,6 +25,10 @@ export type LogoLayoutSettings = {
 };
 
 /** Kích thước footer trước khi chỉnh cân đối logo ngang — nâng tự động nếu admin chưa tùy chỉnh. */
+export const MIN_HEADER_MOBILE_HEIGHT_PX = 48;
+
+export const LEGACY_HEADER_MOBILE_HEIGHT_PX = 32;
+
 export const LEGACY_FOOTER_LOGO_LAYOUT: LogoSlotResponsive = {
   mobile: { heightPx: 40, maxWidthPx: 40 },
   desktop: { heightPx: 56, maxWidthPx: 56 },
@@ -32,7 +36,7 @@ export const LEGACY_FOOTER_LOGO_LAYOUT: LogoSlotResponsive = {
 
 export const DEFAULT_LOGO_LAYOUT: LogoLayoutSettings = {
   header: {
-    mobile: { heightPx: 32, maxWidthPx: 0 },
+    mobile: { heightPx: MIN_HEADER_MOBILE_HEIGHT_PX, maxWidthPx: 0 },
     desktop: { heightPx: 40, maxWidthPx: 0 },
   },
   footer: {
@@ -51,10 +55,22 @@ function footerMatchesLegacy(footer: LogoSlotResponsive) {
   );
 }
 
-/** Giữ chỉnh tay trong admin; chỉ nâng footer mặc định cũ (40/56) lên size mới. */
+/** Giữ chỉnh tay trong admin; nâng footer legacy và header mobile dưới 48px (audit mobile). */
 export function applyLogoLayoutDefaults(layout: LogoLayoutSettings): LogoLayoutSettings {
-  if (!footerMatchesLegacy(layout.footer)) return layout;
-  return { ...layout, footer: DEFAULT_LOGO_LAYOUT.footer };
+  let next = layout;
+  if (footerMatchesLegacy(next.footer)) {
+    next = { ...next, footer: DEFAULT_LOGO_LAYOUT.footer };
+  }
+  if (next.header.mobile.heightPx < MIN_HEADER_MOBILE_HEIGHT_PX) {
+    next = {
+      ...next,
+      header: {
+        ...next.header,
+        mobile: { ...next.header.mobile, heightPx: MIN_HEADER_MOBILE_HEIGHT_PX },
+      },
+    };
+  }
+  return next;
 }
 
 const slotSchema = z.object({

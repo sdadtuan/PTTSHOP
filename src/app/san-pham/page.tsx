@@ -115,6 +115,7 @@ export default async function ProductsPage({
               href={buildQuery({ ...baseParams, sort: o.value, page: "1" })}
               className={cn(
                 "rounded px-2 py-1 text-xs",
+                "max-md:inline-flex max-md:min-h-11 max-md:items-center max-md:px-3 max-md:py-2.5 max-md:text-sm",
                 sort === o.value
                   ? "bg-neutral-900 text-white"
                   : "text-neutral-500 hover:text-neutral-900",
@@ -229,6 +230,7 @@ function FilterChip({
       href={href}
       className={cn(
         "rounded-full border px-4 py-1.5 text-sm transition",
+        "max-md:inline-flex max-md:min-h-11 max-md:items-center max-md:px-4 max-md:py-2.5",
         active
           ? "border-neutral-900 bg-neutral-900 text-white"
           : "border-neutral-200 bg-white text-neutral-700 hover:border-neutral-400",
