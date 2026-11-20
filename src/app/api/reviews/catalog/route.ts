@@ -10,6 +10,8 @@ export async function GET(req: Request) {
     const rating = url.searchParams.get("rating");
     const productId = url.searchParams.get("productId") || undefined;
     const productSlug = url.searchParams.get("productSlug") || undefined;
+    const categoryId = url.searchParams.get("categoryId") || undefined;
+    const categorySlug = url.searchParams.get("categorySlug") || undefined;
 
     const data = await listPublishedReviews(prisma, {
       page,
@@ -17,6 +19,8 @@ export async function GET(req: Request) {
       rating: rating ? Number(rating) : undefined,
       productId,
       productSlug,
+      categoryId,
+      categorySlug,
     });
     return jsonOk(data);
   } catch (err) {

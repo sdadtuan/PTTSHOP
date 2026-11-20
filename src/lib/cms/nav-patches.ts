@@ -48,7 +48,8 @@ function patchNavigationContent(raw: string): { next: NavigationContent; changed
   }
 }
 
-type Db = Pick<PrismaClient, "cmsPatch" | "homepageSection">;
+type NavPatchTx = Pick<PrismaClient, "cmsPatch" | "homepageSection">;
+type Db = NavPatchTx & Pick<PrismaClient, "$transaction">;
 
 /**
  * One-time patch for Version A primary nav only (not demoPrimaryNav).
@@ -64,7 +65,7 @@ export async function ensureDanhGiaNavPatch(db: Db = prisma): Promise<boolean> {
   const published = patchNavigationContent(section.contentJson);
   const draft = patchNavigationContent(section.draftContentJson);
 
-  await db.$transaction(async (tx) => {
+  await db.$transaction(async (tx: NavPatchTx) => {
     if (published.changed || draft.changed) {
       await tx.homepageSection.update({
         where: { key: "navigation" },

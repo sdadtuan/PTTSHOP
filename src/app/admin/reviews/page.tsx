@@ -3,6 +3,11 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
+import { CategoryProductPicker, type CategoryOpt, type ProductOpt } from "@/components/admin/category-product-picker";
+import {
+  ReviewSearchCombobox,
+  type ReviewSearchSuggestion,
+} from "@/components/admin/review-search-combobox";
 import {
   AdminBadge,
   AdminButton,
@@ -38,15 +43,18 @@ type Review = {
   product: { id: string; name: string; slug: string };
 };
 
-type ProductOption = { id: string; name: string; slug: string };
-
 export default function AdminReviewsPage() {
   const { toast } = useAdminToast();
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [products, setProducts] = useState<ProductOption[]>([]);
+  const [categories, setCategories] = useState<CategoryOpt[]>([]);
+  const [products, setProducts] = useState<ProductOpt[]>([]);
+  const [reviewers, setReviewers] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
+  const [filterCategoryId, setFilterCategoryId] = useState("");
+  const [filterProductId, setFilterProductId] = useState("");
+  const [filterRating, setFilterRating] = useState("");
   const [filterPublished, setFilterPublished] = useState<"" | "1" | "0">("");
   const [page, setPage] = useState(1);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -54,11 +62,47 @@ export default function AdminReviewsPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [editReview, setEditReview] = useState<Review | null>(null);
   const [saving, setSaving] = useState(false);
+  const [addCategoryId, setAddCategoryId] = useState("");
+  const [addProductId, setAddProductId] = useState("");
+  const [addProductQuery, setAddProductQuery] = useState("");
+
+  const suggestions = useMemo((): ReviewSearchSuggestion[] => {
+    const items: ReviewSearchSuggestion[] = [];
+    for (const c of categories) {
+      items.push({
+        key: `cat-${c.id}`,
+        kind: "category",
+        label: c.name,
+        categoryId: c.id,
+      });
+    }
+    for (const p of products) {
+      if ((p.reviewCount ?? 0) === 0) continue;
+      items.push({
+        key: `prod-${p.id}`,
+        kind: "product",
+        label: p.name,
+        productId: p.id,
+        categoryId: p.categoryId || undefined,
+        meta: p.category?.name
+          ? `${p.category.name} · ${p.reviewCount} đánh giá`
+          : `${p.reviewCount} đánh giá`,
+      });
+    }
+    for (const name of reviewers) {
+      items.push({ key: `rev-${name}`, kind: "reviewer", label: name, meta: "Người đánh giá" });
+    }
+    return items;
+  }, [categories, products, reviewers]);
 
   const load = useCallback(async () => {
     setLoading(true);
     const sp = new URLSearchParams();
     if (filterPublished) sp.set("published", filterPublished);
+    if (filterCategoryId) sp.set("categoryId", filterCategoryId);
+    if (filterProductId) sp.set("productId", filterProductId);
+    if (filterRating) sp.set("rating", filterRating);
+    if (q.trim()) sp.set("q", q.trim());
     const res = await fetch(`/api/admin/reviews?${sp}`);
     const data = await res.json();
     if (!res.ok) setError(data.error || "Không tải được đánh giá");
@@ -67,36 +111,40 @@ export default function AdminReviewsPage() {
       setReviews(data.reviews || []);
     }
     setLoading(false);
-  }, [filterPublished]);
+  }, [filterPublished, filterCategoryId, filterProductId, filterRating, q]);
 
   useEffect(() => {
-    void load();
-    void fetch("/api/admin/products")
+    void fetch("/api/admin/reviews/meta")
       .then((r) => r.json())
       .then((d) => {
-        const list = (d.products || []).map((p: ProductOption) => ({
-          id: p.id,
-          name: p.name,
-          slug: p.slug,
-        }));
-        setProducts(list);
+        if (d.categories) setCategories(d.categories);
+        if (d.products) setProducts(d.products);
+        if (d.reviewers) setReviewers(d.reviewers);
       })
       .catch(() => {});
-  }, [load]);
+  }, []);
 
-  const filtered = useMemo(() => {
-    const query = q.trim().toLowerCase();
-    if (!query) return reviews;
-    return reviews.filter(
-      (r) =>
-        r.product.name.toLowerCase().includes(query) ||
-        r.userName.toLowerCase().includes(query) ||
-        (r.user?.email || "").toLowerCase().includes(query) ||
-        (r.comment || "").toLowerCase().includes(query),
-    );
-  }, [reviews, q]);
+  useEffect(() => {
+    const t = setTimeout(() => void load(), q.trim() ? 280 : 0);
+    return () => clearTimeout(t);
+  }, [load, q]);
 
-  const paged = paginate(filtered, page, 10);
+  const paged = paginate(reviews, page, 10);
+
+  function handleSearchPick(item: ReviewSearchSuggestion) {
+    if (item.kind === "category" && item.categoryId) {
+      setFilterCategoryId(item.categoryId);
+      setFilterProductId("");
+      setQ("");
+    } else if (item.kind === "product" && item.productId) {
+      if (item.categoryId) setFilterCategoryId(item.categoryId);
+      setFilterProductId(item.productId);
+      setQ("");
+    } else if (item.kind === "reviewer") {
+      setQ(item.label);
+    }
+    setPage(1);
+  }
 
   async function confirmDelete() {
     if (!deleteId) return;
@@ -134,6 +182,10 @@ export default function AdminReviewsPage() {
 
   async function onAddSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!addProductId) {
+      toast("Chọn sản phẩm", "error");
+      return;
+    }
     setSaving(true);
     const form = new FormData(e.currentTarget);
     const createdAtRaw = String(form.get("createdAt") || "");
@@ -141,7 +193,7 @@ export default function AdminReviewsPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        productId: String(form.get("productId")),
+        productId: addProductId,
         displayName: String(form.get("displayName")),
         rating: Number(form.get("rating")),
         comment: String(form.get("comment") || ""),
@@ -158,6 +210,9 @@ export default function AdminReviewsPage() {
     }
     toast("Đã thêm đánh giá");
     setAddOpen(false);
+    setAddCategoryId("");
+    setAddProductId("");
+    setAddProductQuery("");
     await load();
   }
 
@@ -191,6 +246,14 @@ export default function AdminReviewsPage() {
     await load();
   }
 
+  const closeAddModal = useCallback(() => {
+    if (!saving) setAddOpen(false);
+  }, [saving]);
+
+  const closeEditModal = useCallback(() => {
+    if (!saving) setEditReview(null);
+  }, [saving]);
+
   return (
     <div>
       <AdminPageHeader
@@ -208,20 +271,54 @@ export default function AdminReviewsPage() {
         }
       />
 
-      <AdminCard className="mb-4 grid gap-3 md:grid-cols-3">
-        <AdminInput
-          label="Tìm kiếm"
+      <AdminCard className="mb-4 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+        <ReviewSearchCombobox
           value={q}
-          onChange={(e) => {
-            setQ(e.target.value);
+          onChange={(v) => {
+            setQ(v);
             setPage(1);
           }}
-          placeholder="Sản phẩm, khách, nội dung…"
+          suggestions={suggestions}
+          onPick={handleSearchPick}
         />
+        <CategoryProductPicker
+          categories={categories}
+          products={products}
+          categoryId={filterCategoryId}
+          productId={filterProductId}
+          onCategoryIdChange={(id) => {
+            setFilterCategoryId(id);
+            setFilterProductId("");
+            setPage(1);
+          }}
+          onProductIdChange={(id) => {
+            setFilterProductId(id);
+            setPage(1);
+          }}
+          onlyWithReviews
+        />
+        <AdminSelect
+          label="Số sao"
+          value={filterRating}
+          onChange={(e) => {
+            setFilterRating(e.target.value);
+            setPage(1);
+          }}
+        >
+          <option value="">Tất cả</option>
+          {[5, 4, 3, 2, 1].map((n) => (
+            <option key={n} value={String(n)}>
+              {n} sao
+            </option>
+          ))}
+        </AdminSelect>
         <AdminSelect
           label="Trạng thái"
           value={filterPublished}
-          onChange={(e) => setFilterPublished(e.target.value as "" | "1" | "0")}
+          onChange={(e) => {
+            setFilterPublished(e.target.value as "" | "1" | "0");
+            setPage(1);
+          }}
         >
           <option value="">Tất cả</option>
           <option value="1">Đang hiện</option>
@@ -312,7 +409,7 @@ export default function AdminReviewsPage() {
 
       <AdminModal
         open={addOpen}
-        onClose={() => !saving && setAddOpen(false)}
+        onClose={closeAddModal}
         title="Thêm đánh giá (admin)"
         footer={
           <>
@@ -326,16 +423,17 @@ export default function AdminReviewsPage() {
         }
       >
         <form id="admin-review-add" onSubmit={onAddSubmit} className="space-y-3">
-          <AdminSelect name="productId" label="Sản phẩm" required defaultValue="">
-            <option value="" disabled>
-              Chọn sản phẩm
-            </option>
-            {products.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </AdminSelect>
+          <CategoryProductPicker
+            categories={categories}
+            products={products}
+            categoryId={addCategoryId}
+            productId={addProductId}
+            onCategoryIdChange={setAddCategoryId}
+            onProductIdChange={setAddProductId}
+            productQuery={addProductQuery}
+            onProductQueryChange={setAddProductQuery}
+            required
+          />
           <AdminInput name="displayName" label="Tên hiển thị" required placeholder="VD: Minh Anh" />
           <AdminSelect name="rating" label="Số sao" defaultValue="5">
             {[5, 4, 3, 2, 1].map((n) => (
@@ -356,7 +454,7 @@ export default function AdminReviewsPage() {
 
       <AdminModal
         open={Boolean(editReview)}
-        onClose={() => !saving && setEditReview(null)}
+        onClose={closeEditModal}
         title="Sửa đánh giá"
         footer={
           <>

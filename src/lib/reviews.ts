@@ -40,6 +40,8 @@ export type ReviewCatalogFilters = {
   rating?: number;
   productId?: string;
   productSlug?: string;
+  categoryId?: string;
+  categorySlug?: string;
 };
 
 export async function listPublishedReviews(
@@ -48,17 +50,27 @@ export async function listPublishedReviews(
 ) {
   const page = Math.max(1, filters.page ?? 1);
   const pageSize = Math.min(24, Math.max(1, filters.pageSize ?? 12));
+  let categoryId = filters.categoryId;
+  if (!categoryId && filters.categorySlug) {
+    const cat = await db.category.findUnique({
+      where: { slug: filters.categorySlug },
+      select: { id: true },
+    });
+    categoryId = cat?.id;
+  }
+
   const where: {
     isPublished: true;
     rating?: number;
     productId?: string;
-    product?: { slug: string };
+    product?: { slug?: string; categoryId?: string };
   } = { isPublished: true };
   if (filters.rating && filters.rating >= 1 && filters.rating <= 5) {
     where.rating = filters.rating;
   }
   if (filters.productId) where.productId = filters.productId;
   else if (filters.productSlug) where.product = { slug: filters.productSlug };
+  else if (categoryId) where.product = { categoryId };
 
   const [total, reviews, summary] = await Promise.all([
     db.review.count({ where }),

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { StarRating } from "@/components/reviews/star-rating";
 import { cn } from "@/lib/utils";
 
@@ -24,21 +24,39 @@ type CatalogData = {
   reviews: CatalogReview[];
 };
 
-type ProductOption = { id: string; name: string; slug: string };
+type ProductOption = {
+  id: string;
+  name: string;
+  slug: string;
+  categoryId?: string | null;
+  reviewCount?: number;
+};
+type CategoryOption = { id: string; name: string; slug: string };
 
 export function ReviewsCatalogClient({
   intro,
+  categories,
   products,
   initial,
 }: {
   intro?: string | null;
+  categories: CategoryOption[];
   products: ProductOption[];
   initial: CatalogData;
 }) {
   const [data, setData] = useState(initial);
   const [rating, setRating] = useState<number | "">("");
+  const [categorySlug, setCategorySlug] = useState("");
   const [productSlug, setProductSlug] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const productOptions = useMemo(() => {
+    if (!categorySlug) return products;
+    return products.filter((p) => {
+      const cat = categories.find((c) => c.slug === categorySlug);
+      return cat ? p.categoryId === cat.id : true;
+    });
+  }, [products, categories, categorySlug]);
 
   const load = useCallback(
     async (page: number) => {
@@ -46,17 +64,18 @@ export function ReviewsCatalogClient({
       const sp = new URLSearchParams({ page: String(page), pageSize: "12" });
       if (rating) sp.set("rating", String(rating));
       if (productSlug) sp.set("productSlug", productSlug);
+      else if (categorySlug) sp.set("categorySlug", categorySlug);
       const res = await fetch(`/api/reviews/catalog?${sp}`);
       const json = await res.json();
       if (res.ok) setData(json);
       setLoading(false);
     },
-    [rating, productSlug],
+    [rating, productSlug, categorySlug],
   );
 
   useEffect(() => {
     void load(1);
-  }, [rating, productSlug, load]);
+  }, [rating, productSlug, categorySlug, load]);
 
   const s = data.summary;
 
@@ -100,16 +119,35 @@ export function ReviewsCatalogClient({
           </div>
 
           <label className="block text-sm">
-            <span className="mb-1.5 block font-medium text-neutral-800">Lọc theo sản phẩm</span>
+            <span className="mb-1.5 block font-medium text-neutral-800">Danh mục</span>
+            <select
+              value={categorySlug}
+              onChange={(e) => {
+                setCategorySlug(e.target.value);
+                setProductSlug("");
+              }}
+              className="w-full rounded border border-neutral-200 bg-white px-3 py-2 text-sm"
+            >
+              <option value="">Tất cả danh mục</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.slug}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1.5 block font-medium text-neutral-800">Sản phẩm</span>
             <select
               value={productSlug}
               onChange={(e) => setProductSlug(e.target.value)}
               className="w-full rounded border border-neutral-200 bg-white px-3 py-2 text-sm"
             >
               <option value="">Tất cả sản phẩm</option>
-              {products.map((p) => (
+              {productOptions.map((p) => (
                 <option key={p.id} value={p.slug}>
                   {p.name}
+                  {(p.reviewCount ?? 0) > 0 ? ` (${p.reviewCount})` : ""}
                 </option>
               ))}
             </select>

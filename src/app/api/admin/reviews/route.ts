@@ -40,10 +40,14 @@ export async function GET(req: Request) {
     const rating = url.searchParams.get("rating");
     const published = url.searchParams.get("published");
     const productId = url.searchParams.get("productId") || undefined;
+    const categoryId = url.searchParams.get("categoryId") || undefined;
 
     const reviews = await prisma.review.findMany({
       where: {
         ...(productId ? { productId } : {}),
+        ...(categoryId
+          ? { product: { categoryId } }
+          : {}),
         ...(rating ? { rating: Number(rating) } : {}),
         ...(published === "0" ? { isPublished: false } : published === "1" ? { isPublished: true } : {}),
       },

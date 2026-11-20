@@ -14,14 +14,19 @@ export async function generateMetadata() {
 }
 
 export default async function ReviewsPage() {
-  const [page, initial, products] = await Promise.all([
+  const [page, initial, products, categories] = await Promise.all([
     getStorefrontPageBySlug("danh-gia"),
     listPublishedReviews(prisma, { page: 1, pageSize: 12 }),
     prisma.product.findMany({
       where: { reviews: { some: { isPublished: true } } },
-      select: { id: true, name: true, slug: true },
+      select: { id: true, name: true, slug: true, categoryId: true, reviewCount: true },
       orderBy: { name: "asc" },
       take: 200,
+    }),
+    prisma.category.findMany({
+      where: { products: { some: { reviews: { some: { isPublished: true } } } } },
+      select: { id: true, name: true, slug: true },
+      orderBy: { sortOrder: "asc" },
     }),
   ]);
 
@@ -38,5 +43,7 @@ export default async function ReviewsPage() {
     })),
   };
 
-  return <ReviewsCatalogClient intro={intro} products={products} initial={initialClient} />;
+  return (
+    <ReviewsCatalogClient intro={intro} categories={categories} products={products} initial={initialClient} />
+  );
 }
