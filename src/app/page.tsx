@@ -134,6 +134,10 @@ export default async function HomePage() {
 
   const blocks: Partial<Record<HomepageSectionKey, ReactNode>> = {};
 
+  /** Chỉ mobile: subtitle đọc được trên ảnh, không scrim. */
+  const collectionTileSubtitle =
+    "mt-1 text-sm font-medium text-neutral-800 max-md:text-[15px] max-md:font-semibold max-md:leading-[1.35] max-md:text-neutral-900 max-md:[text-shadow:0_0_1px_rgb(255_255_255_/_0.9),0_1px_2px_rgb(255_255_255_/_0.5)]";
+
   // Hero — text ~45% / collage ~50%; title vertically mid-collage
   blocks["hero"] = heroSec.isEnabled ? (
       <section className="relative bg-[#f0f0f0]">
@@ -388,14 +392,14 @@ export default async function HomePage() {
               className="object-cover transition duration-500 group-hover:scale-105"
               style={{ objectPosition: OBJECT_POSITION.catAoThun }}
             />
-            <div className="absolute top-5 left-5 z-10 max-w-[70%]">
+            <div className="absolute top-4 left-4 z-10 max-w-[48%] md:top-5 md:left-5 md:max-w-[70%]">
               <p
-                className="type-display text-neutral-900"
+                className="type-display text-neutral-900 max-md:leading-tight"
                 style={{ fontSize: TYPE_SCALE.tileLabel.css }}
               >
                 {col.tiles[0]?.title || mosaicCats.ao?.name || "Áo Thun"}
               </p>
-              <p className="mt-1 text-sm font-medium text-neutral-800">
+              <p className={collectionTileSubtitle}>
                 {col.tiles[0]?.description || "BST mới với nhiều màu sắc"}
               </p>
             </div>
@@ -421,14 +425,14 @@ export default async function HomePage() {
               className="object-cover transition duration-500 group-hover:scale-105"
               style={{ objectPosition: OBJECT_POSITION.catQuan }}
             />
-            <div className="absolute top-4 left-4 z-10 max-w-[65%]">
+            <div className="absolute top-4 left-4 z-10 max-w-[45%] md:max-w-[65%]">
               <p
-                className="type-display text-neutral-900"
+                className="type-display text-neutral-900 max-md:leading-tight"
                 style={{ fontSize: TYPE_SCALE.tileLabel.css }}
               >
                 {col.tiles[1]?.title || mosaicCats.quan?.name || "Quần"}
               </p>
-              <p className="mt-1 text-sm font-medium text-neutral-800">
+              <p className={collectionTileSubtitle}>
                 {col.tiles[1]?.description || "Đa dạng kiểu dáng, dễ phối đồ"}
               </p>
             </div>
@@ -454,14 +458,14 @@ export default async function HomePage() {
               className="object-cover transition duration-500 group-hover:scale-105"
               style={{ objectPosition: OBJECT_POSITION.catPhuKien }}
             />
-            <div className="absolute top-4 left-4 z-10 max-w-[65%]">
+            <div className="absolute top-4 left-4 z-10 max-w-[45%] md:max-w-[65%]">
               <p
-                className="type-display text-neutral-900"
+                className="type-display text-neutral-900 max-md:leading-tight"
                 style={{ fontSize: TYPE_SCALE.tileLabel.css }}
               >
                 {col.tiles[2]?.title || mosaicCats.pk?.name || "Phụ Kiện"}
               </p>
-              <p className="mt-1 text-sm font-medium text-neutral-800">
+              <p className={collectionTileSubtitle}>
                 {col.tiles[2]?.description || "Hoàn thiện phong cách của bạn"}
               </p>
             </div>
