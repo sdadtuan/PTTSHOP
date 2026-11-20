@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Heart, Menu, Search, ShoppingBag, User, X } from "lucide-react";
 import { useCart } from "@/components/cart/cart-context";
+import { BrandLogoImg } from "@/components/cms/brand-logo-img";
 import { useSiteBrand } from "@/components/cms/site-brand-context";
 import { useStorefrontLayout } from "@/components/cms/storefront-layout-context";
 import { cn } from "@/lib/utils";
@@ -51,12 +52,7 @@ export function Header() {
           onClick={() => setOpen(false)}
         >
           {brand.logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={brand.logoUrl}
-              alt={brandName}
-              className="h-8 w-auto object-contain md:h-10"
-            />
+            <BrandLogoImg src={brand.logoUrl} alt={brandName} slot="header" layout={brand.logoLayout} />
           ) : (
             <span className="font-[family-name:var(--font-display)] text-2xl font-extrabold tracking-[0.22em] text-neutral-900 md:text-[1.75rem]">
               {brandName}

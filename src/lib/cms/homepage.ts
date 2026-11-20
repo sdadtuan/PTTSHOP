@@ -11,6 +11,7 @@ import {
   HOMEPAGE_SECTION_KEYS,
   SECTION_LABELS,
 } from "@/lib/cms/types";
+import { parseLogoLayoutJson } from "@/lib/cms/logo-layout";
 import { parseSectionContent, siteSettingsSchema } from "@/lib/cms/validate";
 import { ensureDanhGiaNavPatch } from "@/lib/cms/nav-patches";
 
@@ -21,6 +22,7 @@ type SettingsRow = {
   brandName: string;
   brandColor: string;
   logoUrl: string | null;
+  logoLayoutJson: string | null;
   footerTagline: string | null;
   contactAddress: string | null;
   contactEmail: string | null;
@@ -76,6 +78,7 @@ export function settingsFromRow(row: SettingsRow): {
     brandName: row.brandName || d.brandName,
     brandColor: row.brandColor || d.brandColor,
     logoUrl: row.logoUrl || null,
+    logoLayout: parseLogoLayoutJson(row.logoLayoutJson),
     footerTagline: row.footerTagline ?? d.footerTagline,
     contactAddress: row.contactAddress ?? d.contactAddress,
     contactEmail: row.contactEmail ?? d.contactEmail,
@@ -98,6 +101,7 @@ function settingsColumns(s: SiteSettingsData) {
     brandName: s.brandName,
     brandColor: s.brandColor,
     logoUrl: s.logoUrl || null,
+    logoLayoutJson: JSON.stringify(s.logoLayout),
     footerTagline: s.footerTagline,
     contactAddress: s.contactAddress,
     contactEmail: s.contactEmail,

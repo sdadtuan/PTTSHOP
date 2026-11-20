@@ -352,6 +352,8 @@ model SiteSettings {
   brandName       String    @default("VIZFAS")
   brandColor      String    @default("#f97316")
   logoUrl         String?
+  /// JSON LogoLayoutSettings (header/footer sizes). Null = storefront defaults (32/40px header).
+  logoLayoutJson  String?
   footerTagline   String?
   contactAddress  String?
   contactEmail    String?

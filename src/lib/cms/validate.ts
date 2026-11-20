@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DEFAULT_LOGO_LAYOUT, logoLayoutSchema } from "@/lib/cms/logo-layout";
 
 const HEX_COLOR = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 
@@ -61,6 +62,7 @@ export const siteSettingsSchema = z.object({
     .union([safeMedia, z.literal(""), z.null()])
     .optional()
     .transform((v): string | null => (v ? v : null)),
+  logoLayout: logoLayoutSchema.optional().default(DEFAULT_LOGO_LAYOUT),
   footerTagline: plain.pipe(z.string().max(500)),
   contactAddress: plain.pipe(z.string().max(300)),
   contactEmail: plain.pipe(

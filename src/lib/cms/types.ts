@@ -1,4 +1,5 @@
 import { homeImages } from "@/config/home-images";
+import { DEFAULT_LOGO_LAYOUT, type LogoLayoutSettings } from "@/lib/cms/logo-layout";
 import {
   DEFAULT_DEMO_MOBILE_EXTRA,
   DEFAULT_DEMO_PRIMARY_NAV,
@@ -44,6 +45,7 @@ export type SiteSettingsData = {
   brandName: string;
   brandColor: string;
   logoUrl: string | null;
+  logoLayout: LogoLayoutSettings;
   footerTagline: string;
   contactAddress: string;
   contactEmail: string;
@@ -265,6 +267,7 @@ export const DEFAULT_SITE_SETTINGS: SiteSettingsData = {
   brandName: "VIZFAS",
   brandColor: "#f97316",
   logoUrl: null,
+  logoLayout: DEFAULT_LOGO_LAYOUT,
   footerTagline:
     "Thời trang hiện đại, tối giản và khác biệt cho thế hệ trẻ tự tin thể hiện phong cách mỗi ngày.",
   contactAddress: "TP. Hồ Chí Minh, Việt Nam",

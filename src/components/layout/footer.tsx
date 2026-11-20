@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MapPin, Mail, Phone, Clock } from "lucide-react";
+import { BrandLogoImg } from "@/components/cms/brand-logo-img";
 import { useSiteBrand } from "@/components/cms/site-brand-context";
 import { useStorefrontLayout } from "@/components/cms/storefront-layout-context";
 import { TYPE_SCALE } from "@/config/home-type-scale";
@@ -93,12 +94,7 @@ export function Footer() {
           <div className="relative z-10 max-w-2xl">
             <div className="flex items-center gap-3 md:gap-4">
               {brand.logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={brand.logoUrl}
-                  alt=""
-                  className="h-10 w-10 object-contain md:h-14 md:w-14"
-                />
+                <BrandLogoImg src={brand.logoUrl} alt="" slot="footer" layout={brand.logoLayout} />
               ) : (
                 <SparkLogo className="h-10 w-10 shrink-0 text-[var(--accent)] md:h-14 md:w-14" />
               )}

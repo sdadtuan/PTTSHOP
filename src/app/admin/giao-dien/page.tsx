@@ -12,6 +12,7 @@ import {
   useAdminToast,
 } from "@/components/admin/ui";
 import { CmsFieldList, ImageField, setPath } from "@/components/cms/cms-fields";
+import { LogoLayoutEditor } from "@/components/cms/logo-layout-editor";
 import { FooterColumnsEditor, LinkListEditor } from "@/components/cms/link-list-editor";
 import { LAYOUT_SECTIONS, SECTION_FIELDS, SECTION_HELP } from "@/lib/cms/admin-fields";
 import { ShippingPolicyCard } from "@/components/admin/shipping-policy-card";
@@ -430,7 +431,13 @@ export default function AdminGiaoDienPage() {
                   onChange={(v) => patchSettings({ logoUrl: v || null })}
                   upload={upload}
                   testId="cms-logo"
-                  hint="PNG/WebP nền trong suốt, cao ~80px."
+                  hint="PNG/WebP nền trong suốt. Chỉnh kích thước hiển thị bên dưới (nháp → Xuất bản)."
+                />
+                <LogoLayoutEditor
+                  logoUrl={settings.logoUrl}
+                  brandName={settings.brandName}
+                  layout={settings.logoLayout}
+                  onChange={(logoLayout) => patchSettings({ logoLayout })}
                 />
                 <div className="space-y-1.5 text-sm">
                   <span className="font-medium">Màu thương hiệu</span>
