@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import {
   AdminBadge,
   AdminButton,
@@ -19,7 +19,9 @@ import {
   paginate,
   useAdminToast,
 } from "@/components/admin/ui";
+import Link from "next/link";
 import { formatVnd } from "@/lib/format";
+import { orderLineSummary } from "@/lib/admin-orders";
 import { ORDER_STATUS_FLOW, ORDER_STATUS_LABELS } from "@/lib/order-status";
 
 type Order = {
@@ -32,6 +34,7 @@ type Order = {
   paymentStatus: string;
   status: keyof typeof ORDER_STATUS_LABELS;
   createdAt: string;
+  items?: { name: string; quantity: number }[];
 };
 
 export default function AdminOrdersPage() {
@@ -174,16 +177,33 @@ export default function AdminOrdersPage() {
               </tr>
             </thead>
             <tbody>
-              {paged.items.map((o) => (
-                <AdminTr key={o.id}>
-                  <AdminTd className="font-medium">{o.orderNumber}</AdminTd>
+              {paged.items.map((o) => {
+                const summary = orderLineSummary(o.items ?? []);
+                return (
+                <AdminTr key={o.id} className="hover:bg-[var(--admin-surface-soft)]">
                   <AdminTd>
-                    <div>{o.customerName}</div>
-                    <div className="text-xs text-[var(--admin-text-muted)]">{o.customerPhone}</div>
+                    <Link
+                      href={`/admin/orders/${o.id}`}
+                      className="block font-medium text-[var(--admin-accent)] hover:underline"
+                    >
+                      {o.orderNumber}
+                    </Link>
+                    {o.items?.length ? (
+                      <div className="mt-0.5 text-xs text-[var(--admin-text-muted)]">{summary.label}</div>
+                    ) : null}
+                  </AdminTd>
+                  <AdminTd>
+                    <Link href={`/admin/orders/${o.id}`} className="block min-w-0">
+                      <div>{o.customerName}</div>
+                      <div className="text-xs text-[var(--admin-text-muted)]">{o.customerPhone}</div>
+                    </Link>
                   </AdminTd>
                   <AdminTd>{formatVnd(o.total)}</AdminTd>
                   <AdminTd>{o.paymentMethod}</AdminTd>
                   <AdminTd>
+                    <div
+                      onClick={(e: MouseEvent) => e.stopPropagation()}
+                    >
                     <AdminBadge tone={o.paymentStatus === "PAID" ? "success" : "pending"}>
                       {o.paymentStatus}
                     </AdminBadge>
@@ -197,8 +217,10 @@ export default function AdminOrdersPage() {
                         Xác nhận đã nhận tiền
                       </AdminButton>
                     ) : null}
+                    </div>
                   </AdminTd>
                   <AdminTd>
+                    <div onClick={(e: MouseEvent) => e.stopPropagation()}>
                     <div className="mb-2">
                       <AdminBadge tone={orderStatusTone(o.status)}>
                         {ORDER_STATUS_LABELS[o.status]}
@@ -215,9 +237,11 @@ export default function AdminOrdersPage() {
                         </option>
                       ))}
                     </AdminSelect>
+                    </div>
                   </AdminTd>
                 </AdminTr>
-              ))}
+              );
+              })}
             </tbody>
           </AdminTable>
           <div className="mt-4">

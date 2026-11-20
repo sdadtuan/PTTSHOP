@@ -3,12 +3,22 @@ import { handleApiError, jsonError, jsonOk } from "@/lib/api";
 import { requireAdmin } from "@/lib/auth-guards";
 import { sendOrderStatusEmail } from "@/lib/mail";
 import { ORDER_STATUS_LABELS } from "@/lib/order-status";
+import { adminOrderDetailInclude } from "@/lib/admin-orders";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(req: Request) {
   try {
     await requireAdmin();
     const url = new URL(req.url);
+    const id = url.searchParams.get("id");
+    if (id) {
+      const order = await prisma.order.findUnique({
+        where: { id },
+        include: adminOrderDetailInclude,
+      });
+      if (!order) return jsonError("Không tìm thấy đơn hàng", 404);
+      return jsonOk({ order });
+    }
     const status = url.searchParams.get("status") || undefined;
     const orders = await prisma.order.findMany({
       where: status ? { status: status as never } : undefined,

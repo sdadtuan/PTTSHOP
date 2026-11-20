@@ -147,7 +147,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
     <AdminToastProvider>
       <div className="admin-root min-h-screen bg-[var(--admin-bg)] text-[var(--admin-text)]">
         <div className="flex min-h-screen">
-          <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-[var(--admin-sidebar)]">
+          <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-[var(--admin-sidebar)] print:hidden">
             {sidebar}
           </div>
 
@@ -166,7 +166,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           ) : null}
 
           <div className="flex min-w-0 flex-1 flex-col lg:pl-[var(--admin-sidebar)]">
-            <header className="sticky top-0 z-40 flex h-[var(--admin-header)] items-center gap-3 border-b border-[var(--admin-border)] bg-[var(--admin-bg)]/95 px-4 backdrop-blur md:px-6">
+            <header className="sticky top-0 z-40 flex h-[var(--admin-header)] items-center gap-3 border-b border-[var(--admin-border)] bg-[var(--admin-bg)]/95 px-4 backdrop-blur md:px-6 print:hidden">
               <AdminButton
                 variant="ghost"
                 size="sm"
