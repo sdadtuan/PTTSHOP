@@ -12,6 +12,7 @@ import {
   SECTION_LABELS,
 } from "@/lib/cms/types";
 import { parseSectionContent, siteSettingsSchema } from "@/lib/cms/validate";
+import { ensureDanhGiaNavPatch } from "@/lib/cms/nav-patches";
 
 /** "published" = what customers see; "draft" = admin preview of unsaved-to-live edits. */
 export type HomepageViewMode = "published" | "draft";
@@ -178,6 +179,8 @@ async function seedInner() {
       },
     });
   }
+
+  await ensureDanhGiaNavPatch(prisma);
 }
 
 async function loadRows() {

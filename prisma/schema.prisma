@@ -395,6 +395,12 @@ model StorefrontUiCopy {
   updatedAt        DateTime  @updatedAt
 }
 
+/// Records one-time CMS/data patches (e.g. nav link migrations); prevents re-applying after admin edits.
+model CmsPatch {
+  id        String   @id
+  appliedAt DateTime @default(now())
+}
+
 /// Editable static storefront pages (vé chúng tôi, hỗ trợ, chính sách, …).
 model StorefrontPage {
   id              String   @id @default(cuid())

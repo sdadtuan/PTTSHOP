@@ -7,7 +7,7 @@ export const DEFAULT_PRIMARY_NAV: NavLink[] = [
   { href: "/", label: "Trang chủ" },
   { href: "/bo-suu-tap", label: "Bộ sưu tập" },
   { href: "/san-pham", label: "Sản phẩm" },
-  { href: "/danh-gia", label: "Đánh giá" },
+  { href: "/danh-gia", label: "Đánh Giá" },
   { href: "/ve-chung-toi", label: "Về chúng tôi" },
   { href: "/lien-he", label: "Liên hệ" },
 ];
