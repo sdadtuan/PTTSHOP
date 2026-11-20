@@ -33,6 +33,8 @@ type ProductCardProps = {
   imageOverride?: string;
   /** Fixed frame ratio from mock measurements. */
   frame?: FrameKey;
+  /** Below md: alternate frame without changing desktop layout. */
+  mobileFrame?: FrameKey;
   /** Eager-load for above/critical homepage slots (avoids gray lazy placeholders). */
   priority?: boolean;
 };
@@ -42,6 +44,7 @@ export function ProductCard({
   large,
   imageOverride,
   frame,
+  mobileFrame,
   priority,
 }: ProductCardProps) {
   const cover = primaryImage(product.images);
@@ -62,10 +65,9 @@ export function ProductCard({
         }),
     ).values(),
   ].slice(0, 5);
-  const aspect =
-    FRAME_ASPECT[
-      frame ?? (large ? "featuredLarge" : "featuredSmall")
-    ];
+  const desktopFrameKey = frame ?? (large ? "featuredLarge" : "featuredSmall");
+  const aspect = FRAME_ASPECT[desktopFrameKey];
+  const useSplitMobileFrame = Boolean(mobileFrame && mobileFrame !== desktopFrameKey);
   const objectPosition =
     frame === "diversePants"
       ? OBJECT_POSITION.diversePants
@@ -75,8 +77,14 @@ export function ProductCard({
     <article className="group relative">
       <Link href={`/san-pham/${product.slug}`} className="block">
         <div
-          className="relative overflow-hidden rounded-2xl bg-neutral-100"
-          style={{ aspectRatio: aspect }}
+          className={cn(
+            "relative overflow-hidden rounded-2xl bg-neutral-100",
+            useSplitMobileFrame &&
+              mobileFrame === "featuredSmall" &&
+              desktopFrameKey === "featuredLarge" &&
+              "max-md:aspect-[111/113] md:aspect-[232/217]",
+          )}
+          style={useSplitMobileFrame ? undefined : { aspectRatio: aspect }}
         >
           {imageUrl ? (
             <Image

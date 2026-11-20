@@ -137,7 +137,7 @@ export default async function HomePage() {
   // Hero — text ~45% / collage ~50%; title vertically mid-collage
   blocks["hero"] = heroSec.isEnabled ? (
       <section className="relative bg-[#f0f0f0]">
-        <div className="relative mx-auto grid max-w-7xl items-center gap-6 px-4 py-12 md:grid-cols-[0.45fr_0.5fr] md:gap-[5%] md:px-6 md:py-16 lg:py-20">
+        <div className="relative mx-auto grid max-w-7xl items-center gap-4 px-4 py-8 md:grid-cols-[0.45fr_0.5fr] md:gap-[5%] md:px-6 md:py-16 lg:py-20">
           <div className="absolute top-8 left-4 z-0 h-12 w-12 rotate-[14deg] rounded-xl bg-[var(--accent)] md:left-2 md:h-14 md:w-14" />
           <div className="absolute top-24 left-[38%] z-0 hidden h-10 w-10 rounded-full bg-neutral-300/90 md:block" />
 
@@ -167,18 +167,18 @@ export default async function HomePage() {
                 />
               </span>
             </h1>
-            <p className="mt-6 max-w-[36ch] text-base leading-relaxed text-neutral-600 md:text-lg">
+            <p className="mt-4 max-w-[36ch] text-base leading-relaxed text-neutral-600 md:mt-6 md:text-lg">
               {hero.description}
             </p>
             <Link
               href={heroCtaHref}
-              className="mt-10 inline-flex h-16 w-16 items-center justify-center rounded-full bg-neutral-900 text-white shadow-md transition hover:bg-[var(--accent)]"
+              className="mt-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-neutral-900 text-white shadow-md transition hover:bg-[var(--accent)] md:mt-10"
               aria-label={hero.ctaLabel || "Xem sản phẩm"}
             >
               <ArrowRight className="h-6 w-6" />
             </Link>
 
-            <ul className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-3">
+            <ul className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-3 md:mt-12 md:gap-4">
               {(hero.trustItems.length ? hero.trustItems : [
                 "Chất liệu thoáng mát",
                 "Form dáng hiện đại",
@@ -347,7 +347,7 @@ export default async function HomePage() {
 
   // Collections mosaic
   blocks["collections"] = colSec.isEnabled ? (
-      <section className="mx-auto max-w-7xl px-4 py-10 md:px-6 md:py-16">
+      <section className="mx-auto max-w-7xl px-4 py-8 md:px-6 md:py-16">
         <div className="mb-10 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="mb-2 text-sm font-bold text-[var(--accent)]">{col.eyebrow}</p>
@@ -378,8 +378,7 @@ export default async function HomePage() {
                 ? `/san-pham?category=${mosaicCats.ao.slug}`
                 : "/san-pham"
             }
-            className="group relative overflow-hidden rounded-2xl bg-neutral-200 md:row-span-2"
-            style={{ aspectRatio: FRAME_ASPECT.catAoThun }}
+            className="group relative aspect-[5/4] max-h-[380px] overflow-hidden rounded-2xl bg-neutral-200 md:row-span-2 md:aspect-[233/266] md:max-h-none"
           >
             <Image
               src={col.tiles[0]?.imageUrl || homeImages.collections.aoThun}
@@ -476,13 +475,13 @@ export default async function HomePage() {
 
   // Đa dạng — trái ~45% / phải ~52%; title đúng 3 dòng; model ~15–18% ngang
   blocks["diverse"] = divSec.isEnabled ? (
-      <section className="relative mx-auto overflow-hidden px-4 py-14 md:px-6 md:py-20">
+      <section className="relative mx-auto overflow-hidden px-4 py-10 md:px-6 md:py-20">
         <div className="mx-auto grid max-w-7xl items-start gap-6 md:grid-cols-[0.45fr_0.52fr] md:gap-[3%]">
           <div className="relative z-10 flex min-w-0 flex-col">
             <p className="mb-3 text-xs font-bold tracking-[0.18em] text-[var(--accent)] uppercase">
               {diverse.eyebrow}
             </p>
-            <div className="relative flex min-h-[480px] items-start gap-3 md:min-h-[560px]">
+            <div className="relative flex min-h-0 items-start gap-3 md:min-h-[560px]">
               <div className="relative z-20 min-w-0 flex-1 pr-[36%] md:pr-[38%]">
                 <h2
                   className="type-display text-neutral-900"
@@ -509,20 +508,19 @@ export default async function HomePage() {
                 </Link>
               </div>
               {/* Model ~15–18% page ≈ ~38% of left col; tall nearly full card */}
-              <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-[36%] max-w-[220px] min-w-[130px] md:w-[38%]">
+              <div className="pointer-events-none absolute top-0 right-0 z-10 h-[38vh] max-h-[300px] w-[36%] max-w-[220px] min-w-[130px] md:inset-y-0 md:h-auto md:max-h-none md:w-[38%]">
                 <div className="relative h-full w-full overflow-hidden bg-gradient-to-b from-neutral-100/60 to-transparent">
                   <Image
                     src={diverse.modelImage || homeImages.diverse.model}
                     alt="Đa dạng kiểu dáng"
                     fill
                     sizes="18vw"
-                    className="object-cover object-top"
-                    style={{ objectPosition: OBJECT_POSITION.diverseModel }}
+                    className="object-cover max-md:[object-position:50%_10%] md:[object-position:50%_8%]"
                   />
                 </div>
               </div>
             </div>
-            <p className="pointer-events-none mt-auto pt-1 font-[family-name:var(--font-display)] text-[4rem] leading-none font-black tracking-[0.04em] text-neutral-200 select-none md:text-[5.5rem]">
+            <p className="pointer-events-none mt-auto pt-1 font-[family-name:var(--font-display)] text-[2.75rem] leading-none font-black tracking-[0.04em] text-neutral-200 select-none md:text-[5.5rem]">
               {diverse.watermark}
             </p>
           </div>
@@ -536,7 +534,7 @@ export default async function HomePage() {
 
   // Featured 2 + 4 — always 6 slots with home-v2 images
   blocks["featured"] = featSec.isEnabled ? (
-      <section className="bg-white py-14 md:py-20">
+      <section className="bg-white py-10 md:py-20">
         <div className="mx-auto max-w-7xl px-4 md:px-6">
           <div className="mb-10 flex items-end justify-between gap-4">
             <h2
@@ -555,7 +553,7 @@ export default async function HomePage() {
           </div>
 
           <div
-            className="grid md:grid-cols-2"
+            className="grid grid-cols-2 md:grid-cols-2"
             style={{ gap: GAPS.featured.desktop }}
           >
             {featuredLarge.map((p, i) => (
@@ -564,6 +562,7 @@ export default async function HomePage() {
                 product={p}
                 large
                 frame="featuredLarge"
+                mobileFrame="featuredSmall"
                 imageOverride={largeImages[i]}
                 priority
               />
@@ -632,15 +631,15 @@ export default async function HomePage() {
 
   // PHỐI MÀU — model full height; type clear; lưới spans under CHẤT (not over type)
   blocks["color_play"] = colorSec.isEnabled ? (
-      <section className="relative mx-auto max-w-7xl overflow-hidden px-4 py-14 md:px-6 md:py-20">
+      <section className="relative mx-auto max-w-7xl overflow-hidden px-4 py-10 md:px-6 md:py-20">
         <div className="relative grid grid-cols-1 gap-x-3 gap-y-4 md:pr-11 lg:grid-cols-[minmax(200px,0.26fr)_minmax(220px,0.3fr)_minmax(0,0.44fr)] lg:[grid-template-areas:'model_type_copy'_'model_grid_grid'] lg:pr-14">
-          <div className="relative z-10 h-[420px] lg:h-auto lg:[grid-area:model]">
+          <div className="relative z-10 aspect-[3/4] max-h-[min(44vh,350px)] w-full md:aspect-auto md:h-[420px] md:max-h-none lg:h-auto lg:[grid-area:model]">
             <Image
               src={colorPlay.mainImage || homeImages.colorPlay.main}
               alt="Phối màu tạo chất"
               fill
               sizes="(max-width:1024px) 100vw, 26vw"
-              className="object-cover object-top"
+              className="object-cover object-top max-md:[object-position:50%_12%]"
               priority
             />
           </div>

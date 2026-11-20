@@ -74,7 +74,7 @@ export function HeroShatterCollage({
 
   return (
     <div
-      className={cn("hero-shatter", className)}
+      className={cn("hero-shatter max-md:max-h-[min(50vh,380px)] max-md:w-full", className)}
       style={
         {
           ["--hero-src"]: `url(${src})`,

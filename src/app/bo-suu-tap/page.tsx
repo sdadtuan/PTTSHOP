@@ -38,7 +38,7 @@ export default async function CollectionsPage() {
           <Link
             key={c.id}
             href={`/san-pham?collection=${c.slug}`}
-            className="group relative min-h-[360px] overflow-hidden bg-neutral-200"
+            className="group relative aspect-[16/10] max-h-[min(40vh,280px)] overflow-hidden bg-neutral-200 md:aspect-auto md:max-h-none md:min-h-[360px]"
           >
             <Image
               src={
@@ -48,7 +48,7 @@ export default async function CollectionsPage() {
               }
               alt={c.name}
               fill
-              className="object-cover transition duration-500 group-hover:scale-105"
+              className="object-cover transition duration-500 group-hover:scale-105 max-md:[object-position:50%_20%]"
               sizes="(max-width:768px) 100vw, 50vw"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />

@@ -139,6 +139,12 @@ body {
   will-change: transform;
 }
 
+@media (max-width: 767px) {
+  .hero-shatter {
+    max-height: min(50vh, 380px);
+  }
+}
+
 .hero-shatter__cell {
   min-height: 0;
   border-radius: 0.65rem;

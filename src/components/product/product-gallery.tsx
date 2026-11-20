@@ -153,7 +153,7 @@ export function ProductGallery({ images, name, selectedColor, colorPickNonce = 0
         </div>
 
         <div
-          className="relative min-h-[420px] flex-1 overflow-hidden bg-neutral-100 md:aspect-[3/4] md:min-h-0"
+          className="relative max-md:aspect-[3/4] max-md:max-h-[380px] max-md:min-h-0 flex-1 overflow-hidden bg-neutral-100 md:aspect-[3/4] md:min-h-0"
           data-testid="gallery-main"
           data-current-url={current.url}
           data-current-type={currentIsVideo ? "video" : "image"}
@@ -170,7 +170,7 @@ export function ProductGallery({ images, name, selectedColor, colorPickNonce = 0
                 loop
                 playsInline
                 preload="metadata"
-                className="absolute inset-0 h-full w-full object-cover"
+                className="absolute inset-0 h-full w-full bg-neutral-100 object-contain max-md:object-contain md:object-cover"
                 data-testid="pdp-product-video"
                 onPlay={() => setPlaying(true)}
                 onPause={() => setPlaying(false)}
