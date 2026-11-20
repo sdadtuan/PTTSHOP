@@ -46,7 +46,7 @@ import {
   type PdpTabDraft,
 } from "@/lib/pdp-tabs";
 
-type Category = { id: string; name: string };
+import { CategoryField, type AdminCategory } from "./category-field";
 
 type Info = {
   name: string;
@@ -124,7 +124,7 @@ export function ProductEditor({ productId }: { productId?: string }) {
   const [uploading, setUploading] = useState("");
   const [error, setError] = useState("");
   const [issues, setIssues] = useState<string[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<AdminCategory[]>([]);
   const [info, setInfo] = useState<Info>(EMPTY_INFO);
   const [slugTouched, setSlugTouched] = useState(false);
   const [media, setMedia] = useState<EditorMedia[]>([]);
@@ -511,19 +511,12 @@ export function ProductEditor({ productId }: { productId?: string }) {
                 });
               }}
             />
-            <AdminSelect
-              name="categoryId"
-              label="Danh mục"
-              value={info.categoryId}
-              onChange={(e) => setInfo((p) => ({ ...p, categoryId: e.target.value }))}
-            >
-              <option value="">— Danh mục —</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </AdminSelect>
+            <CategoryField
+              categoryId={info.categoryId}
+              categories={categories}
+              onCategoryIdChange={(categoryId) => setInfo((p) => ({ ...p, categoryId }))}
+              onCategoriesUpdated={setCategories}
+            />
             <AdminSelect
               name="gender"
               label="Giới tính"

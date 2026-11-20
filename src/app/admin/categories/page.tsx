@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { Pencil } from "lucide-react";
 import {
   AdminButton,
   AdminCard,
@@ -35,6 +36,9 @@ export default function AdminCategoriesPage() {
   const [page, setPage] = useState(1);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [editCat, setEditCat] = useState<Category | null>(null);
+  const [editName, setEditName] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -72,9 +76,7 @@ export default function AdminCategoriesPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: String(form.get("name") || ""),
-        slug: String(form.get("slug") || "")
-          .toLowerCase()
-          .replace(/\s+/g, "-"),
+        slug: String(form.get("slug") || "").trim() || undefined,
         sortOrder: Number(form.get("sortOrder") || 0),
       }),
     });
@@ -86,6 +88,26 @@ export default function AdminCategoriesPage() {
     }
     e.currentTarget.reset();
     toast("Đã thêm danh mục");
+    await load();
+  }
+
+  async function saveEdit(e: FormEvent) {
+    e.preventDefault();
+    if (!editCat) return;
+    setSavingEdit(true);
+    const res = await fetch("/api/admin/categories", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: editCat.id, name: editName.trim() }),
+    });
+    setSavingEdit(false);
+    const data = await res.json();
+    if (!res.ok) {
+      toast(data.error || "Cập nhật thất bại", "error");
+      return;
+    }
+    toast("Đã đổi tên danh mục");
+    setEditCat(null);
     await load();
   }
 
@@ -123,7 +145,7 @@ export default function AdminCategoriesPage() {
       <AdminCard className="mb-4">
         <form onSubmit={onCreate} className="grid gap-3 sm:grid-cols-4">
           <AdminInput name="name" required label="Tên" />
-          <AdminInput name="slug" required label="Slug" />
+          <AdminInput name="slug" label="Slug (tùy chọn)" placeholder="Để trống = tự tạo từ tên" />
           <AdminInput name="sortOrder" type="number" label="Thứ tự" defaultValue={0} />
           <div className="flex items-end">
             <AdminButton type="submit" variant="accent" className="w-full sm:w-auto">
@@ -178,14 +200,33 @@ export default function AdminCategoriesPage() {
                   <AdminTd>{c._count?.products ?? 0}</AdminTd>
                   <AdminTd>{c.sortOrder}</AdminTd>
                   <AdminTd>
-                    <AdminButton
-                      variant="ghost"
-                      size="sm"
-                      className="text-[var(--admin-danger)]"
-                      onClick={() => setDeleteId(c.id)}
-                    >
-                      Xóa
-                    </AdminButton>
+                    <div className="flex justify-end gap-1">
+                      <AdminButton
+                        variant="ghost"
+                        size="sm"
+                        aria-label="Đổi tên"
+                        onClick={() => {
+                          setEditCat(c);
+                          setEditName(c.name);
+                        }}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </AdminButton>
+                      <AdminButton
+                        variant="ghost"
+                        size="sm"
+                        className="text-[var(--admin-danger)]"
+                        disabled={(c._count?.products ?? 0) > 0}
+                        title={
+                          (c._count?.products ?? 0) > 0
+                            ? "Chuyển sản phẩm sang danh mục khác trước khi xóa"
+                            : undefined
+                        }
+                        onClick={() => setDeleteId(c.id)}
+                      >
+                        Xóa
+                      </AdminButton>
+                    </div>
                   </AdminTd>
                 </AdminTr>
               ))}
@@ -201,6 +242,34 @@ export default function AdminCategoriesPage() {
           </div>
         </>
       )}
+
+      {editCat ? (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-neutral-900/40 p-4">
+          <div className="w-full max-w-md rounded-[var(--admin-radius-xl)] border border-[var(--admin-border)] bg-white p-5 shadow-lg">
+            <h3 className="type-title text-lg font-semibold">Đổi tên danh mục</h3>
+            <form onSubmit={saveEdit} className="mt-4 space-y-3">
+              <AdminInput
+                label="Tên"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                required
+                autoFocus
+              />
+              <p className="text-xs text-[var(--admin-text-muted)]">
+                Slug: <span className="font-mono">{editCat.slug}</span> — đổi slug trong form sản phẩm «Đổi tên» nếu cần.
+              </p>
+              <div className="flex justify-end gap-2 pt-2">
+                <AdminButton type="button" variant="ghost" onClick={() => setEditCat(null)}>
+                  Hủy
+                </AdminButton>
+                <AdminButton type="submit" variant="accent" disabled={savingEdit}>
+                  {savingEdit ? "Đang lưu…" : "Lưu"}
+                </AdminButton>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
 
       <AdminConfirmDialog
         open={Boolean(deleteId)}
