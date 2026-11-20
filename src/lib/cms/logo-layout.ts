@@ -20,6 +20,14 @@ export type LogoSlotResponsive = {
 export type LogoLayoutSettings = {
   header: LogoSlotResponsive;
   footer: LogoSlotResponsive;
+  /** Hiện chữ thương hiệu cạnh logo footer (chỉ khi có logo ảnh). */
+  footerShowBrandName: boolean;
+};
+
+/** Kích thước footer trước khi chỉnh cân đối logo ngang — nâng tự động nếu admin chưa tùy chỉnh. */
+export const LEGACY_FOOTER_LOGO_LAYOUT: LogoSlotResponsive = {
+  mobile: { heightPx: 40, maxWidthPx: 40 },
+  desktop: { heightPx: 56, maxWidthPx: 56 },
 };
 
 export const DEFAULT_LOGO_LAYOUT: LogoLayoutSettings = {
@@ -28,10 +36,26 @@ export const DEFAULT_LOGO_LAYOUT: LogoLayoutSettings = {
     desktop: { heightPx: 40, maxWidthPx: 0 },
   },
   footer: {
-    mobile: { heightPx: 40, maxWidthPx: 40 },
-    desktop: { heightPx: 56, maxWidthPx: 56 },
+    mobile: { heightPx: 56, maxWidthPx: 0 },
+    desktop: { heightPx: 72, maxWidthPx: 0 },
   },
+  footerShowBrandName: false,
 };
+
+function footerMatchesLegacy(footer: LogoSlotResponsive) {
+  return (
+    footer.mobile.heightPx === LEGACY_FOOTER_LOGO_LAYOUT.mobile.heightPx &&
+    footer.mobile.maxWidthPx === LEGACY_FOOTER_LOGO_LAYOUT.mobile.maxWidthPx &&
+    footer.desktop.heightPx === LEGACY_FOOTER_LOGO_LAYOUT.desktop.heightPx &&
+    footer.desktop.maxWidthPx === LEGACY_FOOTER_LOGO_LAYOUT.desktop.maxWidthPx
+  );
+}
+
+/** Giữ chỉnh tay trong admin; chỉ nâng footer mặc định cũ (40/56) lên size mới. */
+export function applyLogoLayoutDefaults(layout: LogoLayoutSettings): LogoLayoutSettings {
+  if (!footerMatchesLegacy(layout.footer)) return layout;
+  return { ...layout, footer: DEFAULT_LOGO_LAYOUT.footer };
+}
 
 const slotSchema = z.object({
   heightPx: z.number().int().min(LOGO_HEIGHT_MIN).max(LOGO_HEIGHT_MAX),
@@ -46,6 +70,7 @@ const responsiveSchema = z.object({
 export const logoLayoutSchema = z.object({
   header: responsiveSchema,
   footer: responsiveSchema,
+  footerShowBrandName: z.boolean().optional().default(false),
 });
 
 export function parseLogoLayout(raw: unknown): LogoLayoutSettings {
@@ -60,9 +85,11 @@ export function parseLogoLayout(raw: unknown): LogoLayoutSettings {
       mobile: { ...DEFAULT_LOGO_LAYOUT.footer.mobile, ...o.footer?.mobile },
       desktop: { ...DEFAULT_LOGO_LAYOUT.footer.desktop, ...o.footer?.desktop },
     },
+    footerShowBrandName: o.footerShowBrandName ?? DEFAULT_LOGO_LAYOUT.footerShowBrandName,
   };
   const parsed = logoLayoutSchema.safeParse(merged);
-  return parsed.success ? parsed.data : DEFAULT_LOGO_LAYOUT;
+  const base = parsed.success ? parsed.data : DEFAULT_LOGO_LAYOUT;
+  return applyLogoLayoutDefaults(base);
 }
 
 export function parseLogoLayoutJson(json: string | null | undefined): LogoLayoutSettings {

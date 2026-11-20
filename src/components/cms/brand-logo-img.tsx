@@ -4,7 +4,7 @@ import type { LogoLayoutSettings } from "@/lib/cms/logo-layout";
 import { DEFAULT_LOGO_LAYOUT, logoImgStyle } from "@/lib/cms/logo-layout";
 import { cn } from "@/lib/utils";
 
-type Slot = keyof LogoLayoutSettings;
+type LogoImageSlot = "header" | "footer";
 
 export function BrandLogoImg({
   src,
@@ -15,12 +15,13 @@ export function BrandLogoImg({
 }: {
   src: string;
   alt: string;
-  slot: Slot;
+  slot: LogoImageSlot;
   layout?: LogoLayoutSettings;
   className?: string;
 }) {
-  const mobile = layout[slot].mobile;
-  const desktop = layout[slot].desktop;
+  const slotLayout = layout[slot];
+  const mobile = slotLayout.mobile;
+  const desktop = slotLayout.desktop;
   return (
     <>
       {/* eslint-disable-next-line @next/next/no-img-element */}

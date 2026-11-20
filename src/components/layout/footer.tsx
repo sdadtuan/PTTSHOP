@@ -76,12 +76,13 @@ export function Footer() {
   ] as const;
 
   const brandName = brand.brandName || "VIZFAS";
+  const showFooterBrandText = Boolean(brand.logoUrl && brand.logoLayout.footerShowBrandName);
 
   return (
     <footer className="relative mt-auto overflow-hidden border-t border-black/5 bg-white text-neutral-700">
-      {/* Decor — desktop only large; mobile tucked away so không đè logo */}
+      {/* Decor — ẩn mobile để không đè khối logo/tagline */}
       <div
-        className="pointer-events-none absolute top-4 right-[-10%] z-0 h-24 w-24 rotate-[22deg] rounded-[1.5rem] bg-[var(--accent)]/70 sm:right-[14%] sm:h-44 sm:w-44 sm:rounded-[2rem] sm:bg-[var(--accent)]/90 md:h-52 md:w-52"
+        className="pointer-events-none absolute top-4 right-[-10%] z-0 hidden h-24 w-24 rotate-[22deg] rounded-[1.5rem] bg-[var(--accent)]/70 sm:right-[14%] sm:block sm:h-44 sm:w-44 sm:rounded-[2rem] sm:bg-[var(--accent)]/90 md:h-52 md:w-52"
         aria-hidden
       />
       <div
@@ -91,22 +92,38 @@ export function Footer() {
 
       <div className="relative z-10 mx-auto max-w-7xl overflow-hidden px-4 pt-16 pb-12 md:px-6 md:pt-20 md:pb-14">
         <div className="flex flex-col gap-8 border-b border-black/5 pb-10 md:flex-row md:items-start md:justify-between md:pb-14">
-          <div className="relative z-10 max-w-2xl">
-            <div className="flex items-center gap-3 md:gap-4">
+          <div className="relative z-10 max-w-2xl pr-2 sm:pr-0">
+            <div
+              className={
+                brand.logoUrl
+                  ? showFooterBrandText
+                    ? "flex flex-wrap items-center gap-3 md:gap-4"
+                    : "flex flex-col items-start"
+                  : "flex items-center gap-3 md:gap-4"
+              }
+            >
               {brand.logoUrl ? (
-                <BrandLogoImg src={brand.logoUrl} alt="" slot="footer" layout={brand.logoLayout} />
+                <BrandLogoImg src={brand.logoUrl} alt={brandName} slot="footer" layout={brand.logoLayout} />
               ) : (
                 <SparkLogo className="h-10 w-10 shrink-0 text-[var(--accent)] md:h-14 md:w-14" />
               )}
-              <p
-                className="font-[family-name:var(--font-display)] font-black tracking-[0.12em] text-neutral-900"
-                style={{ fontSize: TYPE_SCALE.footerLogo.css }}
-              >
-                {brandName}
-              </p>
+              {brand.logoUrl ? (
+                showFooterBrandText ? (
+                  <p className="font-[family-name:var(--font-display)] text-xl font-bold tracking-[0.08em] text-neutral-900 md:text-2xl">
+                    {brandName}
+                  </p>
+                ) : null
+              ) : (
+                <p
+                  className="font-[family-name:var(--font-display)] font-black tracking-[0.12em] text-neutral-900"
+                  style={{ fontSize: TYPE_SCALE.footerLogo.css }}
+                >
+                  {brandName}
+                </p>
+              )}
             </div>
             <p
-              className="mt-5 leading-relaxed text-neutral-600"
+              className="mt-4 leading-relaxed text-neutral-600 md:mt-5"
               style={{ fontSize: TYPE_SCALE.footerTagline.css }}
             >
               {brand.footerTagline}

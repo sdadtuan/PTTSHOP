@@ -117,11 +117,34 @@ export function LogoLayoutEditor({
           <BrandLogoImg src={logoUrl} alt={brandName} slot="header" layout={layout} />
         </div>
         <p className="mb-2 mt-4 text-xs font-medium text-[var(--admin-text-muted)]">Xem trước (footer)</p>
-        <div className="flex items-center gap-3">
-          <BrandLogoImg src={logoUrl} alt="" slot="footer" layout={layout} />
-          <span className="text-sm font-semibold tracking-wide">{brandName}</span>
+        <div
+          className={
+            layout.footerShowBrandName
+              ? "flex flex-wrap items-center gap-3"
+              : "flex flex-col items-start"
+          }
+        >
+          <BrandLogoImg src={logoUrl} alt={brandName} slot="footer" layout={layout} />
+          {layout.footerShowBrandName ? (
+            <span className="text-sm font-semibold tracking-wide">{brandName}</span>
+          ) : null}
         </div>
       </div>
+
+      <label className="flex cursor-pointer items-start gap-3 rounded-[var(--admin-radius-md)] border border-[var(--admin-border)] p-3 text-sm">
+        <input
+          type="checkbox"
+          className="mt-0.5 accent-[var(--admin-accent)]"
+          checked={Boolean(layout.footerShowBrandName)}
+          onChange={(e) => onChange({ ...layout, footerShowBrandName: e.target.checked })}
+        />
+        <span>
+          <span className="font-medium">Hiện chữ thương hiệu cạnh logo</span>
+          <span className="mt-0.5 block text-xs text-[var(--admin-text-muted)]">
+            Chỉ áp dụng footer khi đã có logo ảnh. Mặc định tắt — chỉ hiển thị logo.
+          </span>
+        </span>
+      </label>
 
       <div>
         <p className="mb-2 text-sm font-semibold">Header — logo trên menu</p>
