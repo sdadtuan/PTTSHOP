@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { Pencil, Plus } from "lucide-react";
 import {
@@ -50,6 +50,14 @@ export function CategoryField({
     () => slugify(newName, { fallback: "danh-muc" }),
     [newName],
   );
+
+  const closeAddModal = useCallback(() => {
+    if (!saving) setAddOpen(false);
+  }, [saving]);
+
+  const closeRenameModal = useCallback(() => {
+    if (!saving) setRenameOpen(false);
+  }, [saving]);
 
   async function refreshCategories(): Promise<AdminCategory[]> {
     const res = await fetch("/api/admin/categories");
@@ -165,7 +173,7 @@ export function CategoryField({
 
     <AdminModal
       open={addOpen}
-      onClose={() => !saving && setAddOpen(false)}
+      onClose={closeAddModal}
       title="Thêm danh mục mới"
       footer={
         <>
@@ -195,7 +203,7 @@ export function CategoryField({
 
     <AdminModal
       open={renameOpen}
-      onClose={() => !saving && setRenameOpen(false)}
+      onClose={closeRenameModal}
       title="Đổi tên danh mục"
       footer={
         <>

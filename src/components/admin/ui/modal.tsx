@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { pickInitialModalFocus } from "@/lib/modal-focus";
 import { AdminButton } from "./button";
 
 export function AdminModal({
@@ -22,18 +23,24 @@ export function AdminModal({
 }) {
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+  const didFocusOnOpen = useRef(false);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      didFocusOnOpen.current = false;
+      return;
+    }
     const prev = document.activeElement as HTMLElement | null;
     const panel = panelRef.current;
-    const focusable = panel?.querySelector<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-    );
-    focusable?.focus();
+    if (!didFocusOnOpen.current) {
+      didFocusOnOpen.current = true;
+      pickInitialModalFocus(panel)?.focus();
+    }
 
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
       if (e.key !== "Tab" || !panel) return;
       const nodes = [
         ...panel.querySelectorAll<HTMLElement>(
@@ -59,7 +66,7 @@ export function AdminModal({
       document.body.style.overflow = "";
       prev?.focus();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 
