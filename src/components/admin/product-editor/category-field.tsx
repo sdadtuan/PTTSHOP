@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Pencil, Plus } from "lucide-react";
 import {
@@ -10,6 +10,7 @@ import {
   AdminSelect,
   useAdminToast,
 } from "@/components/admin/ui";
+import { useAutoSlugField } from "@/hooks/use-auto-slug-field";
 import { slugify } from "@/lib/slug";
 
 export type AdminCategory = {
@@ -35,10 +36,8 @@ export function CategoryField({
   const { toast } = useAdminToast();
   const [addOpen, setAddOpen] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [renameName, setRenameName] = useState("");
-  const [renameSlug, setRenameSlug] = useState("");
-  const [renameSlugTouched, setRenameSlugTouched] = useState(false);
+  const addFields = useAutoSlugField({ fallback: "" });
+  const renameFields = useAutoSlugField({ fallback: "" });
   const [saving, setSaving] = useState(false);
 
   const selected = useMemo(
@@ -46,10 +45,9 @@ export function CategoryField({
     [categories, categoryId],
   );
 
-  const addSlugPreview = useMemo(
-    () => slugify(newName, { fallback: "danh-muc" }),
-    [newName],
-  );
+  useEffect(() => {
+    if (addOpen) addFields.reset();
+  }, [addOpen, addFields.reset]);
 
   const closeAddModal = useCallback(() => {
     if (!saving) setAddOpen(false);
@@ -70,13 +68,16 @@ export function CategoryField({
 
   async function onAddSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!newName.trim()) return;
+    if (!addFields.name.trim()) return;
     setSaving(true);
     try {
       const res = await fetch("/api/admin/categories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newName.trim() }),
+        body: JSON.stringify({
+          name: addFields.name.trim(),
+          slug: addFields.slug.trim() || undefined,
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Tạo danh mục thất bại");
@@ -85,7 +86,7 @@ export function CategoryField({
       onCategoryIdChange(created.id);
       toast(`Đã thêm danh mục «${created.name}»`);
       setAddOpen(false);
-      setNewName("");
+      addFields.reset();
     } catch (err) {
       toast(err instanceof Error ? err.message : "Tạo danh mục thất bại", "error");
     } finally {
@@ -95,9 +96,7 @@ export function CategoryField({
 
   function openRename() {
     if (!selected) return;
-    setRenameName(selected.name);
-    setRenameSlug(selected.slug);
-    setRenameSlugTouched(false);
+    renameFields.reset({ name: selected.name, slug: selected.slug, preserveSlug: true });
     setRenameOpen(true);
   }
 
@@ -106,16 +105,17 @@ export function CategoryField({
     if (!selected) return;
     setSaving(true);
     try {
-      const slug = renameSlugTouched
-        ? slugify(renameSlug, { fallback: selected.slug })
+      const nextSlug = renameFields.slug.trim()
+        ? slugify(renameFields.slug, { fallback: selected.slug })
         : undefined;
+      const slugBody = nextSlug && nextSlug !== selected.slug ? { slug: nextSlug } : {};
       const res = await fetch("/api/admin/categories", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: selected.id,
-          name: renameName.trim(),
-          ...(slug ? { slug } : {}),
+          name: renameFields.name.trim(),
+          ...slugBody,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -189,15 +189,19 @@ export function CategoryField({
       <form id="pe-add-category" onSubmit={onAddSubmit} className="space-y-3">
         <AdminInput
           label="Tên danh mục"
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
+          value={addFields.name}
+          onChange={(e) => addFields.setName(e.target.value)}
           required
           autoFocus
           placeholder="VD: Áo sơ mi"
         />
-        <p className="text-xs text-[var(--admin-text-muted)]">
-          Slug tự tạo: <span className="font-mono">{addSlugPreview || "—"}</span>
-        </p>
+        <AdminInput
+          label="Slug"
+          value={addFields.slug}
+          onChange={(e) => addFields.setSlug(e.target.value)}
+          onBlur={addFields.onSlugBlur}
+          hint="Tự điền từ tên; có thể sửa hoặc xóa hết để bật lại tự động"
+        />
       </form>
     </AdminModal>
 
@@ -219,18 +223,16 @@ export function CategoryField({
       <form id="pe-rename-category" onSubmit={onRenameSubmit} className="space-y-3">
         <AdminInput
           label="Tên hiển thị"
-          value={renameName}
-          onChange={(e) => setRenameName(e.target.value)}
+          value={renameFields.name}
+          onChange={(e) => renameFields.setName(e.target.value)}
           required
         />
         <AdminInput
           label="Slug (link lọc /san-pham?category=…)"
-          value={renameSlug}
-          onChange={(e) => {
-            setRenameSlugTouched(true);
-            setRenameSlug(e.target.value);
-          }}
-          hint="Chỉ đổi slug khi cần; tên đổi là đủ cho hầu hết trường hợp."
+          value={renameFields.slug}
+          onChange={(e) => renameFields.setSlug(e.target.value)}
+          onBlur={renameFields.onSlugBlur}
+          hint="Đổi tên không đổi slug; xóa slug để tạo lại từ tên hoặc sửa tay."
         />
       </form>
     </AdminModal>

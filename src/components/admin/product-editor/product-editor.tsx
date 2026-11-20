@@ -17,6 +17,12 @@ import {
   useAdminToast,
 } from "@/components/admin/ui";
 import { HEX_RE } from "@/lib/product-media";
+import {
+  autoSlugOnNameChange,
+  autoSlugOnSlugBlur,
+  autoSlugOnSlugChange,
+  slugFromDisplayName,
+} from "@/lib/auto-slug-field";
 import { slugify, uniqueSlugSync } from "@/lib/slug";
 import { cn } from "@/lib/utils";
 import {
@@ -89,11 +95,6 @@ const EMPTY_INFO: Info = {
 
 const IMAGE_ACCEPT = "image/jpeg,image/png,image/webp,image/gif";
 const VIDEO_ACCEPT = "video/mp4,video/webm";
-
-/** Slug generated from the product name ("" while the name is empty). */
-function slugFromName(name: string) {
-  return name.trim() ? slugify(name) : "";
-}
 
 async function uploadFile(file: File) {
   const body = new FormData();
@@ -481,7 +482,13 @@ export function ProductEditor({ productId }: { productId?: string }) {
               data-testid="pe-name"
               onChange={(e) => {
                 const name = e.target.value;
-                setInfo((p) => ({ ...p, name, slug: slugTouched ? p.slug : slugFromName(name) }));
+                setInfo((p) => {
+                  const next = autoSlugOnNameChange(
+                    { name: p.name, slug: p.slug, slugManual: slugTouched },
+                    name,
+                  );
+                  return { ...p, name: next.name, slug: next.slug };
+                });
               }}
             />
             <AdminInput
@@ -497,17 +504,25 @@ export function ProductEditor({ productId }: { productId?: string }) {
                     : "Đổi slug sẽ đổi link sản phẩm"
               }
               onChange={(e) => {
-                // live-sanitise manual input (keep one trailing "-" so words can be typed)
-                const slug = e.target.value ? slugify(e.target.value, { fallback: "", keepTrailingDash: true }) : "";
-                // cleared → back to automatic (from the name); otherwise manual, never overwritten
-                setSlugTouched(slug !== "");
-                setInfo((p) => ({ ...p, slug }));
+                setInfo((p) => {
+                  const next = autoSlugOnSlugChange(
+                    { name: p.name, slug: p.slug, slugManual: slugTouched },
+                    e.target.value,
+                  );
+                  setSlugTouched(next.slugManual);
+                  return { ...p, slug: next.slug };
+                });
               }}
               onBlur={() => {
                 setInfo((p) => {
                   if (!isNew && p.slug === savedSlug) return p;
-                  const slug = p.slug ? slugify(p.slug) : slugFromName(p.name);
-                  return slug === p.slug ? p : { ...p, slug };
+                  const next = autoSlugOnSlugBlur(
+                    { name: p.name, slug: p.slug, slugManual: slugTouched },
+                  );
+                  if (!next.slug && p.name.trim()) {
+                    return { ...p, slug: slugFromDisplayName(p.name) };
+                  }
+                  return next.slug === p.slug ? p : { ...p, slug: next.slug };
                 });
               }}
             />

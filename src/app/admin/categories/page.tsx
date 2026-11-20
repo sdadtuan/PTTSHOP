@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Pencil } from "lucide-react";
+import { useAutoSlugField } from "@/hooks/use-auto-slug-field";
 import {
   AdminButton,
   AdminCard,
@@ -39,6 +40,8 @@ export default function AdminCategoriesPage() {
   const [editCat, setEditCat] = useState<Category | null>(null);
   const [editName, setEditName] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
+  const createSlug = useAutoSlugField({ fallback: "" });
+  const [createSortOrder, setCreateSortOrder] = useState(0);
 
   async function load() {
     setLoading(true);
@@ -70,14 +73,15 @@ export default function AdminCategoriesPage() {
 
   async function onCreate(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const form = new FormData(e.currentTarget);
+    const name = createSlug.name.trim();
+    if (!name) return;
     const res = await fetch("/api/admin/categories", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        name: String(form.get("name") || ""),
-        slug: String(form.get("slug") || "").trim() || undefined,
-        sortOrder: Number(form.get("sortOrder") || 0),
+        name,
+        slug: createSlug.slug.trim() || undefined,
+        sortOrder: createSortOrder,
       }),
     });
     const data = await res.json();
@@ -86,7 +90,8 @@ export default function AdminCategoriesPage() {
       toast(data.error || "Tạo thất bại", "error");
       return;
     }
-    e.currentTarget.reset();
+    createSlug.reset();
+    setCreateSortOrder(0);
     toast("Đã thêm danh mục");
     await load();
   }
@@ -144,9 +149,25 @@ export default function AdminCategoriesPage() {
 
       <AdminCard className="mb-4">
         <form onSubmit={onCreate} className="grid gap-3 sm:grid-cols-4">
-          <AdminInput name="name" required label="Tên" />
-          <AdminInput name="slug" label="Slug (tùy chọn)" placeholder="Để trống = tự tạo từ tên" />
-          <AdminInput name="sortOrder" type="number" label="Thứ tự" defaultValue={0} />
+          <AdminInput
+            label="Tên"
+            required
+            value={createSlug.name}
+            onChange={(e) => createSlug.setName(e.target.value)}
+          />
+          <AdminInput
+            label="Slug"
+            value={createSlug.slug}
+            onChange={(e) => createSlug.setSlug(e.target.value)}
+            onBlur={createSlug.onSlugBlur}
+            hint="Tự điền từ tên; xóa hết để bật lại tự động"
+          />
+          <AdminInput
+            type="number"
+            label="Thứ tự"
+            value={createSortOrder}
+            onChange={(e) => setCreateSortOrder(Number(e.target.value) || 0)}
+          />
           <div className="flex items-end">
             <AdminButton type="submit" variant="accent" className="w-full sm:w-auto">
               Thêm
