@@ -285,14 +285,20 @@ model Order {
 
 model Review {
   id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   productId String
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  orderId   String
-  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId   String?
+  order     Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
   rating    Int
   comment   String?
+  /// When false, hidden from storefront but kept in admin.
+  isPublished Boolean @default(true)
+  /// Admin-entered review (no purchase); shown with displayName.
+  isAdminCreated Boolean @default(false)
+  displayName String?
+  avatarUrl   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

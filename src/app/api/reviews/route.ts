@@ -2,7 +2,7 @@ import { z } from "zod";
 import { handleApiError, jsonError, jsonOk } from "@/lib/api";
 import { getOptionalSession, requireSession } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
-import { recomputeProductRating } from "@/lib/reviews";
+import { PUBLISHED_REVIEW_WHERE, recomputeProductRating, reviewDisplayName } from "@/lib/reviews";
 
 export async function GET(req: Request) {
   try {
@@ -11,7 +11,7 @@ export async function GET(req: Request) {
     if (!productId) return jsonError("Thiếu productId", 400);
 
     const reviews = await prisma.review.findMany({
-      where: { productId },
+      where: { productId, ...PUBLISHED_REVIEW_WHERE },
       include: {
         user: { select: { name: true } },
       },
@@ -49,7 +49,7 @@ export async function GET(req: Request) {
         rating: r.rating,
         comment: r.comment,
         createdAt: r.createdAt,
-        userName: r.user.name || "Khách",
+        userName: reviewDisplayName(r),
       })),
       eligibleOrderId,
     });

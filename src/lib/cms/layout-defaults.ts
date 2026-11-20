@@ -5,9 +5,11 @@ export { type TrustPair };
 
 export const DEFAULT_PRIMARY_NAV: NavLink[] = [
   { href: "/", label: "Trang chủ" },
-  { href: "/san-pham", label: "Sản phẩm" },
   { href: "/bo-suu-tap", label: "Bộ sưu tập" },
+  { href: "/san-pham", label: "Sản phẩm" },
+  { href: "/danh-gia", label: "Đánh giá" },
   { href: "/ve-chung-toi", label: "Về chúng tôi" },
+  { href: "/lien-he", label: "Liên hệ" },
 ];
 
 export const DEFAULT_MOBILE_NAV_EXTRA: NavLink[] = [

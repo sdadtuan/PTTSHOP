@@ -65,12 +65,14 @@ export default async function DemoV2HomePage() {
 
   void settings;
 
-  const reviews = reviewRows.map((r) => ({
+  const reviews = reviewRows
+    .filter((r) => r.isPublished)
+    .map((r) => ({
     id: r.id,
     rating: r.rating,
     comment: r.comment,
     createdAt: r.createdAt,
-    userName: r.user.name || "Khách VIZFAS",
+    userName: r.displayName?.trim() || r.user?.name || "Khách VIZFAS",
     productName: r.product.name,
     productSlug: r.product.slug,
   }));

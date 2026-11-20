@@ -31,6 +31,7 @@ const REVALIDATE_PATHS = [
   "/tin-tuc",
   "/tuyen-dung",
   "/ve-chung-toi",
+  "/danh-gia",
 ];
 
 let uiCopySeeding: Promise<void> | null = null;

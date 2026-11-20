@@ -122,6 +122,7 @@ export async function saveStorefrontPage(input: SaveStorefrontPageInput) {
   });
 
   revalidatePath(`/${row.slug}`);
+  revalidatePath("/danh-gia");
   if (row.slug.includes("/")) {
   revalidatePath(`/${row.slug.split("/")[0]}`);
   }

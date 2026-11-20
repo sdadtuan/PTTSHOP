@@ -8,6 +8,16 @@ export type StorefrontPageSeed = {
 
 export const STOREFRONT_PAGE_SEEDS: StorefrontPageSeed[] = [
   {
+    slug: "danh-gia",
+    title: "Đánh giá",
+    description: "Nhận xét từ khách hàng VIZFAS.",
+    body: [
+      "Xem nhận xét thật từ khách đã mua và trải nghiệm sản phẩm VIZFAS.",
+      "Bạn cũng có thể để lại đánh giá trên trang chi tiết sản phẩm sau khi đặt hàng thành công.",
+    ],
+    sortOrder: 4,
+  },
+  {
     slug: "tin-tuc",
     title: "Tin tức",
     description: "Cập nhật thương hiệu và bộ sưu tập VIZFAS.",
