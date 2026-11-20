@@ -78,10 +78,28 @@ export const siteSettingsSchema = z.object({
   socialFacebook: z.string().refine((v) => !v || isSafeHref(v), { message: "URL MXH không hợp lệ" }),
   socialTiktok: z.string().refine((v) => !v || isSafeHref(v), { message: "URL MXH không hợp lệ" }),
   socialYoutube: z.string().refine((v) => !v || isSafeHref(v), { message: "URL MXH không hợp lệ" }),
+  seoTitle: plain.pipe(z.string().max(160)),
+  seoDescription: plain.pipe(z.string().max(400)),
+});
+
+const navLinkSchema = z.object({
+  href: safeHref,
+  label: plain.pipe(z.string().min(1).max(80)),
+  match: plain.pipe(z.string().max(120)).optional(),
+  hash: plain.pipe(z.string().max(40)).optional(),
+});
+
+const footerLinkSchema = z.object({
+  href: safeHref,
+  label: plain.pipe(z.string().min(1).max(120)),
 });
 
 export const sectionKeySchema = z.enum([
   "header",
+  "navigation",
+  "footer_links",
+  "floating_contact",
+  "reviews",
   "hero",
   "dual_banner",
   "collections",
@@ -97,6 +115,22 @@ const headerContentSchema = z.object({
   logoUrl: z.union([safeMedia, z.literal(""), z.null()]).nullable().optional(),
 });
 
+const trustPairSchema = z.object({
+  title: plain.pipe(z.string().max(80)),
+  subtitle: plain.pipe(z.string().max(120)),
+});
+
+const demoHeroSlideSchema = z.object({
+  eyebrow: plain.pipe(z.string().max(80)),
+  title: plain.pipe(z.string().max(80)),
+  subtitle: plain.pipe(z.string().max(240)),
+  ctaHref: safeHref,
+  ctaLabel: plain.pipe(z.string().max(80)),
+  mainImage: safeMedia,
+  sideAImage: safeMedia,
+  sideBImage: safeMedia,
+});
+
 const heroContentSchema = z.object({
   badgeLine1: plain.pipe(z.string().max(80)),
   badgeLine2: plain.pipe(z.string().max(80)),
@@ -107,7 +141,50 @@ const heroContentSchema = z.object({
   ctaHref: safeHref,
   imageUrl: safeMedia,
   trustItems: z.array(plain.pipe(z.string().max(80))).max(8),
+  trustPairs: z.array(trustPairSchema).max(8),
+  demoExtraSlides: z.array(demoHeroSlideSchema).max(6),
   useHeroBanner: z.boolean(),
+});
+
+const navigationContentSchema = z.object({
+  searchPlaceholder: plain.pipe(z.string().max(80)),
+  primaryNav: z.array(navLinkSchema).max(16),
+  mobileExtra: z.array(navLinkSchema).max(16),
+  demoPrimaryNav: z.array(navLinkSchema).max(16),
+  demoMobileExtra: z.array(navLinkSchema).max(16),
+});
+
+const footerLinksContentSchema = z.object({
+  columns: z
+    .array(
+      z.object({
+        title: plain.pipe(z.string().max(80)),
+        links: z.array(footerLinkSchema).max(16),
+      }),
+    )
+    .max(6),
+  legalLinks: z.array(footerLinkSchema).max(10),
+  contactColumnTitle: plain.pipe(z.string().max(80)),
+  copyrightNote: plain.pipe(z.string().max(200)),
+  showHomepageSwitcher: z.boolean(),
+});
+
+const floatingContactContentSchema = z.object({
+  items: z
+    .array(
+      z.object({
+        href: z.string().refine((v) => isSafeHref(v), { message: "URL không hợp lệ" }),
+        label: plain.pipe(z.string().max(40)),
+        preset: z.enum(["facebook", "messenger", "zalo", "phone", "instagram", "custom"]),
+      }),
+    )
+    .max(8),
+});
+
+const reviewsSectionContentSchema = z.object({
+  title: plain.pipe(z.string().max(160)),
+  emptyLine1: plain.pipe(z.string().max(200)),
+  emptyLine2: plain.pipe(z.string().max(200)),
 });
 
 const dualBannerContentSchema = z.object({
@@ -171,6 +248,10 @@ const colorPlayContentSchema = z.object({
   introImage1Alt: plain.pipe(z.string().max(160)),
   introImage2Alt: plain.pipe(z.string().max(160)),
   verticalLabel: plain.pipe(z.string().max(80)),
+  brandLine1: plain.pipe(z.string().max(40)),
+  brandEmphasis: plain.pipe(z.string().max(40)),
+  ctaLabel: plain.pipe(z.string().max(80)),
+  ctaHref: safeHref,
 });
 
 const promoBannerContentSchema = z.object({
@@ -196,6 +277,10 @@ const footerContentSchema = z.object({
 
 export const sectionContentSchemas = {
   header: headerContentSchema,
+  navigation: navigationContentSchema,
+  footer_links: footerLinksContentSchema,
+  floating_contact: floatingContactContentSchema,
+  reviews: reviewsSectionContentSchema,
   hero: heroContentSchema,
   dual_banner: dualBannerContentSchema,
   collections: collectionsContentSchema,

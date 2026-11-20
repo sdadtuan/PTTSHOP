@@ -83,9 +83,8 @@ describe("demo-v2 isolation", () => {
   });
 
   it("exposes ĐÁNH GIÁ nav and #danh-gia reviews (read-only)", () => {
-    const header = read("src/components/demo-v2/demo-header.tsx");
-    expect(header).toContain('label: "ĐÁNH GIÁ"');
-    expect(header).toContain("/demo-v2#danh-gia");
+    expect(read("src/lib/cms/layout-defaults.ts")).toContain('label: "ĐÁNH GIÁ"');
+    expect(read("src/components/demo-v2/demo-header.tsx")).toContain("useStorefrontLayout");
     expect(read("src/components/demo-v2/demo-reviews.tsx")).toContain('id="danh-gia"');
     expect(read("src/components/demo-v2/demo-reviews.tsx")).toContain(
       "Khách Hàng Nói Gì Về VIZFAS",

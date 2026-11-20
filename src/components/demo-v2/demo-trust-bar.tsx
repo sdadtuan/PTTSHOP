@@ -1,23 +1,34 @@
 import { Gem, Headphones, Leaf, PackageOpen, ShieldCheck, Shirt, Truck } from "lucide-react";
+import type { TrustPair } from "@/lib/cms/types";
 
-const DEFAULT = [
-  { icon: Truck, title: "Giao Hàng Nhanh", subtitle: "Toàn Quốc" },
-  { icon: PackageOpen, title: "Đổi Trả Dễ Dàng", subtitle: "Trong 7 Ngày" },
-  { icon: ShieldCheck, title: "Thanh Toán An Toàn", subtitle: "Nhiều Phương Thức" },
-  { icon: Headphones, title: "Hỗ Trợ 24/7", subtitle: "Luôn Sẵn Sàng" },
-] as const;
+const FALLBACK_ICONS = [Truck, PackageOpen, ShieldCheck, Headphones, Leaf, Shirt, Gem] as const;
 
-const FALLBACK_ICONS = [Leaf, Shirt, Gem, Truck] as const;
-
-export function DemoTrustBar({ items }: { items?: string[] }) {
+export function DemoTrustBar({
+  items,
+  pairs,
+}: {
+  items?: string[];
+  pairs?: TrustPair[];
+}) {
   const rows =
-    items && items.length > 0
-      ? items.slice(0, 4).map((title, i) => ({
+    pairs && pairs.length > 0
+      ? pairs.slice(0, 4).map((p, i) => ({
           icon: FALLBACK_ICONS[i % FALLBACK_ICONS.length]!,
-          title,
-          subtitle: DEFAULT[i]?.subtitle || "VIZFAS",
+          title: p.title,
+          subtitle: p.subtitle,
         }))
-      : [...DEFAULT];
+      : items && items.length > 0
+        ? items.slice(0, 4).map((title, i) => ({
+            icon: FALLBACK_ICONS[i % FALLBACK_ICONS.length]!,
+            title,
+            subtitle: "VIZFAS",
+          }))
+        : [
+            { icon: Truck, title: "Giao Hàng Nhanh", subtitle: "Toàn Quốc" },
+            { icon: PackageOpen, title: "Đổi Trả Dễ Dàng", subtitle: "Trong 7 Ngày" },
+            { icon: ShieldCheck, title: "Thanh Toán An Toàn", subtitle: "Nhiều Phương Thức" },
+            { icon: Headphones, title: "Hỗ Trợ 24/7", subtitle: "Luôn Sẵn Sàng" },
+          ];
 
   return (
     <section className="dv2-trust" data-testid="demo-v2-trust" aria-label="Cam kết">

@@ -12,9 +12,19 @@ import {
   useAdminToast,
 } from "@/components/admin/ui";
 import { CmsFieldList, ImageField, setPath } from "@/components/cms/cms-fields";
+import { FooterColumnsEditor, LinkListEditor } from "@/components/cms/link-list-editor";
 import { LAYOUT_SECTIONS, SECTION_FIELDS, SECTION_HELP } from "@/lib/cms/admin-fields";
 import { ShippingPolicyCard } from "@/components/admin/shipping-policy-card";
-import type { HomepageSectionKey, SiteSettingsData } from "@/lib/cms/types";
+import type {
+  DemoHeroSlide,
+  FloatingContactContent,
+  FooterLinksContent,
+  HomepageSectionKey,
+  NavigationContent,
+  ReviewsSectionContent,
+  SiteSettingsData,
+  TrustPair,
+} from "@/lib/cms/types";
 
 type CmsSection = {
   id: string;
@@ -334,8 +344,10 @@ export default function AdminGiaoDienPage() {
       <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
         <div className="min-w-0" data-testid="admin-sections">
           <AdminCard>
-            <h2 className="mb-1 font-semibold">Khu vực trang chủ</h2>
-            <p className="mb-3 text-xs text-[var(--admin-text-muted)]">Theo đúng thứ tự trên trang. Bật/tắt và ↑↓ để sắp xếp.</p>
+            <h2 className="mb-1 font-semibold">Khu vực giao diện</h2>
+            <p className="mb-3 text-xs text-[var(--admin-text-muted)]">
+              Menu, footer và các khối trang chủ. Mục &quot;Cố định&quot; không đổi thứ tự trên trang.
+            </p>
             {loading ? (
               <p className="text-sm text-[var(--admin-text-muted)]">Đang tải…</p>
             ) : (
@@ -437,6 +449,199 @@ export default function AdminGiaoDienPage() {
                   </div>
                   <span className="block text-xs text-[var(--admin-text-muted)]">Áp dụng cho nút, điểm nhấn và chữ màu trên toàn site.</span>
                 </div>
+                <AdminInput
+                  label="Tiêu đề SEO mặc định"
+                  data-testid="cms-seo-title"
+                  value={settings.seoTitle}
+                  onChange={(e) => patchSettings({ seoTitle: e.target.value })}
+                />
+                <AdminTextarea
+                  label="Mô tả SEO mặc định"
+                  data-testid="cms-seo-description"
+                  value={settings.seoDescription}
+                  onChange={(e) => patchSettings({ seoDescription: e.target.value })}
+                />
+              </div>
+            ) : selectedKey === "navigation" ? (
+              <div className="space-y-4">
+                <AdminInput
+                  label="Placeholder ô tìm kiếm"
+                  value={(selected.draftContent as NavigationContent).searchPlaceholder}
+                  onChange={(e) =>
+                    patchSection(selectedKey, {
+                      draftContent: { ...selected.draftContent, searchPlaceholder: e.target.value },
+                    })
+                  }
+                />
+                <LinkListEditor
+                  label="Menu chính (trang chủ A)"
+                  value={(selected.draftContent as NavigationContent).primaryNav}
+                  onChange={(primaryNav) =>
+                    patchSection(selectedKey, { draftContent: { ...selected.draftContent, primaryNav } })
+                  }
+                  testId="cms-nav-primary"
+                />
+                <LinkListEditor
+                  label="Menu bổ sung (di động A)"
+                  value={(selected.draftContent as NavigationContent).mobileExtra}
+                  onChange={(mobileExtra) =>
+                    patchSection(selectedKey, { draftContent: { ...selected.draftContent, mobileExtra } })
+                  }
+                  testId="cms-nav-mobile-extra"
+                />
+                <LinkListEditor
+                  label="Menu chính (Demo V2)"
+                  showMatchFields
+                  value={(selected.draftContent as NavigationContent).demoPrimaryNav}
+                  onChange={(demoPrimaryNav) =>
+                    patchSection(selectedKey, { draftContent: { ...selected.draftContent, demoPrimaryNav } })
+                  }
+                  testId="cms-nav-demo-primary"
+                />
+                <LinkListEditor
+                  label="Menu bổ sung (di động Demo V2)"
+                  value={(selected.draftContent as NavigationContent).demoMobileExtra}
+                  onChange={(demoMobileExtra) =>
+                    patchSection(selectedKey, { draftContent: { ...selected.draftContent, demoMobileExtra } })
+                  }
+                  testId="cms-nav-demo-mobile"
+                />
+              </div>
+            ) : selectedKey === "footer_links" ? (
+              <div className="space-y-4">
+                <FooterColumnsEditor
+                  columns={(selected.draftContent as FooterLinksContent).columns}
+                  onChange={(columns) =>
+                    patchSection(selectedKey, { draftContent: { ...selected.draftContent, columns } })
+                  }
+                  testId="cms-footer-columns"
+                />
+                <LinkListEditor
+                  label="Liên kết pháp lý (dưới cùng)"
+                  value={(selected.draftContent as FooterLinksContent).legalLinks}
+                  onChange={(legalLinks) =>
+                    patchSection(selectedKey, { draftContent: { ...selected.draftContent, legalLinks } })
+                  }
+                  testId="cms-footer-legal"
+                />
+                <AdminInput
+                  label="Tiêu đề cột liên hệ"
+                  value={(selected.draftContent as FooterLinksContent).contactColumnTitle}
+                  onChange={(e) =>
+                    patchSection(selectedKey, {
+                      draftContent: { ...selected.draftContent, contactColumnTitle: e.target.value },
+                    })
+                  }
+                />
+                <AdminInput
+                  label="Dòng bản quyền"
+                  value={(selected.draftContent as FooterLinksContent).copyrightNote}
+                  onChange={(e) =>
+                    patchSection(selectedKey, {
+                      draftContent: { ...selected.draftContent, copyrightNote: e.target.value },
+                    })
+                  }
+                />
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={(selected.draftContent as FooterLinksContent).showHomepageSwitcher}
+                    onChange={(e) =>
+                      patchSection(selectedKey, {
+                        draftContent: { ...selected.draftContent, showHomepageSwitcher: e.target.checked },
+                      })
+                    }
+                  />
+                  Hiện link chuyển Homepage A / B ở demo footer
+                </label>
+              </div>
+            ) : selectedKey === "floating_contact" ? (
+              <div className="space-y-3" data-testid="cms-floating-contact">
+                {((selected.draftContent as FloatingContactContent).items || []).map((item, i) => {
+                  const items = [...((selected.draftContent as FloatingContactContent).items || [])];
+                  const setItem = (patch: Partial<(typeof items)[number]>) => {
+                    items[i] = { ...items[i]!, ...patch };
+                    patchSection(selectedKey, { draftContent: { items } });
+                  };
+                  return (
+                    <div key={i} className="space-y-2 rounded border border-[var(--admin-border)] p-3">
+                      <AdminInput label="Nhãn" value={item.label} onChange={(e) => setItem({ label: e.target.value })} />
+                      <AdminInput label="URL" value={item.href} onChange={(e) => setItem({ href: e.target.value })} />
+                      <label className="block text-sm">
+                        <span className="font-medium">Kiểu nút</span>
+                        <select
+                          className="mt-1 w-full rounded border px-2 py-2"
+                          value={item.preset}
+                          onChange={(e) =>
+                            setItem({
+                              preset: e.target.value as (typeof items)[number]["preset"],
+                            })
+                          }
+                        >
+                          {["facebook", "messenger", "zalo", "phone", "instagram", "custom"].map((p) => (
+                            <option key={p} value={p}>
+                              {p}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <AdminButton
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() =>
+                          patchSection(selectedKey, {
+                            draftContent: { items: items.filter((_, k) => k !== i) },
+                          })
+                        }
+                      >
+                        Xóa
+                      </AdminButton>
+                    </div>
+                  );
+                })}
+                <AdminButton
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  disabled={((selected.draftContent as FloatingContactContent).items || []).length >= 8}
+                  onClick={() =>
+                    patchSection(selectedKey, {
+                      draftContent: {
+                        items: [
+                          ...((selected.draftContent as FloatingContactContent).items || []),
+                          { href: "https://", label: "Mới", preset: "custom" as const },
+                        ],
+                      },
+                    })
+                  }
+                >
+                  + Thêm nút
+                </AdminButton>
+              </div>
+            ) : selectedKey === "reviews" ? (
+              <div className="space-y-3">
+                <AdminInput
+                  label="Tiêu đề khối"
+                  value={(selected.draftContent as ReviewsSectionContent).title}
+                  onChange={(e) =>
+                    patchSection(selectedKey, { draftContent: { ...selected.draftContent, title: e.target.value } })
+                  }
+                />
+                <AdminInput
+                  label="Dòng khi chưa có review (1)"
+                  value={(selected.draftContent as ReviewsSectionContent).emptyLine1}
+                  onChange={(e) =>
+                    patchSection(selectedKey, { draftContent: { ...selected.draftContent, emptyLine1: e.target.value } })
+                  }
+                />
+                <AdminInput
+                  label="Dòng khi chưa có review (2)"
+                  value={(selected.draftContent as ReviewsSectionContent).emptyLine2}
+                  onChange={(e) =>
+                    patchSection(selectedKey, { draftContent: { ...selected.draftContent, emptyLine2: e.target.value } })
+                  }
+                />
               </div>
             ) : selectedKey === "footer" ? (
               <div className="grid gap-3 sm:grid-cols-2">
@@ -478,6 +683,81 @@ export default function AdminGiaoDienPage() {
                   onChange={(v) => patchSection(selectedKey, { draftContent: v })}
                   upload={upload}
                 />
+
+                {selectedKey === "hero" ? (
+                  <div className="space-y-4" data-testid="cms-hero-extras">
+                    <div className="space-y-2 rounded border border-[var(--admin-border)] p-3">
+                      <p className="text-sm font-medium">Thanh cam kết Demo V2 (tiêu đề + phụ đề)</p>
+                      {((selected.draftContent.trustPairs as TrustPair[]) || []).map((pair, i) => {
+                        const trustPairs = [...((selected.draftContent.trustPairs as TrustPair[]) || [])];
+                        const setPair = (patch: Partial<TrustPair>) => {
+                          trustPairs[i] = { ...trustPairs[i]!, ...patch };
+                          patchSection(selectedKey, {
+                            draftContent: setPath(selected.draftContent, "trustPairs", trustPairs),
+                          });
+                        };
+                        return (
+                          <div key={i} className="grid gap-2 sm:grid-cols-2">
+                            <AdminInput label={`Tiêu đề ${i + 1}`} value={pair.title} onChange={(e) => setPair({ title: e.target.value })} />
+                            <AdminInput label={`Phụ đề ${i + 1}`} value={pair.subtitle} onChange={(e) => setPair({ subtitle: e.target.value })} />
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="space-y-3 rounded border border-[var(--admin-border)] p-3">
+                      <p className="text-sm font-medium">Slide hero bổ sung (Demo V2)</p>
+                      {((selected.draftContent.demoExtraSlides as DemoHeroSlide[]) || []).map((slide, i) => {
+                        const slides = [...((selected.draftContent.demoExtraSlides as DemoHeroSlide[]) || [])];
+                        const setSlide = (patch: Partial<DemoHeroSlide>) => {
+                          slides[i] = { ...slides[i]!, ...patch };
+                          patchSection(selectedKey, {
+                            draftContent: setPath(selected.draftContent, "demoExtraSlides", slides),
+                          });
+                        };
+                        return (
+                          <div key={i} className="space-y-2 border-t border-[var(--admin-border)] pt-3">
+                            <p className="text-xs font-semibold text-[var(--admin-text-muted)]">Slide {i + 2}</p>
+                            <AdminInput label="Nhãn" value={slide.eyebrow} onChange={(e) => setSlide({ eyebrow: e.target.value })} />
+                            <AdminInput label="Tiêu đề" value={slide.title} onChange={(e) => setSlide({ title: e.target.value })} />
+                            <AdminTextarea label="Mô tả" value={slide.subtitle} onChange={(e) => setSlide({ subtitle: e.target.value })} />
+                            <AdminInput label="Link nút" value={slide.ctaHref} onChange={(e) => setSlide({ ctaHref: e.target.value })} />
+                            <ImageField label="Ảnh chính" value={slide.mainImage} onChange={(v) => setSlide({ mainImage: v })} upload={upload} testId={`cms-hero-slide-${i}-main`} />
+                            <ImageField label="Ảnh phụ A" value={slide.sideAImage} onChange={(v) => setSlide({ sideAImage: v })} upload={upload} testId={`cms-hero-slide-${i}-a`} />
+                            <ImageField label="Ảnh phụ B" value={slide.sideBImage} onChange={(v) => setSlide({ sideBImage: v })} upload={upload} testId={`cms-hero-slide-${i}-b`} />
+                            <AdminButton type="button" size="sm" variant="ghost" onClick={() => patchSection(selectedKey, { draftContent: setPath(selected.draftContent, "demoExtraSlides", slides.filter((_, k) => k !== i)) })}>
+                              Xóa slide
+                            </AdminButton>
+                          </div>
+                        );
+                      })}
+                      <AdminButton
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        disabled={((selected.draftContent.demoExtraSlides as DemoHeroSlide[]) || []).length >= 6}
+                        onClick={() =>
+                          patchSection(selectedKey, {
+                            draftContent: setPath(selected.draftContent, "demoExtraSlides", [
+                              ...((selected.draftContent.demoExtraSlides as DemoHeroSlide[]) || []),
+                              {
+                                eyebrow: "NEW",
+                                title: "VIZFAS",
+                                subtitle: "Mô tả slide",
+                                ctaHref: "/san-pham",
+                                ctaLabel: "Khám phá",
+                                mainImage: "/images/home-v2/hero-main.jpg",
+                                sideAImage: "/images/home-v2/featured-small-01.jpg",
+                                sideBImage: "/images/home-v2/diverse-model.jpg",
+                              },
+                            ]),
+                          })
+                        }
+                      >
+                        + Thêm slide
+                      </AdminButton>
+                    </div>
+                  </div>
+                ) : null}
 
                 {selectedKey === "collections" ? (
                   <div className="space-y-3" data-testid="cms-collection-tiles">

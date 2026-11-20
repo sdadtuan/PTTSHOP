@@ -1,11 +1,22 @@
 import type { FieldDef } from "@/components/cms/cms-fields";
 import type { HomepageSectionKey } from "@/lib/cms/types";
 
-/** Header/footer are part of the site layout (fixed position); they use Site settings. */
-export const LAYOUT_SECTIONS: HomepageSectionKey[] = ["header", "footer"];
+/** Layout sections are not reordered on the homepage body list. */
+export const LAYOUT_SECTIONS: HomepageSectionKey[] = [
+  "header",
+  "navigation",
+  "footer_links",
+  "floating_contact",
+  "reviews",
+  "footer",
+];
 
 export const SECTION_HELP: Partial<Record<HomepageSectionKey, string>> = {
-  header: "Logo và tên thương hiệu trên thanh menu (cố định ở đầu mọi trang).",
+  header: "Logo, tên thương hiệu, màu chủ đạo và SEO mặc định toàn site.",
+  navigation: "Menu điều hướng trang chủ A và demo B (desktop + menu di động).",
+  footer_links: "Các cột liên kết chân trang và dòng pháp lý dưới cùng.",
+  floating_contact: "Nút liên hệ nổi bên phải (Facebook, Zalo, gọi điện…).",
+  reviews: "Tiêu đề và trạng thái trống của khối đánh giá trên /demo-v2.",
   hero: "Khối đầu trang: ảnh vỡ mảnh (shatter), tiêu đề lớn, nút và 4 ưu điểm.",
   dual_banner: "Banner 2 ảnh “Phong Cách Đơn Giản – Mang Đậm Tính Cá Nhân”.",
   collections: "Lưới 3 bộ sưu tập (Áo Thun / Quần / Phụ Kiện) — chọn danh mục có sẵn cho từng ô.",
@@ -70,6 +81,10 @@ export const SECTION_FIELDS: Partial<Record<HomepageSectionKey, FieldDef[]>> = {
     { path: "smallImages", label: "Ảnh 4 khung nhỏ", kind: "images", max: 4, hint: "Ảnh hiển thị thay ảnh sản phẩm ở khung nhỏ." },
   ],
   color_play: [
+    { path: "brandLine1", label: "Nhãn thương hiệu (dòng 1)", kind: "text" },
+    { path: "brandEmphasis", label: "Nhãn nhấn (in nghiêng)", kind: "text" },
+    { path: "ctaLabel", label: "Chữ nút CTA", kind: "text" },
+    { path: "ctaHref", label: "Link nút CTA", kind: "href" },
     { path: "headline", label: "Tiêu đề", kind: "textarea" },
     { path: "paragraph1", label: "Đoạn 1", kind: "textarea" },
     { path: "paragraph2", label: "Đoạn 2", kind: "textarea" },

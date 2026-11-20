@@ -23,14 +23,18 @@ export function DemoPhoiMau({ content }: { content: ColorPlayContent }) {
         <div className="dv2-lookbook__head">
           <div>
             <p className="dv2-lookbook__brand">
-              PHỐI MÀU <em>TẠO CHẤT</em>
+              {content.brandLine1 || "PHỐI MÀU"} <em>{content.brandEmphasis || "TẠO CHẤT"}</em>
             </p>
             <h2 id="dv2-color-play-title">{content.headline}</h2>
             <p className="dv2-lookbook__lead">{content.paragraph1}</p>
             <p className="dv2-lookbook__lead">{content.paragraph2}</p>
           </div>
-          <Link href="/bo-suu-tap" className="dv2-cta" data-testid="demo-v2-phoi-cta">
-            Xem Gợi Ý Phối Đồ
+          <Link
+            href={content.ctaHref || "/bo-suu-tap"}
+            className="dv2-cta"
+            data-testid="demo-v2-phoi-cta"
+          >
+            {content.ctaLabel || "Xem Gợi Ý Phối Đồ"}
             <ArrowRight />
           </Link>
         </div>

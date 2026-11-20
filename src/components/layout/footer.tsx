@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MapPin, Mail, Phone, Clock } from "lucide-react";
 import { useSiteBrand } from "@/components/cms/site-brand-context";
+import { useStorefrontLayout } from "@/components/cms/storefront-layout-context";
 import { TYPE_SCALE } from "@/config/home-type-scale";
 
 function InstagramIcon({ className }: { className?: string }) {
@@ -56,44 +57,14 @@ function SparkLogo({ className }: { className?: string }) {
   );
 }
 
-const columns = [
-  {
-    title: "Mua sắm",
-    links: [
-      { href: "/san-pham?sort=newest", label: "Sản phẩm mới" },
-      { href: "/san-pham?category=ao-thun", label: "Áo thun" },
-      { href: "/san-pham?category=ao-khoac", label: "Áo khoác" },
-      { href: "/san-pham?category=quan", label: "Quần" },
-      { href: "/san-pham?category=phu-kien", label: "Phụ kiện" },
-      { href: "/san-pham?sale=1", label: "Sale" },
-    ],
-  },
-  {
-    title: "Hỗ trợ",
-    links: [
-      { href: "/ho-tro/mua-hang", label: "Hướng dẫn mua hàng" },
-      { href: "/ho-tro/doi-tra", label: "Chính sách đổi trả" },
-      { href: "/ho-tro/van-chuyen", label: "Chính sách vận chuyển" },
-      { href: "/ho-tro/thanh-toan", label: "Phương thức thanh toán" },
-      { href: "/ho-tro/cau-hoi", label: "Câu hỏi thường gặp" },
-    ],
-  },
-  {
-    title: "Về chúng tôi",
-    links: [
-      { href: "/ve-chung-toi", label: "Câu chuyện thương hiệu" },
-      { href: "/ve-chung-toi#gia-tri", label: "Giá trị cốt lõi" },
-      { href: "/bo-suu-tap", label: "Bộ sưu tập" },
-      { href: "/tin-tuc", label: "Tin tức" },
-      { href: "/tuyen-dung", label: "Tuyển dụng" },
-      { href: "/lien-he", label: "Liên hệ" },
-    ],
-  },
-];
-
 export function Footer() {
   const pathname = usePathname();
   const brand = useSiteBrand();
+  const { footerLinks } = useStorefrontLayout();
+  const columns = footerLinks.columns;
+  const legalLinks = footerLinks.legalLinks;
+  const contactTitle = footerLinks.contactColumnTitle || "Liên hệ";
+  const copyrightNote = footerLinks.copyrightNote || "Tất cả quyền được bảo lưu.";
   if (pathname?.startsWith("/admin") || pathname?.startsWith("/demo-v2")) return null;
 
   const social = [
@@ -195,7 +166,7 @@ export function Footer() {
               className="font-bold tracking-wide text-neutral-900"
               style={{ fontSize: TYPE_SCALE.footerTagline.css }}
             >
-              Liên hệ
+              {contactTitle}
             </p>
             <span
               className="mt-2 block h-[3px] w-9 rounded-full bg-[var(--accent)]"
@@ -239,20 +210,17 @@ export function Footer() {
       <div className="border-t border-black/5">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-3 px-4 py-5 text-xs text-neutral-500 md:flex-row md:items-center md:px-6">
           <p>
-            © {new Date().getFullYear()} {`${brandName}. Tất cả quyền được bảo lưu.`}
+            © {new Date().getFullYear()} {`${brandName}. ${copyrightNote}`}
           </p>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-            <Link href="/chinh-sach/dieu-khoan" className="hover:text-neutral-800">
-              Điều khoản sử dụng
-            </Link>
-            <span aria-hidden>|</span>
-            <Link href="/chinh-sach/bao-mat" className="hover:text-neutral-800">
-              Chính sách bảo mật
-            </Link>
-            <span aria-hidden>|</span>
-            <Link href="/chinh-sach/cookie" className="hover:text-neutral-800">
-              Chính sách cookie
-            </Link>
+            {legalLinks.map((link, i) => (
+              <span key={link.href + link.label} className="contents">
+                {i > 0 ? <span aria-hidden>|</span> : null}
+                <Link href={link.href} className="hover:text-neutral-800">
+                  {link.label}
+                </Link>
+              </span>
+            ))}
           </div>
         </div>
       </div>

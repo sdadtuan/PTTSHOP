@@ -27,7 +27,17 @@ function Stars({ rating }: { rating: number }) {
   );
 }
 
-export function DemoReviews({ reviews }: { reviews: DemoReview[] }) {
+export function DemoReviews({
+  reviews,
+  title = "Khách Hàng Nói Gì Về VIZFAS",
+  emptyLine1 = "Chưa có đánh giá công khai.",
+  emptyLine2 = "Khi khách mua hàng để lại review, chúng sẽ hiện tại đây.",
+}: {
+  reviews: DemoReview[];
+  title?: string;
+  emptyLine1?: string;
+  emptyLine2?: string;
+}) {
   return (
     <section
       id="danh-gia"
@@ -41,14 +51,14 @@ export function DemoReviews({ reviews }: { reviews: DemoReview[] }) {
             <span className="dv2-slashes" aria-hidden>
               ///
             </span>
-            Khách Hàng Nói Gì Về VIZFAS
+            {title}
           </h2>
         </div>
 
         {reviews.length === 0 ? (
           <div className="dv2-reviews__empty" data-testid="demo-v2-reviews-empty">
-            <p>Chưa có đánh giá công khai.</p>
-            <p>Khi khách mua hàng để lại review, chúng sẽ hiện tại đây.</p>
+            <p>{emptyLine1}</p>
+            <p>{emptyLine2}</p>
           </div>
         ) : (
           <div className="dv2-reviews__grid">

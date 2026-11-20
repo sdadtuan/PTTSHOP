@@ -6,27 +6,17 @@ import { useEffect, useState } from "react";
 import { Heart, Menu, Search, ShoppingBag, User, X } from "lucide-react";
 import { useCart } from "@/components/cart/cart-context";
 import { useSiteBrand } from "@/components/cms/site-brand-context";
+import { useStorefrontLayout } from "@/components/cms/storefront-layout-context";
 import { cn } from "@/lib/utils";
-
-const primaryNav = [
-  { href: "/", label: "Trang chủ" },
-  { href: "/san-pham", label: "Sản phẩm" },
-  { href: "/bo-suu-tap", label: "Bộ sưu tập" },
-  { href: "/ve-chung-toi", label: "Về chúng tôi" },
-];
-
-const mobileNav = [
-  ...primaryNav,
-  { href: "/san-pham?gender=MALE", label: "Nam" },
-  { href: "/san-pham?gender=FEMALE", label: "Nữ" },
-  { href: "/tai-khoan", label: "Tài khoản" },
-  { href: "/lien-he", label: "Liên hệ" },
-];
 
 export function Header() {
   const pathname = usePathname();
   const { count } = useCart();
   const brand = useSiteBrand();
+  const { navigation } = useStorefrontLayout();
+  const primaryNav = navigation.primaryNav;
+  const mobileNav = [...primaryNav, ...navigation.mobileExtra];
+  const searchPlaceholder = navigation.searchPlaceholder || "Tìm sản phẩm...";
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [q, setQ] = useState("");
@@ -142,7 +132,7 @@ export function Header() {
               name="q"
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Tìm sản phẩm..."
+              placeholder={searchPlaceholder}
               className="min-w-0 flex-1 rounded-full border border-neutral-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-neutral-900"
               autoFocus
             />

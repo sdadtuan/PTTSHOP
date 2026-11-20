@@ -2,7 +2,15 @@ import { cache } from "react";
 import { headers } from "next/headers";
 import { auth } from "@/auth";
 import { getHomepageView, type HomepageViewMode } from "@/lib/cms/homepage";
-import { DEFAULT_SITE_SETTINGS, type SiteSettingsData } from "@/lib/cms/types";
+import {
+  DEFAULT_SITE_SETTINGS,
+  defaultSectionContent,
+  type FloatingContactContent,
+  type FooterLinksContent,
+  type NavigationContent,
+  type ReviewsSectionContent,
+  type SiteSettingsData,
+} from "@/lib/cms/types";
 
 /** Header set by middleware for `/?cmsPreview=draft` requests from an ADMIN session. */
 export const CMS_PREVIEW_HEADER = "x-cms-preview";
@@ -42,4 +50,37 @@ export async function getHomeSectionsForRequest() {
 
 export async function getPublishedHomeSections() {
   return getHomepageView("published");
+}
+
+export type StorefrontLayoutSnapshot = {
+  settings: SiteSettingsData;
+  navigation: NavigationContent;
+  footerLinks: FooterLinksContent;
+  floatingContact: FloatingContactContent;
+  reviews: ReviewsSectionContent;
+};
+
+export async function getStorefrontLayoutForRequest(): Promise<StorefrontLayoutSnapshot> {
+  try {
+    const data = await viewForMode(await resolveHomepageMode());
+    return {
+      settings: data.settings,
+      navigation: (data.sections.navigation?.content ??
+        defaultSectionContent("navigation")) as NavigationContent,
+      footerLinks: (data.sections.footer_links?.content ??
+        defaultSectionContent("footer_links")) as FooterLinksContent,
+      floatingContact: (data.sections.floating_contact?.content ??
+        defaultSectionContent("floating_contact")) as FloatingContactContent,
+      reviews: (data.sections.reviews?.content ??
+        defaultSectionContent("reviews")) as ReviewsSectionContent,
+    };
+  } catch {
+    return {
+      settings: DEFAULT_SITE_SETTINGS,
+      navigation: defaultSectionContent("navigation") as NavigationContent,
+      footerLinks: defaultSectionContent("footer_links") as FooterLinksContent,
+      floatingContact: defaultSectionContent("floating_contact") as FloatingContactContent,
+      reviews: defaultSectionContent("reviews") as ReviewsSectionContent,
+    };
+  }
 }

@@ -5,19 +5,12 @@ import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { homeImages } from "@/config/home-images";
+import type { DemoHeroSlide, HeroContent } from "@/lib/cms/types";
 
-type Slide = {
-  eyebrow: string;
-  title: string;
-  subtitle: string;
-  ctaHref: string;
-  ctaLabel: string;
-  main: string;
-  sideA: string;
-  sideB: string;
-};
+type Slide = DemoHeroSlide & { key: string };
 
 type Props = {
+  content: HeroContent;
   eyebrow?: string;
   title?: string;
   subtitle?: string;
@@ -27,6 +20,7 @@ type Props = {
 };
 
 export function DemoHero({
+  content,
   eyebrow = "NEW COLLECTION",
   title = "VIZFAS",
   subtitle = "Streetwear hiện đại / Cho phong cách của riêng bạn.",
@@ -34,40 +28,26 @@ export function DemoHero({
   ctaLabel = "Khám Phá Ngay",
   image,
 }: Props) {
+  const labelCta = content.ctaLabel || ctaLabel;
   const primary: Slide = {
+    key: "primary",
     eyebrow,
     title: title.includes("VIZFAS") ? "VIZFAS" : title,
     subtitle,
-    ctaHref,
-    ctaLabel,
-    main: image || homeImages.hero.main,
-    sideA: homeImages.featured.small[0],
-    sideB: homeImages.diverse.model,
+    ctaHref: content.ctaHref || ctaHref,
+    ctaLabel: labelCta,
+    mainImage: image || content.imageUrl || homeImages.hero.main,
+    sideAImage: homeImages.featured.small[0],
+    sideBImage: homeImages.diverse.model,
   };
 
-  const slides: Slide[] = [
-    primary,
-    {
-      eyebrow: "ESSENTIALS",
-      title: "VIZFAS",
-      subtitle: "Form rộng, chất dày — dễ mặc mỗi ngày.",
-      ctaHref: "/san-pham?category=hoodie",
-      ctaLabel: ctaLabel,
-      main: homeImages.featured.large[0],
-      sideA: homeImages.featured.small[1],
-      sideB: homeImages.colorPlay.main,
-    },
-    {
-      eyebrow: "COLOR PLAY",
-      title: "VIZFAS",
-      subtitle: "Phối màu tạo chất — nổi bật mà vẫn tối giản.",
-      ctaHref: "/bo-suu-tap",
-      ctaLabel: ctaLabel,
-      main: homeImages.featured.large[1],
-      sideA: homeImages.colorPlay.grid[2],
-      sideB: homeImages.dualBanner.right,
-    },
-  ];
+  const extras = (content.demoExtraSlides ?? []).map((s, i) => ({
+    ...s,
+    key: `extra-${i}`,
+    ctaLabel: s.ctaLabel || labelCta,
+  }));
+
+  const slides: Slide[] = [primary, ...extras];
 
   const [index, setIndex] = useState(0);
   const slide = slides[index] ?? slides[0];
@@ -128,8 +108,8 @@ export function DemoHero({
         <div className="dv2-hero__stage">
           <div className="dv2-hero__main">
             <Image
-              key={slide.main}
-              src={slide.main}
+              key={slide.mainImage}
+              src={slide.mainImage}
               alt="Mẫu streetwear VIZFAS"
               fill
               priority
@@ -139,7 +119,7 @@ export function DemoHero({
           </div>
           <div className="dv2-hero__side dv2-hero__side--a">
             <Image
-              src={slide.sideA}
+              src={slide.sideAImage}
               alt=""
               fill
               sizes="180px"
@@ -148,7 +128,7 @@ export function DemoHero({
           </div>
           <div className="dv2-hero__side dv2-hero__side--b">
             <Image
-              src={slide.sideB}
+              src={slide.sideBImage}
               alt=""
               fill
               sizes="180px"

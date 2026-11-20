@@ -27,6 +27,7 @@ import type {
   HomepageSectionKey,
   PromoBannerContent,
 } from "@/lib/cms/types";
+import { HOMEPAGE_BODY_SECTION_KEYS } from "@/lib/cms/types";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -746,7 +747,9 @@ export default async function HomePage() {
 
   // Render body sections in CMS sortOrder (header/footer live in the layout).
   const orderedKeys = (Object.values(sections) as Array<{ key: HomepageSectionKey; sortOrder: number }>)
-    .filter((s) => s.key !== "header" && s.key !== "footer")
+    .filter((s) =>
+      (HOMEPAGE_BODY_SECTION_KEYS as readonly string[]).includes(s.key),
+    )
     .sort((a, b) => a.sortOrder - b.sortOrder)
     .map((s) => s.key);
 

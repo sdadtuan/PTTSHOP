@@ -1,7 +1,27 @@
 import { homeImages } from "@/config/home-images";
+import {
+  DEFAULT_DEMO_MOBILE_EXTRA,
+  DEFAULT_DEMO_PRIMARY_NAV,
+  DEFAULT_DEMO_TRUST_PAIRS,
+  DEFAULT_FOOTER_COLUMNS,
+  DEFAULT_LEGAL_LINKS,
+  DEFAULT_MOBILE_NAV_EXTRA,
+  DEFAULT_PRIMARY_NAV,
+  DEFAULT_HERO_TRUST_ITEMS,
+  defaultDemoHeroSlides,
+} from "@/lib/cms/layout-defaults";
 
-export const HOMEPAGE_SECTION_KEYS = [
-  "header",
+/** Sections that are not rendered in homepage body order (chrome / static blocks). */
+export const LAYOUT_ONLY_SECTION_KEYS = [
+  "navigation",
+  "footer_links",
+  "floating_contact",
+  "reviews",
+] as const;
+
+export type LayoutOnlySectionKey = (typeof LAYOUT_ONLY_SECTION_KEYS)[number];
+
+export const HOMEPAGE_BODY_SECTION_KEYS = [
   "hero",
   "dual_banner",
   "collections",
@@ -9,6 +29,12 @@ export const HOMEPAGE_SECTION_KEYS = [
   "featured",
   "color_play",
   "promo_banner",
+] as const;
+
+export const HOMEPAGE_SECTION_KEYS = [
+  "header",
+  ...LAYOUT_ONLY_SECTION_KEYS,
+  ...HOMEPAGE_BODY_SECTION_KEYS,
   "footer",
 ] as const;
 
@@ -27,6 +53,65 @@ export type SiteSettingsData = {
   socialFacebook: string;
   socialTiktok: string;
   socialYoutube: string;
+  seoTitle: string;
+  seoDescription: string;
+};
+
+export type NavLink = {
+  href: string;
+  label: string;
+  match?: string;
+  hash?: string;
+};
+
+export type FooterLink = { href: string; label: string };
+
+export type FooterColumn = { title: string; links: FooterLink[] };
+
+export type TrustPair = { title: string; subtitle: string };
+
+export type DemoHeroSlide = {
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  ctaHref: string;
+  ctaLabel: string;
+  mainImage: string;
+  sideAImage: string;
+  sideBImage: string;
+};
+
+export type FloatingContactItem = {
+  href: string;
+  label: string;
+  /** UI preset for icon/color — stored as string for flexibility. */
+  preset: "facebook" | "messenger" | "zalo" | "phone" | "instagram" | "custom";
+};
+
+export type NavigationContent = {
+  searchPlaceholder: string;
+  primaryNav: NavLink[];
+  mobileExtra: NavLink[];
+  demoPrimaryNav: NavLink[];
+  demoMobileExtra: NavLink[];
+};
+
+export type FooterLinksContent = {
+  columns: FooterColumn[];
+  legalLinks: FooterLink[];
+  contactColumnTitle: string;
+  copyrightNote: string;
+  showHomepageSwitcher: boolean;
+};
+
+export type FloatingContactContent = {
+  items: FloatingContactItem[];
+};
+
+export type ReviewsSectionContent = {
+  title: string;
+  emptyLine1: string;
+  emptyLine2: string;
 };
 
 export type HeaderContent = {
@@ -44,6 +129,10 @@ export type HeroContent = {
   ctaHref: string;
   imageUrl: string;
   trustItems: string[];
+  /** Optional subtitles paired with trustItems (demo-v2 trust bar). */
+  trustPairs: TrustPair[];
+  /** Extra hero slides for /demo-v2 carousel (after the CMS primary slide). */
+  demoExtraSlides: DemoHeroSlide[];
   /** When true, merge active HeroBanner over image/title/subtitle/cta. */
   useHeroBanner: boolean;
 };
@@ -108,6 +197,10 @@ export type ColorPlayContent = {
   introImage1Alt: string;
   introImage2Alt: string;
   verticalLabel: string;
+  brandLine1: string;
+  brandEmphasis: string;
+  ctaLabel: string;
+  ctaHref: string;
 };
 
 export type PromoBannerContent = {
@@ -133,6 +226,10 @@ export type FooterContent = {
 
 export type SectionContentMap = {
   header: HeaderContent;
+  navigation: NavigationContent;
+  footer_links: FooterLinksContent;
+  floating_contact: FloatingContactContent;
+  reviews: ReviewsSectionContent;
   hero: HeroContent;
   dual_banner: DualBannerContent;
   collections: CollectionsContent;
@@ -178,10 +275,17 @@ export const DEFAULT_SITE_SETTINGS: SiteSettingsData = {
   socialFacebook: "https://facebook.com",
   socialTiktok: "https://tiktok.com",
   socialYoutube: "https://youtube.com",
+  seoTitle: "VIZFAS — Thời trang mỗi ngày đều chất",
+  seoDescription:
+    "Cửa hàng thời trang & phụ kiện Nam · Nữ. Chất liệu bền, form hiện đại, dễ phối mỗi ngày.",
 };
 
 export const SECTION_LABELS: Record<HomepageSectionKey, string> = {
-  header: "Header / Logo",
+  header: "Header / Logo & SEO",
+  navigation: "Menu điều hướng",
+  footer_links: "Liên kết chân trang",
+  floating_contact: "Nút liên hệ nổi",
+  reviews: "Khối đánh giá (Demo V2)",
   hero: "Hero shatter",
   dual_banner: "Banner Phong Cách",
   collections: "Bộ sưu tập",
@@ -189,7 +293,7 @@ export const SECTION_LABELS: Record<HomepageSectionKey, string> = {
   featured: "Sản phẩm nổi bật",
   color_play: "Phối Màu",
   promo_banner: "Banner quảng cáo",
-  footer: "Footer",
+  footer: "Footer (liên hệ)",
 };
 
 export function defaultSectionContent(
@@ -201,6 +305,40 @@ export function defaultSectionContent(
         brandName: "VIZFAS",
         logoUrl: null,
       } satisfies HeaderContent;
+    case "navigation":
+      return {
+        searchPlaceholder: "Tìm sản phẩm...",
+        primaryNav: [...DEFAULT_PRIMARY_NAV],
+        mobileExtra: [...DEFAULT_MOBILE_NAV_EXTRA],
+        demoPrimaryNav: [...DEFAULT_DEMO_PRIMARY_NAV],
+        demoMobileExtra: [...DEFAULT_DEMO_MOBILE_EXTRA],
+      } satisfies NavigationContent;
+    case "footer_links":
+      return {
+        columns: DEFAULT_FOOTER_COLUMNS.map((c) => ({
+          title: c.title,
+          links: c.links.map((l) => ({ ...l })),
+        })),
+        legalLinks: [...DEFAULT_LEGAL_LINKS],
+        contactColumnTitle: "Liên hệ",
+        copyrightNote: "Tất cả quyền được bảo lưu.",
+        showHomepageSwitcher: true,
+      } satisfies FooterLinksContent;
+    case "floating_contact":
+      return {
+        items: [
+          { href: "https://facebook.com", label: "Facebook", preset: "facebook" },
+          { href: "https://m.me/vizfas", label: "Messenger", preset: "messenger" },
+          { href: "https://zalo.me/0901234567", label: "Zalo", preset: "zalo" },
+          { href: "tel:0901234567", label: "Gọi điện", preset: "phone" },
+        ],
+      } satisfies FloatingContactContent;
+    case "reviews":
+      return {
+        title: "Khách Hàng Nói Gì Về VIZFAS",
+        emptyLine1: "Chưa có đánh giá công khai.",
+        emptyLine2: "Khi khách mua hàng để lại review, chúng sẽ hiện tại đây.",
+      } satisfies ReviewsSectionContent;
     case "hero":
       return {
         badgeLine1: "Bộ sưu tập",
@@ -212,12 +350,9 @@ export function defaultSectionContent(
         ctaLabel: "Xem sản phẩm",
         ctaHref: "/san-pham",
         imageUrl: homeImages.hero.main,
-        trustItems: [
-          "Chất liệu thoáng mát",
-          "Form dáng hiện đại",
-          "Bền màu",
-          "Free ship > 500k",
-        ],
+        trustItems: [...DEFAULT_HERO_TRUST_ITEMS],
+        trustPairs: DEFAULT_DEMO_TRUST_PAIRS.map((p) => ({ ...p })),
+        demoExtraSlides: defaultDemoHeroSlides("Khám Phá Ngay"),
         useHeroBanner: true,
       } satisfies HeroContent;
     case "dual_banner":
@@ -299,6 +434,10 @@ export function defaultSectionContent(
         introImage1Alt: "Look phối màu — khung 1",
         introImage2Alt: "Look phối màu — khung 2",
         verticalLabel: "BỘ SƯU TẬP MỚI",
+        brandLine1: "PHỐI MÀU",
+        brandEmphasis: "TẠO CHẤT",
+        ctaLabel: "Xem Gợi Ý Phối Đồ",
+        ctaHref: "/bo-suu-tap",
       } satisfies ColorPlayContent;
     case "promo_banner":
       return {
@@ -335,8 +474,14 @@ export function defaultSectionsSeed(): Array<{
     key,
     label: SECTION_LABELS[key],
     sortOrder: i,
-    // promo_banner off by default so homepage matches 6003c40 layout
-    isEnabled: key !== "promo_banner",
+    // promo_banner off by default so homepage matches 6003c40 layout; reviews only on demo-v2
+    isEnabled: key !== "promo_banner" && key !== "reviews",
     content: defaultSectionContent(key),
   }));
+}
+
+export function isHomepageBodySectionKey(
+  key: HomepageSectionKey,
+): key is (typeof HOMEPAGE_BODY_SECTION_KEYS)[number] {
+  return (HOMEPAGE_BODY_SECTION_KEYS as readonly string[]).includes(key);
 }

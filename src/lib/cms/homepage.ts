@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import {
   DEFAULT_SITE_SETTINGS,
@@ -28,6 +29,8 @@ type SettingsRow = {
   socialFacebook: string | null;
   socialTiktok: string | null;
   socialYoutube: string | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
   draftJson: string | null;
 };
 
@@ -81,6 +84,8 @@ export function settingsFromRow(row: SettingsRow): {
     socialFacebook: row.socialFacebook ?? d.socialFacebook,
     socialTiktok: row.socialTiktok ?? d.socialTiktok,
     socialYoutube: row.socialYoutube ?? d.socialYoutube,
+    seoTitle: row.seoTitle ?? d.seoTitle,
+    seoDescription: row.seoDescription ?? d.seoDescription,
   };
   const draftParsed = parseJson<Partial<SiteSettingsData> | null>(row.draftJson, null);
   const draft = draftParsed ? normalizeSettings(draftParsed, published) : { ...published };
@@ -101,6 +106,8 @@ function settingsColumns(s: SiteSettingsData) {
     socialFacebook: s.socialFacebook,
     socialTiktok: s.socialTiktok,
     socialYoutube: s.socialYoutube,
+    seoTitle: s.seoTitle,
+    seoDescription: s.seoDescription,
   };
 }
 
@@ -385,6 +392,9 @@ export async function publishHomepage(createdById?: string) {
       createdById: createdById ?? null,
     },
   });
+
+  revalidatePath("/", "layout");
+  revalidatePath("/demo-v2", "layout");
 
   return getAdminCmsState();
 }

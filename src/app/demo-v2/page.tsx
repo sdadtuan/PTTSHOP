@@ -7,7 +7,7 @@ import { DemoPhongCach } from "@/components/demo-v2/demo-phong-cach";
 import { DemoPromo } from "@/components/demo-v2/demo-promo";
 import { DemoReviews } from "@/components/demo-v2/demo-reviews";
 import { DemoTrustBar } from "@/components/demo-v2/demo-trust-bar";
-import { getHomeSectionsForRequest } from "@/lib/cms/published";
+import { getHomeSectionsForRequest, getStorefrontLayoutForRequest } from "@/lib/cms/published";
 import type {
   CollectionsContent,
   ColorPlayContent,
@@ -34,9 +34,10 @@ function padProducts<T extends { id: string }>(list: T[], need: number, pool: T[
 }
 
 export default async function DemoV2HomePage() {
-  const [{ sections, settings }, categories, featured, catalog, reviewRows] =
+  const [{ sections, settings }, layoutCms, categories, featured, catalog, reviewRows] =
     await Promise.all([
       getHomeSectionsForRequest(),
+      getStorefrontLayoutForRequest(),
       prisma.category.findMany({ orderBy: { sortOrder: "asc" }, take: 6 }),
       prisma.product.findMany({
         where: { isFeatured: true },
@@ -100,6 +101,7 @@ export default async function DemoV2HomePage() {
     <>
       {sections.hero.isEnabled ? (
         <DemoHero
+          content={hero}
           eyebrow={
             [hero.badgeLine1, hero.badgeLine2].filter(Boolean).join(" ") ||
             "NEW COLLECTION"
@@ -115,7 +117,7 @@ export default async function DemoV2HomePage() {
         />
       ) : null}
 
-      <DemoTrustBar items={hero.trustItems} />
+      <DemoTrustBar items={hero.trustItems} pairs={hero.trustPairs} />
 
       {sections.dual_banner.isEnabled ? <DemoPhongCach content={dual} /> : null}
 
@@ -135,7 +137,14 @@ export default async function DemoV2HomePage() {
 
       {sections.color_play.isEnabled ? <DemoPhoiMau content={colorPlay} /> : null}
 
-      <DemoReviews reviews={reviews} />
+      {sections.reviews?.isEnabled !== false ? (
+        <DemoReviews
+          reviews={reviews}
+          title={layoutCms.reviews.title}
+          emptyLine1={layoutCms.reviews.emptyLine1}
+          emptyLine2={layoutCms.reviews.emptyLine2}
+        />
+      ) : null}
     </>
   );
 }

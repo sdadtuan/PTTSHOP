@@ -355,6 +355,8 @@ model SiteSettings {
   socialFacebook  String?
   socialTiktok    String?
   socialYoutube   String?
+  seoTitle        String?
+  seoDescription  String?
   /// PDP "Vận chuyển & Đổi trả" bullets (JSON string[]). Null = built-in copy.
   shippingPolicyJson String?
   /// Draft override blob (JSON). When set, admin edits draft; publish copies into columns.
@@ -376,6 +378,24 @@ model HomepageSection {
   draftContentJson String   @default("{}")
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+}
+
+/// Editable static storefront pages (vé chúng tôi, hỗ trợ, chính sách, …).
+model StorefrontPage {
+  id              String   @id @default(cuid())
+  /// Route slug without leading slash, e.g. `ve-chung-toi` or `ho-tro/van-chuyen`
+  slug            String   @unique
+  title           String
+  description     String?
+  /// JSON string[] paragraphs / bullet lines (published).
+  bodyJson        String   @default("[]")
+  draftTitle      String?
+  draftDescription String?
+  draftBodyJson   String   @default("[]")
+  isPublished     Boolean  @default(true)
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 /// Version history snapshots of published homepage + site settings.

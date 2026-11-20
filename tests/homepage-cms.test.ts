@@ -5,6 +5,7 @@ import { cleanDb, resetTestDb, seedMinimal } from "./helpers";
 // Route-handler auth tests drive requireAdmin() through a mocked NextAuth session.
 const authMock = vi.fn();
 vi.mock("@/auth", () => ({ auth: () => authMock() }));
+vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 import {
   discardDraft,
@@ -63,7 +64,19 @@ describe("CMS validation / sanitising", () => {
   });
 
   it("every default section passes its schema unchanged (no visual drift)", () => {
-    for (const key of ["hero", "dual_banner", "collections", "diverse", "featured", "color_play", "promo_banner"] as const) {
+    for (const key of [
+      "navigation",
+      "footer_links",
+      "floating_contact",
+      "reviews",
+      "hero",
+      "dual_banner",
+      "collections",
+      "diverse",
+      "featured",
+      "color_play",
+      "promo_banner",
+    ] as const) {
       expect(parseSectionContent(key, defaultSectionContent(key))).toEqual(defaultSectionContent(key));
     }
     expect(siteSettingsSchema.parse(DEFAULT_SITE_SETTINGS)).toEqual(DEFAULT_SITE_SETTINGS);
@@ -139,7 +152,7 @@ describe("homepage CMS draft / publish / versions", () => {
     await saveDraft({ sections: [{ key: "featured", sortOrder: 1, draftEnabled: false }, { key: "hero", sortOrder: 5 }] });
     const live = await getPublishedHomepage();
     expect(live.sections.featured.isEnabled).toBe(true);
-    expect(live.sections.hero.sortOrder).toBe(1);
+    expect(live.sections.hero.sortOrder).toBe(5);
     const draft = await getHomepageView("draft");
     expect(draft.sections.featured.isEnabled).toBe(false);
     expect(draft.sections.hero.sortOrder).toBe(5);
@@ -191,7 +204,7 @@ describe("CMS API access control", () => {
     const admin = await prisma.user.findFirstOrThrow({ where: { role: "ADMIN" } });
     authMock.mockResolvedValue({ user: { id: admin.id, role: "ADMIN" } });
     const state = await (await cmsGET()).json();
-    expect(state.sections.length).toBe(9);
+    expect(state.sections.length).toBe(13);
 
     const bad = await cmsPOST(req({ action: "save_draft", settings: { ...DEFAULT_SITE_SETTINGS, brandColor: "url(x)" } }));
     expect(bad.status).toBe(400);

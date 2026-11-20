@@ -5,34 +5,19 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent, type MouseEvent } from "react";
 import { Heart, Menu, Search, ShoppingBag, User, X } from "lucide-react";
 import { useCart } from "@/components/cart/cart-context";
+import { useStorefrontLayout } from "@/components/cms/storefront-layout-context";
+import type { NavLink } from "@/lib/cms/types";
 
-type NavItem = {
-  href: string;
-  label: string;
-  match?: string;
-  hash?: string;
-};
-
-const primaryNav: NavItem[] = [
-  { href: "/demo-v2", label: "Trang Chủ", match: "/demo-v2" },
-  { href: "/bo-suu-tap", label: "Bộ Sưu Tập" },
-  { href: "/san-pham", label: "Sản Phẩm" },
-  { href: "/demo-v2#danh-gia", label: "ĐÁNH GIÁ", match: "/demo-v2", hash: "#danh-gia" },
-  { href: "/ve-chung-toi", label: "Về VIZFAS" },
-  { href: "/lien-he", label: "Liên Hệ" },
-];
-
-const mobileExtra: NavItem[] = [
-  { href: "/san-pham?gender=MALE", label: "Nam" },
-  { href: "/san-pham?gender=FEMALE", label: "Nữ" },
-  { href: "/tai-khoan", label: "Tài khoản" },
-  { href: "/yeu-thich", label: "Yêu thích" },
-];
+type NavItem = NavLink;
 
 export function DemoHeader({ brandName = "VIZFAS" }: { brandName?: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const { count } = useCart();
+  const { navigation } = useStorefrontLayout();
+  const primaryNav = navigation.demoPrimaryNav;
+  const mobileExtra = navigation.demoMobileExtra;
+  const searchPlaceholder = navigation.searchPlaceholder || "Tìm sản phẩm...";
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [q, setQ] = useState("");
@@ -147,7 +132,7 @@ export function DemoHeader({ brandName = "VIZFAS" }: { brandName?: string }) {
             name="q"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Tìm sản phẩm..."
+            placeholder={searchPlaceholder}
             aria-label="Tìm sản phẩm"
             autoFocus
           />
