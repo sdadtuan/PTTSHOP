@@ -3,6 +3,7 @@ import {
   DEFAULT_LOGO_LAYOUT,
   LEGACY_FOOTER_LOGO_LAYOUT,
   applyLogoLayoutDefaults,
+  logoImgStyle,
   parseLogoLayout,
 } from "@/lib/cms/logo-layout";
 import { siteSettingsSchema } from "@/lib/cms/validate";
@@ -15,6 +16,14 @@ describe("logo layout", () => {
     expect(DEFAULT_LOGO_LAYOUT.footer.mobile.heightPx).toBe(56);
     expect(DEFAULT_LOGO_LAYOUT.footer.desktop.heightPx).toBe(72);
     expect(DEFAULT_LOGO_LAYOUT.footerShowBrandName).toBe(false);
+  });
+
+  it("logoImgStyle ignoreMaxWidth bỏ maxWidth inline", () => {
+    const style = logoImgStyle({ heightPx: 48, maxWidthPx: 97 }, { ignoreMaxWidth: true });
+    expect(style.height).toBe(48);
+    expect(style.maxWidth).toBeUndefined();
+    const capped = logoImgStyle({ heightPx: 48, maxWidthPx: 97 });
+    expect(capped.maxWidth).toBe(97);
   });
 
   it("nâng header mobile dưới 48px lên 48", () => {

@@ -29,7 +29,7 @@ export function BrandLogoImg({
         src={src}
         alt={alt}
         className={cn("object-contain md:hidden", className)}
-        style={logoImgStyle(mobile)}
+        style={logoImgStyle(mobile, slot === "header" ? { ignoreMaxWidth: true } : undefined)}
       />
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img

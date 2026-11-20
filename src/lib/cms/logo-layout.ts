@@ -124,7 +124,12 @@ export function clampLogoSlot(slot: LogoSlotSize): LogoSlotSize {
   };
 }
 
-export function logoImgStyle(slot: LogoSlotSize): CSSProperties {
+export type LogoImgStyleOptions = {
+  /** Header mobile: bỏ giới hạn max-width CMS để giữ chiều cao; không đổi dữ liệu. */
+  ignoreMaxWidth?: boolean;
+};
+
+export function logoImgStyle(slot: LogoSlotSize, options?: LogoImgStyleOptions): CSSProperties {
   const s = clampLogoSlot(slot);
   const style: CSSProperties = {
     height: s.heightPx,
@@ -132,6 +137,6 @@ export function logoImgStyle(slot: LogoSlotSize): CSSProperties {
     maxHeight: s.heightPx,
     objectFit: "contain",
   };
-  if (s.maxWidthPx > 0) style.maxWidth = s.maxWidthPx;
+  if (s.maxWidthPx > 0 && !options?.ignoreMaxWidth) style.maxWidth = s.maxWidthPx;
   return style;
 }

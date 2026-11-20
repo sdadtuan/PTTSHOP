@@ -35,10 +35,10 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-black/5 bg-[var(--background)]/95 backdrop-blur-md">
       {/* Row 1: logo centered + utilities */}
-      <div className="relative mx-auto flex h-14 max-w-7xl items-center px-4 md:h-16 md:px-6">
+      <div className="relative mx-auto flex h-14 max-w-7xl items-center px-4 max-md:grid max-md:grid-cols-[2.75rem_minmax(0,1fr)_auto] max-md:items-center max-md:gap-x-2 max-md:px-3 md:h-16 md:px-6">
         <button
           type="button"
-          className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full p-2 text-neutral-700 transition hover:bg-black/5 md:hidden md:min-h-0 md:min-w-0"
+          className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full p-2 text-neutral-700 transition hover:bg-black/5 max-md:justify-self-start md:hidden md:min-h-0 md:min-w-0"
           aria-label={open ? "Đóng menu" : "Mở menu"}
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
@@ -48,11 +48,16 @@ export function Header() {
 
         <Link
           href="/"
-          className="absolute left-1/2 -translate-x-1/2"
+          className="max-md:relative max-md:left-auto max-md:flex max-md:min-w-0 max-md:max-w-full max-md:translate-x-0 max-md:justify-center max-md:overflow-hidden max-md:[&_img]:mx-auto md:absolute md:left-1/2 md:-translate-x-1/2"
           onClick={() => setOpen(false)}
         >
           {brand.logoUrl ? (
-            <BrandLogoImg src={brand.logoUrl} alt={brandName} slot="header" layout={brand.logoLayout} />
+            <BrandLogoImg
+              src={brand.logoUrl}
+              alt={brandName}
+              slot="header"
+              layout={brand.logoLayout}
+            />
           ) : (
             <span className="font-[family-name:var(--font-display)] text-2xl font-extrabold tracking-[0.22em] text-neutral-900 md:text-[1.75rem]">
               {brandName}
@@ -60,7 +65,7 @@ export function Header() {
           )}
         </Link>
 
-        <div className="ml-auto flex items-center gap-0.5 sm:gap-1">
+        <div className="ml-auto flex items-center gap-0 max-md:justify-self-end max-md:gap-0 sm:gap-1 md:ml-auto">
           <button
             type="button"
             className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full p-2 text-neutral-700 transition hover:bg-black/5 md:min-h-0 md:min-w-0"
