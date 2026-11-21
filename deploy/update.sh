@@ -81,13 +81,19 @@ fi
 sha256sum "$BACKUP" | tee "${BACKUP}.sha256" >/dev/null
 echo "Đã sao lưu ${BACKUP} (integrity_check=ok)."
 
-"${GIT[@]}" fetch origin "$DEPLOY_BRANCH"
+"${GIT[@]}" fetch origin "+refs/heads/${DEPLOY_BRANCH}:refs/remotes/origin/${DEPLOY_BRANCH}"
+remote_sha="$("${GIT[@]}" rev-parse "origin/${DEPLOY_BRANCH}")"
 if "${GIT[@]}" show-ref --verify --quiet "refs/heads/${DEPLOY_BRANCH}"; then
-  "${GIT[@]}" checkout "$DEPLOY_BRANCH"
-else
-  "${GIT[@]}" checkout -b "$DEPLOY_BRANCH" --track "origin/${DEPLOY_BRANCH}"
+  local_sha="$("${GIT[@]}" rev-parse "refs/heads/${DEPLOY_BRANCH}")"
+  if [ "$local_sha" != "$remote_sha" ] && ! "${GIT[@]}" merge-base --is-ancestor "$local_sha" "$remote_sha"; then
+    die "Nhánh local ${DEPLOY_BRANCH} lệch origin/${DEPLOY_BRANCH}. Dừng."
+  fi
 fi
-"${GIT[@]}" merge --ff-only "origin/${DEPLOY_BRANCH}"
+"${GIT[@]}" checkout -B "$DEPLOY_BRANCH" "origin/${DEPLOY_BRANCH}"
+head_sha="$("${GIT[@]}" rev-parse HEAD)"
+if [ "$head_sha" != "$remote_sha" ]; then
+  die "HEAD không trùng origin/${DEPLOY_BRANCH}."
+fi
 
 chown -R "$SERVICE_USER:$SERVICE_USER" "$APP_DIR"
 sudo -u "$SERVICE_USER" env NODE_ENV=development npm ci
