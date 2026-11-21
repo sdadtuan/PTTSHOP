@@ -17,9 +17,7 @@ async function main() {
   const prisma = new PrismaClient();
   try {
     const result = await rotateAdminAccount(prisma, credentials);
-    console.log(
-      `Đã cập nhật admin ${result.email}. Tài khoản demo không trùng email này đã bị vô hiệu hoá. Đơn hàng được giữ nguyên.`,
-    );
+    console.log(`Đã cập nhật admin ${result.email}; đã khoá ${result.locked} tài khoản demo.`);
   } finally {
     await prisma.$disconnect();
   }

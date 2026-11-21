@@ -1,6 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
-import { readAdminCredentials } from "@/lib/admin-credentials";
+import { assertStrongAdminPassword, readAdminCredentials } from "@/lib/admin-credentials";
 
 export const DEMO_ACCOUNT_EMAILS = ["admin@vizfas.vn", "khach@vizfas.vn"] as const;
 
@@ -12,8 +12,10 @@ export async function rotateAdminAccount(
     ADMIN_EMAIL: input.email,
     ADMIN_PASSWORD: input.password,
   });
+  assertStrongAdminPassword(password);
   const hash = await bcrypt.hash(password, 10);
 
+  let locked = 0;
   await db.$transaction(async (tx) => {
     const demos = await tx.user.findMany({
       where: { email: { in: [...DEMO_ACCOUNT_EMAILS] } },
@@ -23,8 +25,9 @@ export async function rotateAdminAccount(
       await tx.session.deleteMany({ where: { userId: user.id } });
       await tx.user.update({
         where: { id: user.id },
-        data: { password: null },
+        data: { password: null, role: "CUSTOMER" },
       });
+      locked += 1;
     }
 
     await tx.user.upsert({
@@ -42,5 +45,5 @@ export async function rotateAdminAccount(
     });
   });
 
-  return { email };
+  return { email, locked };
 }

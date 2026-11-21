@@ -26,3 +26,17 @@ export function readAdminCredentials(
   }
   return { email, password };
 }
+
+/** Quy tắc của rotate-admin. Không đưa mật khẩu vào thông báo lỗi. */
+export function assertStrongAdminPassword(password: string) {
+  const strong =
+    password.length >= 12 &&
+    /[a-z]/.test(password) &&
+    /[A-Z]/.test(password) &&
+    /\d/.test(password);
+  if (!strong) {
+    throw new AdminCredentialsError(
+      "ADMIN_PASSWORD cần ít nhất 12 ký tự, có chữ hoa, chữ thường và số.",
+    );
+  }
+}
