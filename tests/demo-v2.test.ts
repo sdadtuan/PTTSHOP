@@ -10,10 +10,9 @@ function read(rel: string) {
 
 describe("demo-v2 isolation", () => {
   it("owns a dedicated route and components under demo-v2", () => {
-    expect(read("src/app/demo-v2/page.tsx")).toContain("DemoHero");
-    expect(read("src/app/demo-v2/page.tsx")).toContain("DemoPhongCach");
-    expect(read("src/app/demo-v2/page.tsx")).toContain("DemoDiverse");
-    expect(read("src/app/demo-v2/page.tsx")).toContain("getHomeSectionsForRequest");
+    expect(read("src/app/demo-v2/page.tsx")).toContain("notFound");
+    expect(read("src/app/demo-v2/page.tsx")).not.toContain("DemoHero");
+    expect(read("next.config.ts")).toContain("poweredByHeader: false");
     expect(read("src/app/demo-v2/layout.tsx")).toContain("robots");
     expect(read("src/app/demo-v2/layout.tsx")).toMatch(/index:\s*false/);
     expect(read("src/components/demo-v2/demo-v2.css")).toContain(".demo-v2");
@@ -89,7 +88,7 @@ describe("demo-v2 isolation", () => {
     expect(read("src/components/demo-v2/demo-reviews.tsx")).toContain(
       "Khách Hàng Nói Gì Về VIZFAS",
     );
-    expect(read("src/app/demo-v2/page.tsx")).toContain("prisma.review.findMany");
+    expect(read("src/app/demo-v2/page.tsx")).toContain("notFound");
     expect(read("src/app/page.tsx")).not.toContain("ĐÁNH GIÁ");
   });
 });
