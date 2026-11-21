@@ -2,15 +2,22 @@ import { describe, expect, it } from "vitest";
 import { clearRateLimit } from "@/lib/rate-limit";
 import {
   CREDENTIALS_FAIL_LIMIT,
+  LOGIN_FAILURE_ERROR,
+  credentialsEmailKey,
   credentialsResponseFailed,
   guardCredentialsCallback,
   isCredentialsCallback,
 } from "@/lib/credentials-rate-limit";
 
-function callbackRequest(ip: string) {
+function callbackRequest(ip: string, email = "person@example.com") {
+  const body = new URLSearchParams({ email, password: "not-the-real-password" });
   return new Request("http://localhost/api/auth/callback/credentials", {
     method: "POST",
-    headers: { "x-forwarded-for": ip },
+    headers: {
+      "content-type": "application/x-www-form-urlencoded",
+      "x-forwarded-for": ip,
+    },
+    body,
   });
 }
 
@@ -36,6 +43,7 @@ describe("credentials callback rate limit", () => {
   it("blocks the callback after the failed-attempt limit", async () => {
     const ip = "203.0.113.10";
     clearRateLimit(`credentials-callback:${ip}`);
+    clearRateLimit(credentialsEmailKey("person@example.com"));
     let calls = 0;
     const next = async () => {
       calls += 1;
@@ -51,6 +59,27 @@ describe("credentials callback rate limit", () => {
     expect(blocked.status).toBe(429);
     expect(calls).toBe(CREDENTIALS_FAIL_LIMIT);
     const body = await blocked.json();
-    expect(body.error).toContain("đăng nhập sai");
+    expect(body.error).toBe(LOGIN_FAILURE_ERROR);
+  });
+
+  it("blocks the same email from another IP and keeps one error code", async () => {
+    const email = "shared@example.com";
+    clearRateLimit(credentialsEmailKey(email));
+    clearRateLimit("credentials-callback:198.51.100.1");
+    clearRateLimit("credentials-callback:198.51.100.2");
+    let calls = 0;
+    const next = async () => {
+      calls += 1;
+      return failedLogin();
+    };
+
+    for (let i = 0; i < CREDENTIALS_FAIL_LIMIT; i += 1) {
+      await guardCredentialsCallback(callbackRequest("198.51.100.1", email), next);
+    }
+
+    const blocked = await guardCredentialsCallback(callbackRequest("198.51.100.2", email), next);
+    expect(blocked.status).toBe(429);
+    expect(await blocked.json()).toEqual({ error: LOGIN_FAILURE_ERROR });
+    expect(calls).toBe(CREDENTIALS_FAIL_LIMIT);
   });
 });

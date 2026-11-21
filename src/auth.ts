@@ -4,7 +4,6 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { clearRateLimit, isRateLimited, rateLimit } from "@/lib/rate-limit";
 
 const credentialsSchema = z.object({
   email: z.string().email(),
@@ -31,28 +30,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!parsed.success) return null;
 
         const email = parsed.data.email.toLowerCase();
-        const failKey = `login-fail:${email}`;
-        const blocked = isRateLimited(failKey, 5);
-        if (blocked.limited) {
-          throw new Error("Quá nhiều lần đăng nhập sai. Thử lại sau 15 phút.");
-        }
-
         const user = await prisma.user.findUnique({
           where: { email },
         });
 
-        if (!user?.password) {
-          rateLimit(failKey, 5, 15 * 60_000);
-          return null;
-        }
+        if (!user?.password) return null;
 
         const valid = await bcrypt.compare(parsed.data.password, user.password);
-        if (!valid) {
-          rateLimit(failKey, 5, 15 * 60_000);
-          return null;
-        }
-
-        clearRateLimit(failKey);
+        if (!valid) return null;
 
         return {
           id: user.id,
