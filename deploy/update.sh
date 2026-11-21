@@ -91,15 +91,29 @@ fi
 
 chown -R "$SERVICE_USER:$SERVICE_USER" "$APP_DIR"
 sudo -u "$SERVICE_USER" env NODE_ENV=development npm ci
-sudo -u "$SERVICE_USER" bash -lc 'set -a; [ -f .env ] && . ./.env; set +a; npx prisma migrate deploy'
+
+if [ ! -d "$APP_DIR/prisma/migrations" ] || [ -z "$(find "$APP_DIR/prisma/migrations" -mindepth 2 -name migration.sql -print -quit)" ]; then
+  die "Repo không có migrations, cần anh quyết định"
+fi
+
+sudo -u "$SERVICE_USER" bash -lc 'cd /var/www/pttshop && set +x && set -a && { [ ! -f .env ] || . ./.env; } && set +x && set +a && npx prisma migrate deploy'
 sudo -u "$SERVICE_USER" npm run build
 systemctl restart pttshop
 
-home_code="$(curl -sS -o /dev/null -w "%{http_code}" http://127.0.0.1:3400/)"
-login_code="$(curl -sS -o /dev/null -w "%{http_code}" http://127.0.0.1:3400/dang-nhap)"
-if [ "$home_code" != "200" ] || [ "$login_code" != "200" ]; then
-  die "HTTP không phải 200 (trang chủ=${home_code}, /dang-nhap=${login_code})."
-fi
+deadline=$((SECONDS + 30))
+home_code="000"
+login_code="000"
+while true; do
+  home_code="$(curl -sS -o /dev/null -w "%{http_code}" --connect-timeout 2 --max-time 5 http://127.0.0.1:3400/ || true)"
+  login_code="$(curl -sS -o /dev/null -w "%{http_code}" --connect-timeout 2 --max-time 5 http://127.0.0.1:3400/dang-nhap || true)"
+  if [ "$home_code" = "200" ] && [ "$login_code" = "200" ]; then
+    break
+  fi
+  if [ "$SECONDS" -ge "$deadline" ]; then
+    die "HTTP không phải 200 sau 30 giây (trang chủ=${home_code}, /dang-nhap=${login_code})."
+  fi
+  sleep 2
+done
 
 trap - ERR
 echo "Triển khai ${DEPLOY_BRANCH} xong. Trang chủ và /dang-nhap trả 200."
