@@ -96,6 +96,11 @@ if [ ! -d "$APP_DIR/prisma/migrations" ] || [ -z "$(find "$APP_DIR/prisma/migrat
   die "Repo không có migrations, cần anh quyết định"
 fi
 
+baseline_count="$(sqlite3 -readonly "$DB_PATH" "SELECT COUNT(*) FROM _prisma_migrations WHERE migration_name = '0_init';" 2>/dev/null || true)"
+if [ -z "$baseline_count" ] || [ "$baseline_count" = "0" ]; then
+  die "Chưa baseline. Chạy một lần: cd /var/www/pttshop && sudo -u ${SERVICE_USER} npx prisma migrate resolve --applied 0_init, rồi chạy lại script."
+fi
+
 sudo -u "$SERVICE_USER" bash -lc 'cd /var/www/pttshop && set +x && set -a && { [ ! -f .env ] || . ./.env; } && set +x && set +a && npx prisma migrate deploy'
 sudo -u "$SERVICE_USER" npm run build
 systemctl restart pttshop
