@@ -26,20 +26,18 @@ describe("storefront UI copy", () => {
   });
 
   it("drops demo login hints from published copy sent to the client", () => {
+    const marker = "demo@example.test";
     const parsed = parseStorefrontUi({
       auth: {
-        loginDemoHint: "Demo: khach@vizfas.vn / khach123 hoặc admin@vizfas.vn / admin123",
-        loginAdminWarning: "Đổi mật khẩu admin@vizfas.vn / admin123",
+        loginDemoHint: `Gợi ý ${marker}`,
+        loginAdminWarning: `Cảnh báo ${marker}`,
         loginTitle: "Đăng nhập",
       },
     });
     const json = JSON.stringify(parsed);
     expect(parsed.auth).not.toHaveProperty("loginDemoHint");
     expect(parsed.auth).not.toHaveProperty("loginAdminWarning");
-    expect(json).not.toContain("khach123");
-    expect(json).not.toContain("admin123");
-    expect(json).not.toContain("khach@vizfas.vn");
-    expect(json).not.toContain("admin@vizfas.vn");
+    expect(json).not.toContain(marker);
   });
 
   it("seeds published draft matching defaults", async () => {
