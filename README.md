@@ -12,14 +12,7 @@ npm run dev
 
 Mở [http://localhost:3000](http://localhost:3000).
 
-## Tài khoản demo
-
-| Vai trò  | Email             | Mật khẩu  |
-|----------|-------------------|-----------|
-| Admin    | admin@vizfas.vn   | admin123  |
-| Khách    | khach@vizfas.vn   | khach123  |
-
-> **Bắt buộc:** Đổi mật khẩu admin mặc định (`admin@vizfas.vn` / `admin123`) trước khi dùng môi trường chia sẻ hoặc production. Seed sẽ in cảnh báo mỗi lần chạy.
+Seed local cần `ADMIN_EMAIL` và `ADMIN_PASSWORD` (tối thiểu 8 ký tự) trong môi trường lúc chạy. Script dừng ngay khi `NODE_ENV=production` và không tạo tài khoản với mật khẩu cố định.
 
 Admin: [/admin](http://localhost:3000/admin)
 
@@ -43,11 +36,13 @@ Copy `.env.example` → `.env`.
 | `NEXT_PUBLIC_APP_NAME` | Không | Tên hiển thị |
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | Không | SMTP generic — khi trống, email ghi log console |
 | `EMAIL_FROM` | Không | Địa chỉ gửi |
+| `ADMIN_EMAIL` | Khi seed | Email admin tạo lúc `npm run db:seed` |
+| `ADMIN_PASSWORD` | Khi seed | Mật khẩu admin, tối thiểu 8 ký tự, chỉ lấy từ môi trường |
 | `TEST_DATABASE_URL` | Không | DB riêng cho Vitest (mặc định `file:./test.db`) |
 
 ## Luồng khách → admin (manual checklist)
 
-1. Đăng ký `/dang-ky` hoặc đăng nhập khách demo
+1. Đăng ký `/dang-ky` hoặc đăng nhập tài khoản vừa seed
 2. Thêm sản phẩm vào giỏ (DB cart + cookie `vizfas_cart_sid`)
 3. Checkout COD hoặc chuyển khoản; thử mã `VIZFAS10` (đơn ≥ 500k)
 4. Admin `/admin` → Đơn hàng → đổi trạng thái (COMPLETED = “Đã giao”)

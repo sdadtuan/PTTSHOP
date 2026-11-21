@@ -1,8 +1,14 @@
 import { PrismaClient, Gender } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { readAdminCredentials } from "../src/lib/admin-credentials";
 import { ensureHomepageCmsSeeded } from "../src/lib/cms/homepage";
 import { ensureStorefrontPagesSeeded } from "../src/lib/storefront/pages";
 import { ensureStorefrontUiSeeded } from "../src/lib/storefront/ui-copy";
+
+if (process.env.NODE_ENV === "production") {
+  console.error("Từ chối seed khi NODE_ENV=production.");
+  process.exit(1);
+}
 
 const prisma = new PrismaClient();
 
@@ -10,9 +16,8 @@ const img = (id: string) =>
   `https://images.unsplash.com/${id}?auto=format&fit=crop&w=800&q=80`;
 
 async function main() {
-  console.warn(
-    "\n⚠️  SEED: admin@vizfas.vn / admin123 — ĐỔI mật khẩu admin trước khi dùng môi trường chia sẻ / production.\n",
-  );
+  const admin = readAdminCredentials();
+  const password = await bcrypt.hash(admin.password, 10);
 
   await prisma.review.deleteMany();
   await prisma.orderItem.deleteMany();
@@ -33,24 +38,12 @@ async function main() {
   await prisma.account.deleteMany();
   await prisma.user.deleteMany();
 
-  const password = await bcrypt.hash("admin123", 10);
-
   await prisma.user.create({
     data: {
       name: "Admin VIZFAS",
-      email: "admin@vizfas.vn",
+      email: admin.email,
       password,
       role: "ADMIN",
-    },
-  });
-
-  const customer = await prisma.user.create({
-    data: {
-      name: "Khách Demo",
-      email: "khach@vizfas.vn",
-      password: await bcrypt.hash("khach123", 10),
-      role: "CUSTOMER",
-      phone: "0901234567",
     },
   });
 
@@ -530,7 +523,6 @@ async function main() {
     }
   }
 
-  // Sample completed order + real review for demo customer
   const demoProduct = await prisma.product.findFirst({
     where: { slug: "ao-thun-oversize" },
     include: { variants: { take: 1 } },
@@ -540,14 +532,12 @@ async function main() {
     const order = await prisma.order.create({
       data: {
         orderNumber: "VFSEED0001",
-        userId: customer.id,
         status: "COMPLETED",
         paymentMethod: "COD",
         paymentStatus: "PAID",
         paymentProvider: "cod",
-        customerName: customer.name || "Khách Demo",
-        customerPhone: customer.phone || "0901234567",
-        customerEmail: customer.email,
+        customerName: "Khách mẫu",
+        customerPhone: "0901234567",
         address: "123 Nguyễn Huệ, Quận 1, TP.HCM",
         subtotal: variant.price,
         shippingFee: 0,
@@ -567,7 +557,6 @@ async function main() {
     });
     await prisma.review.create({
       data: {
-        userId: customer.id,
         productId: demoProduct.id,
         orderId: order.id,
         rating: 5,
@@ -584,9 +573,7 @@ async function main() {
   await ensureStorefrontPagesSeeded();
   await ensureStorefrontUiSeeded();
 
-  console.log(
-    "Seed xong: admin@vizfas.vn / admin123 | khach@vizfas.vn / khach123 — ĐỔI mật khẩu admin trước khi dùng chung.",
-  );
+  console.log(`Seed xong. Admin: ${admin.email}`);
 }
 
 main()
