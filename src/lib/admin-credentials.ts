@@ -5,8 +5,16 @@ export class AdminCredentialsError extends Error {
   }
 }
 
+type AdminCredentialEnv = {
+  ADMIN_EMAIL?: string;
+  ADMIN_PASSWORD?: string;
+};
+
 export function readAdminCredentials(
-  env: NodeJS.ProcessEnv = process.env,
+  env: AdminCredentialEnv = {
+    ADMIN_EMAIL: process.env.ADMIN_EMAIL,
+    ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
+  },
 ): { email: string; password: string } {
   const email = env.ADMIN_EMAIL?.trim().toLowerCase() ?? "";
   const password = env.ADMIN_PASSWORD ?? "";
