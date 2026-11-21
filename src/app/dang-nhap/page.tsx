@@ -133,8 +133,6 @@ export default function LoginPage() {
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-4 py-16">
       <h1 className="type-title text-3xl font-bold">{a.loginTitle}</h1>
-      <p className="mt-2 text-sm text-neutral-500">{a.loginDemoHint}</p>
-      <p className="mt-1 text-xs text-amber-700">{a.loginAdminWarning}</p>
 
       <Suspense fallback={<p className="mt-8 text-sm text-neutral-500">Đang tải...</p>}>
         <LoginForm />

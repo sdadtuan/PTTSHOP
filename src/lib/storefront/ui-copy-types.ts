@@ -118,8 +118,6 @@ export type OrdersUiCopy = {
 
 export type AuthUiCopy = {
   loginTitle: string;
-  loginDemoHint: string;
-  loginAdminWarning: string;
   loginSubmit: string;
   loginSubmitLoading: string;
   loginHydrateWait: string;
@@ -274,8 +272,6 @@ export const DEFAULT_STOREFRONT_UI: StorefrontUiCopy = {
   },
   auth: {
     loginTitle: "Đăng nhập",
-    loginDemoHint: "Demo: khach@vizfas.vn / khach123 hoặc admin@vizfas.vn / admin123",
-    loginAdminWarning: "Đổi mật khẩu admin mặc định trước khi dùng môi trường chia sẻ.",
     loginSubmit: "Đăng nhập",
     loginSubmitLoading: "Đang đăng nhập...",
     loginHydrateWait: "Đang sẵn sàng form đăng nhập…",
@@ -433,8 +429,6 @@ export const UI_COPY_FIELD_LABELS: Record<UiCopySectionKey, Record<string, strin
   },
   auth: {
     loginTitle: "Đăng nhập — tiêu đề",
-    loginDemoHint: "Gợi ý tài khoản demo",
-    loginAdminWarning: "Cảnh báo admin",
     loginSubmit: "Nút đăng nhập",
     loginSubmitLoading: "Đang đăng nhập",
     loginHydrateWait: "Chờ hydrate",

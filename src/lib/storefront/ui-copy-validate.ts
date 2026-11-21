@@ -131,8 +131,6 @@ const storefrontUiSchema = z.object({
   }),
   auth: sectionSchema({
     loginTitle: short(),
-    loginDemoHint: short(300),
-    loginAdminWarning: short(300),
     loginSubmit: short(40),
     loginSubmitLoading: short(80),
     loginHydrateWait: short(120),
@@ -165,7 +163,7 @@ const storefrontUiSchema = z.object({
 });
 
 export function parseStorefrontUi(raw: unknown): StorefrontUiCopy {
-  const merged = deepMerge(DEFAULT_STOREFRONT_UI, raw);
+  const merged = deepMerge(DEFAULT_STOREFRONT_UI, stripDemoAuthHints(raw));
   return storefrontUiSchema.parse(merged);
 }
 
@@ -176,6 +174,21 @@ export function parseStorefrontUiSection<K extends UiCopySectionKey>(
   const section = storefrontUiSchema.shape[key];
   const merged = { ...DEFAULT_STOREFRONT_UI[key], ...(raw && typeof raw === "object" ? raw : {}) };
   return section.parse(merged) as StorefrontUiCopy[K];
+}
+
+const DEMO_AUTH_KEYS = ["loginDemoHint", "loginAdminWarning"] as const;
+
+/** Drop demo-account copy even when an older published JSON still contains it. */
+export function stripDemoAuthHints(raw: unknown): unknown {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return raw;
+  const copy = { ...(raw as Record<string, unknown>) };
+  const auth = copy.auth;
+  if (auth && typeof auth === "object" && !Array.isArray(auth)) {
+    const next = { ...(auth as Record<string, unknown>) };
+    for (const key of DEMO_AUTH_KEYS) delete next[key];
+    copy.auth = next;
+  }
+  return copy;
 }
 
 function deepMerge<T extends Record<string, unknown>>(base: T, patch: unknown): T {
