@@ -1,3 +1,4 @@
+import { e2eAdmin, e2eCustomer } from "./accounts";
 import { expect, test, type Page } from "@playwright/test";
 import fs from "fs";
 import path from "path";
@@ -11,7 +12,7 @@ async function login(page: Page, email: string, password: string, callbackUrl = 
 }
 
 async function loginAdmin(page: Page) {
-  await login(page, "admin@vizfas.vn", "admin123", "/admin/giao-dien");
+  await login(page, e2eAdmin().email, e2eAdmin().password, "/admin/giao-dien");
   await page.waitForURL((u) => u.pathname.startsWith("/admin"), { timeout: 25_000 });
 }
 
@@ -106,7 +107,7 @@ test.describe("Homepage CMS (Quản lý giao diện)", () => {
   });
 
   test("customer cannot open CMS UI or API", async ({ page }) => {
-    await login(page, "khach@vizfas.vn", "khach123");
+    await login(page, e2eCustomer().email, e2eCustomer().password);
     await page.waitForTimeout(1500);
     await page.goto("/admin/giao-dien");
     await expect(page).not.toHaveURL(/\/admin\/giao-dien/);

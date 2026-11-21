@@ -10,11 +10,18 @@ if (!outDir) {
 }
 fs.mkdirSync(outDir, { recursive: true });
 
+const adminEmail = process.env.E2E_ADMIN_EMAIL?.trim();
+const adminPassword = process.env.E2E_ADMIN_PASSWORD;
+if (!adminEmail || !adminPassword) {
+  console.error("Thiếu E2E_ADMIN_EMAIL hoặc E2E_ADMIN_PASSWORD");
+  process.exit(1);
+}
+
 async function login(page) {
   await page.goto(`${base}/api/auth/csrf`);
   await page.goto(`${base}/dang-nhap?callbackUrl=/admin/products`);
-  await page.getByLabel(/^Email$/i).fill("admin@vizfas.vn");
-  await page.getByLabel(/Mật khẩu/i).fill("admin123");
+  await page.getByLabel(/^Email$/i).fill(adminEmail);
+  await page.getByLabel(/Mật khẩu/i).fill(adminPassword);
   await page.getByRole("button", { name: /Đăng nhập/i }).click();
   await page.waitForURL(
     (url) => url.pathname === "/admin" || url.pathname.startsWith("/admin/"),

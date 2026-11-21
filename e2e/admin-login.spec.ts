@@ -1,3 +1,4 @@
+import { e2eAdmin } from "./accounts";
 import { expect, test } from "@playwright/test";
 
 async function openLogin(page: import("@playwright/test").Page, callbackUrl: string) {
@@ -15,8 +16,8 @@ test.describe("Admin login form", () => {
   }) => {
     await openLogin(page, "/admin");
 
-    await page.getByLabel(/^Email$/i).fill("admin@vizfas.vn");
-    await page.getByLabel(/Mật khẩu/i).fill("admin123");
+    await page.getByLabel(/^Email$/i).fill(e2eAdmin().email);
+    await page.getByLabel(/Mật khẩu/i).fill(e2eAdmin().password);
     await page.getByRole("button", { name: /Đăng nhập/i }).click();
 
     await page.waitForURL(
@@ -25,14 +26,14 @@ test.describe("Admin login form", () => {
     );
 
     expect(page.url()).not.toMatch(/password=/i);
-    expect(page.url()).not.toMatch(/admin123/i);
+    expect(page.url()).not.toContain(e2eAdmin().password);
     await expect(page.getByRole("heading", { name: /Dashboard/i })).toBeVisible();
   });
 
   test("products list opens after login", async ({ page }) => {
     await openLogin(page, "/admin/products");
-    await page.getByLabel(/^Email$/i).fill("admin@vizfas.vn");
-    await page.getByLabel(/Mật khẩu/i).fill("admin123");
+    await page.getByLabel(/^Email$/i).fill(e2eAdmin().email);
+    await page.getByLabel(/Mật khẩu/i).fill(e2eAdmin().password);
     await page.getByRole("button", { name: /Đăng nhập/i }).click();
     await page.waitForURL(/\/admin\/products/, { timeout: 25_000 });
     await expect(page.getByRole("heading", { name: /^Sản phẩm$/i })).toBeVisible();

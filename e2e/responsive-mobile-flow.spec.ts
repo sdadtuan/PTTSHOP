@@ -1,3 +1,4 @@
+import { e2eAdmin } from "./accounts";
 import { expect, test, type Page } from "@playwright/test";
 
 /** Real usage on a phone-sized screen: menu, PDP gallery/video/colour/size, cart, checkout form, admin. */
@@ -60,8 +61,8 @@ test.describe("Mobile flows", () => {
     await useMobile(page, testInfo.project.name);
     await page.goto("/api/auth/csrf");
     await page.goto("/dang-nhap?callbackUrl=/admin");
-    await page.getByLabel(/^Email$/i).fill("admin@vizfas.vn");
-    await page.getByLabel(/Mật khẩu/i).fill("admin123");
+    await page.getByLabel(/^Email$/i).fill(e2eAdmin().email);
+    await page.getByLabel(/Mật khẩu/i).fill(e2eAdmin().password);
     await page.getByRole("button", { name: /Đăng nhập/i }).click();
     await page.waitForURL((u) => u.pathname.startsWith("/admin"), { timeout: 25_000 });
 

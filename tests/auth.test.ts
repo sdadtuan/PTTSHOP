@@ -27,7 +27,7 @@ describe("auth: register & login", () => {
     await cleanDb(prisma);
     await seedMinimal(prisma);
     clearRateLimit("register:127.0.0.1");
-    clearRateLimit("login-fail:customer@test.local");
+    clearRateLimit(`login-fail:${process.env.E2E_CUSTOMER_EMAIL}`);
   });
 
   afterAll(async () => {
@@ -67,15 +67,15 @@ describe("auth: register & login", () => {
 
   it("login succeeds with correct password and fails with wrong", async () => {
     const user = await prisma.user.findUnique({
-      where: { email: "customer@test.local" },
+      where: { email: process.env.E2E_CUSTOMER_EMAIL },
     });
     expect(user?.password).toBeTruthy();
-    expect(await bcrypt.compare("khach123", user!.password!)).toBe(true);
+    expect(await bcrypt.compare(process.env.E2E_CUSTOMER_PASSWORD!, user!.password!)).toBe(true);
     expect(await bcrypt.compare("wrong", user!.password!)).toBe(false);
   });
 
   it("forgot-password stores reset token", async () => {
-    const email = "customer@test.local";
+    const email = process.env.E2E_CUSTOMER_EMAIL!;
     const token = "a".repeat(40);
     await prisma.verificationToken.create({
       data: {

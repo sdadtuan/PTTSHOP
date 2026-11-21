@@ -1,3 +1,4 @@
+import { e2eAdmin } from "./accounts";
 import { expect, test } from "@playwright/test";
 import path from "path";
 import fs from "fs";
@@ -11,8 +12,8 @@ async function adminLogin(page: import("@playwright/test").Page) {
   // Warm Auth.js CSRF cookie before credentials sign-in
   await page.goto("/api/auth/csrf");
   await page.goto("/dang-nhap?callbackUrl=/admin/products");
-  await page.getByLabel(/^Email$/i).fill("admin@vizfas.vn");
-  await page.getByLabel(/Mật khẩu/i).fill("admin123");
+  await page.getByLabel(/^Email$/i).fill(e2eAdmin().email);
+  await page.getByLabel(/Mật khẩu/i).fill(e2eAdmin().password);
   await page.getByRole("button", { name: /Đăng nhập/i }).click();
   await page.waitForURL(
     (url) => url.pathname === "/admin" || url.pathname.startsWith("/admin/"),

@@ -1,3 +1,4 @@
+import { e2eCustomer } from "./accounts";
 import { expect, test } from "@playwright/test";
 
 test.describe("Storefront", () => {
@@ -82,8 +83,8 @@ test.describe("Access control", () => {
 
   test("customer cannot open admin after login", async ({ page }) => {
     await page.goto("/dang-nhap");
-    await page.getByLabel(/Email/i).fill("khach@vizfas.vn");
-    await page.getByLabel(/Mật khẩu/i).fill("khach123");
+    await page.getByLabel(/Email/i).fill(e2eCustomer().email);
+    await page.getByLabel(/Mật khẩu/i).fill(e2eCustomer().password);
     await page.getByRole("button", { name: /Đăng nhập/i }).click();
     await page.goto("/admin");
     await expect(page).not.toHaveURL(/\/admin$/);

@@ -1,11 +1,12 @@
+import { e2eAdmin } from "./accounts";
 import { expect, test } from "@playwright/test";
 
 async function loginAdmin(page: import("@playwright/test").Page) {
   await page.goto("/api/auth/csrf");
   await page.goto("/dang-nhap?callbackUrl=/admin/products");
   await expect(page.getByTestId("login-form")).toHaveAttribute("data-hydrated", "true");
-  await page.getByLabel(/^Email$/i).fill("admin@vizfas.vn");
-  await page.getByLabel(/Mật khẩu/i).fill("admin123");
+  await page.getByLabel(/^Email$/i).fill(e2eAdmin().email);
+  await page.getByLabel(/Mật khẩu/i).fill(e2eAdmin().password);
   await page.getByRole("button", { name: /Đăng nhập/i }).click();
   await page.waitForURL(/\/admin\/products/, { timeout: 25_000 });
 }

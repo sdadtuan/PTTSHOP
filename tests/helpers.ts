@@ -38,20 +38,30 @@ export async function cleanDb(prisma: PrismaClient) {
   await prisma.user.deleteMany();
 }
 
+function requiredEnv(name: string) {
+  const value = process.env[name]?.trim();
+  if (!value) throw new Error(`Thiếu biến môi trường ${name}`);
+  return value;
+}
+
 export async function seedMinimal(prisma: PrismaClient) {
+  const adminEmail = requiredEnv("E2E_ADMIN_EMAIL");
+  const adminPassword = requiredEnv("E2E_ADMIN_PASSWORD");
+  const customerEmail = requiredEnv("E2E_CUSTOMER_EMAIL");
+  const customerPassword = requiredEnv("E2E_CUSTOMER_PASSWORD");
   const admin = await prisma.user.create({
     data: {
       name: "Admin",
-      email: "admin@test.local",
-      password: await bcrypt.hash("admin123", 10),
+      email: adminEmail,
+      password: await bcrypt.hash(adminPassword, 10),
       role: "ADMIN",
     },
   });
   const customer = await prisma.user.create({
     data: {
       name: "Customer",
-      email: "customer@test.local",
-      password: await bcrypt.hash("khach123", 10),
+      email: customerEmail,
+      password: await bcrypt.hash(customerPassword, 10),
       role: "CUSTOMER",
     },
   });

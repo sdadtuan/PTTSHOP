@@ -1,3 +1,4 @@
+import { e2eAdmin } from "./accounts";
 import { expect, test, type Page } from "@playwright/test";
 import fs from "fs";
 import path from "path";
@@ -24,8 +25,8 @@ const EXPECTED = [
 async function adminLogin(page: Page) {
   await page.goto("/api/auth/csrf");
   await page.goto("/dang-nhap?callbackUrl=/admin/products");
-  await page.getByLabel(/^Email$/i).fill("admin@vizfas.vn");
-  await page.getByLabel(/Mật khẩu/i).fill("admin123");
+  await page.getByLabel(/^Email$/i).fill(e2eAdmin().email);
+  await page.getByLabel(/Mật khẩu/i).fill(e2eAdmin().password);
   await page.getByRole("button", { name: /Đăng nhập/i }).click();
   await page.waitForURL((u) => u.pathname === "/admin" || u.pathname.startsWith("/admin/"), { timeout: 25_000 });
 }
