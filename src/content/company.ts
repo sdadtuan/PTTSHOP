@@ -14,6 +14,25 @@ export const company = {
   tradeConfirmCode: "",
 } as const;
 
+export const UNSET = "[cần chốt]";
+
+export function isUnset(value: string | null | undefined) {
+  return !value || value.includes(UNSET);
+}
+
+/** Bỏ câu còn thiếu dữ liệu. Giữ câu đã có thông tin trong cùng một đoạn. */
+export function visibleParagraphs(lines: string[]) {
+  return lines
+    .map((line) =>
+      line
+        .split(/(?<=\.)\s+/)
+        .map((sentence) => sentence.trim())
+        .filter((sentence) => sentence && !sentence.includes(UNSET))
+        .join(" "),
+    )
+    .filter(Boolean);
+}
+
 export const companyPolicyLinks = [
   { href: "/chinh-sach-bao-mat", label: "Chính sách bảo mật" },
   { href: "/dieu-khoan", label: "Điều khoản" },

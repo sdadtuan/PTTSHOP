@@ -1,6 +1,7 @@
 "use client";
 
 import { useSiteBrand } from "@/components/cms/site-brand-context";
+import { isUnset } from "@/content/company";
 import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
 
 export default function ContactPage() {
@@ -18,12 +19,14 @@ export default function ContactPage() {
         <p>
           <strong>{ui.showroomLabel}</strong> {ui.showroomAddress}
         </p>
+        {isUnset(email) ? null : (
         <p>
           <strong>{ui.emailLabel}</strong>{" "}
           <a href={`mailto:${email}`} className="text-[var(--accent)]">
             {email}
           </a>
         </p>
+        )}
         <p>
           <strong>{ui.phoneLabel}</strong>{" "}
           <a href={`tel:${phone.replace(/\s/g, "")}`} className="text-[var(--accent)]">

@@ -1,3 +1,4 @@
+import { visibleParagraphs } from "@/content/company";
 import { getStorefrontPageBySlug } from "@/lib/storefront/pages";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +14,7 @@ export async function generateMetadata() {
 export default async function AboutPage() {
   const page = await getStorefrontPageBySlug("ve-chung-toi");
   const title = page?.title || "Về PTT Shop";
-  const body = page?.body ?? [];
+  const body = visibleParagraphs(page?.body ?? []);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 md:px-6">

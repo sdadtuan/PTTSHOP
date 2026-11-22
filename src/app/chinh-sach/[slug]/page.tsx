@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { visibleParagraphs } from "@/content/company";
 import { getStorefrontPageBySlug } from "@/lib/storefront/pages";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +21,7 @@ export default async function PolicyPage({ params }: Props) {
     <div className="mx-auto max-w-3xl px-4 py-12 md:px-6">
       <h1 className="type-title text-3xl font-extrabold">{page.title}</h1>
       <div className="mt-6 space-y-4 text-sm leading-relaxed text-neutral-600">
-        {page.body.map((p) => (
+        {visibleParagraphs(page.body).map((p) => (
           <p key={p}>{p}</p>
         ))}
       </div>

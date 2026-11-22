@@ -7,7 +7,7 @@ import { BrandLogoImg } from "@/components/cms/brand-logo-img";
 import { useSiteBrand } from "@/components/cms/site-brand-context";
 import { useStorefrontLayout } from "@/components/cms/storefront-layout-context";
 import { TYPE_SCALE } from "@/config/home-type-scale";
-import { company, companyPolicyLinks } from "@/content/company";
+import { company, companyPolicyLinks, isUnset } from "@/content/company";
 
 function InstagramIcon({ className }: { className?: string }) {
   return (
@@ -194,6 +194,7 @@ export function Footer() {
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" />
                 <span>{brand.contactAddress}</span>
               </li>
+              {isUnset(brand.contactEmail) ? null : (
               <li className="flex items-center gap-2.5">
                 <Mail className="h-4 w-4 shrink-0 text-[var(--accent)]" />
                 <a
@@ -203,6 +204,7 @@ export function Footer() {
                   {brand.contactEmail}
                 </a>
               </li>
+              )}
               <li className="flex items-center gap-2.5">
                 <Phone className="h-4 w-4 shrink-0 text-[var(--accent)]" />
                 <a
@@ -225,10 +227,13 @@ export function Footer() {
         <div className="mx-auto max-w-7xl space-y-3 px-4 py-6 text-xs leading-relaxed text-neutral-500 md:px-6">
           <p className="font-semibold text-neutral-800">{company.name}</p>
           <p>
-            MST {company.taxId}, cấp ngày {company.issuedOn}, nơi cấp {company.issuedBy}. Người đại diện: {company.representative}.
+            MST {company.taxId}, cấp ngày {company.issuedOn}
+            {isUnset(company.issuedBy) ? "" : `, nơi cấp ${company.issuedBy}`}. Người đại diện: {company.representative}.
           </p>
           <p>
-            {company.address}. Hotline {company.hotline}. Email             {company.email}.
+            {company.address}
+            {isUnset(company.hotline) ? "" : `. Hotline ${company.hotline}`}
+            {isUnset(company.email) ? "" : `. Email ${company.email}`}.
           </p>
           <p>
             <Link href="/yeu-cau-du-lieu" className="hover:text-neutral-800">
