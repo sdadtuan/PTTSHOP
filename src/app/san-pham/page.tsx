@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ProductCard } from "@/components/product/product-card";
+import { publicVariants } from "@/lib/catalog-visibility";
 import { prisma } from "@/lib/prisma";
 import { buildProductWhere, sortProductsByPrice } from "@/lib/products-query";
 import { cn } from "@/lib/utils";
@@ -67,7 +68,7 @@ export default async function ProductsPage({
       }),
       include: {
         images: { orderBy: { sortOrder: "asc" } },
-        variants: true,
+        variants: publicVariants(),
         category: true,
       },
     }),

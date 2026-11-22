@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { handleApiError, jsonOk } from "@/lib/api";
+import { publicVariants } from "@/lib/catalog-visibility";
 import { prisma } from "@/lib/prisma";
 import {
   buildProductWhere,
@@ -34,7 +35,7 @@ export async function GET(req: Request) {
       where,
       include: {
         images: { orderBy: { sortOrder: "asc" } },
-        variants: true,
+        variants: publicVariants(),
         category: true,
       },
     });

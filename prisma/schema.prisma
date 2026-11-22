@@ -163,6 +163,8 @@ model Product {
   sizeChartJson        String?
   /// PDP shipping bullets for this product only. Null = site default.
   shippingOverrideJson String?
+  /// DRAFT | SELLING | HIDDEN | DISCONTINUED. Mặc định SELLING để bản ghi cũ vẫn hiện.
+  saleStatus   String              @default("SELLING")
   createdAt    DateTime            @default(now())
   updatedAt    DateTime            @updatedAt
 }
@@ -208,6 +210,8 @@ model ProductVariant {
   size          String
   price         Int
   compareAt     Int?
+  /// Giá vốn, chỉ trang quản trị. Null = chưa chốt.
+  costPrice     Int?
   stock         Int            @default(0)
   productId     String
   product       Product        @relation(fields: [productId], references: [id], onDelete: Cascade)

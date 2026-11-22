@@ -28,6 +28,7 @@ import type {
   PromoBannerContent,
 } from "@/lib/cms/types";
 import { HOMEPAGE_BODY_SECTION_KEYS } from "@/lib/cms/types";
+import { publicCatalogWhere, publicVariants } from "@/lib/catalog-visibility";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -63,14 +64,15 @@ export default async function HomePage() {
     getHomeSectionsForRequest(),
     prisma.category.findMany({ orderBy: { sortOrder: "asc" }, take: 6 }),
     prisma.product.findMany({
-      where: { isFeatured: true },
-      include: { images: { orderBy: { sortOrder: "asc" } }, variants: true },
+      where: { isFeatured: true, ...publicCatalogWhere },
+      include: { images: { orderBy: { sortOrder: "asc" } }, variants: publicVariants() },
       take: 12,
     }),
     prisma.product.findMany({
+      where: publicCatalogWhere,
       include: {
         images: { orderBy: { sortOrder: "asc" } },
-        variants: true,
+        variants: publicVariants(),
         category: { select: { slug: true } },
       },
       take: 24,
@@ -113,8 +115,8 @@ export default async function HomePage() {
   let selectedFeatured: CardProduct[] = featured;
   if (featuredCms.productIds.length > 0) {
     const picked = await prisma.product.findMany({
-      where: { id: { in: featuredCms.productIds } },
-      include: { images: { orderBy: { sortOrder: "asc" } }, variants: true },
+      where: { id: { in: featuredCms.productIds }, ...publicCatalogWhere },
+      include: { images: { orderBy: { sortOrder: "asc" } }, variants: publicVariants() },
     });
     const order = new Map(featuredCms.productIds.map((id, i) => [id, i]));
     selectedFeatured = [...picked].sort(

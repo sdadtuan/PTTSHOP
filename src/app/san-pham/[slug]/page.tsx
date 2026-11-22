@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/product/product-card";
 import { ProductDetailClient } from "@/components/product/product-detail-client";
 import { ProductReviews } from "@/components/product/product-reviews";
+import { publicCatalogWhere, publicVariants } from "@/lib/catalog-visibility";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +14,7 @@ type Props = {
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
-  const product = await prisma.product.findUnique({ where: { slug } });
+  const product = await prisma.product.findFirst({ where: { slug, ...publicCatalogWhere } });
   if (!product) return { title: "Sản phẩm" };
   return {
     title: product.name,
@@ -24,10 +25,10 @@ export async function generateMetadata({ params }: Props) {
 export default async function ProductDetailPage({ params }: Props) {
   const { slug } = await params;
   const product = await prisma.product.findUnique({
-    where: { slug },
+    where: { slug, ...publicCatalogWhere },
     include: {
       images: { orderBy: { sortOrder: "asc" } },
-      variants: true,
+      variants: publicVariants(),
       category: true,
     },
   });
@@ -41,6 +42,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
   const related = await prisma.product.findMany({
     where: {
+      ...publicCatalogWhere,
       id: { not: product.id },
       OR: [
         { slug: { contains: "hoodie" } },
@@ -49,7 +51,7 @@ export default async function ProductDetailPage({ params }: Props) {
     },
     include: {
       images: { orderBy: { sortOrder: "asc" } },
-      variants: true,
+      variants: publicVariants(),
     },
     take: 4,
     orderBy: { updatedAt: "desc" },

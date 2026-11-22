@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { publicCatalogWhere } from "@/lib/catalog-visibility";
 import { prisma } from "@/lib/prisma";
 import { getStorefrontUi } from "@/lib/storefront/ui-copy";
 
@@ -10,6 +11,7 @@ export default async function CollectionsPage() {
   const collections = await prisma.collection.findMany({
     include: {
       products: {
+        where: { product: publicCatalogWhere },
         include: {
           product: {
             include: {

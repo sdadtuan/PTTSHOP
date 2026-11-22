@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import type { ProductSort } from "@/lib/validation";
+import { publicCatalogWhere } from "@/lib/catalog-visibility";
 
 export function productOrderBy(
   sort: ProductSort,
@@ -58,7 +59,7 @@ export function buildProductWhere(params: {
   q?: string;
   isNew?: boolean;
 }): Prisma.ProductWhereInput {
-  const where: Prisma.ProductWhereInput = {};
+  const where: Prisma.ProductWhereInput = { ...publicCatalogWhere };
   if (params.category) where.category = { slug: params.category };
   if (params.gender && ["MALE", "FEMALE", "UNISEX"].includes(params.gender)) {
     where.gender = params.gender as "MALE" | "FEMALE" | "UNISEX";

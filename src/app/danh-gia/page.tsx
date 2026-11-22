@@ -1,4 +1,5 @@
 import { ReviewsCatalogClient } from "@/components/reviews/reviews-catalog-client";
+import { publicCatalogWhere } from "@/lib/catalog-visibility";
 import { prisma } from "@/lib/prisma";
 import { listPublishedReviews } from "@/lib/reviews";
 import { getStorefrontPageBySlug } from "@/lib/storefront/pages";
@@ -18,7 +19,7 @@ export default async function ReviewsPage() {
     getStorefrontPageBySlug("danh-gia"),
     listPublishedReviews(prisma, { page: 1, pageSize: 12 }),
     prisma.product.findMany({
-      where: { reviews: { some: { isPublished: true } } },
+      where: { ...publicCatalogWhere, reviews: { some: { isPublished: true } } },
       select: { id: true, name: true, slug: true, categoryId: true, reviewCount: true },
       orderBy: { name: "asc" },
       take: 200,
