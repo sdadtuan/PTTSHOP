@@ -10,6 +10,7 @@ import {
 import { sendOrderConfirmationEmail } from "@/lib/mail";
 import { getPaymentProvider } from "@/lib/payments";
 import { prisma } from "@/lib/prisma";
+import { clientIp, recordConsents } from "@/lib/consent";
 import { emailSchema, phoneSchema } from "@/lib/validation";
 
 const bodySchema = z.object({
@@ -20,6 +21,14 @@ const bodySchema = z.object({
   note: z.string().max(500).optional(),
   paymentMethod: z.enum(["COD", "BANK_TRANSFER"]),
   couponCode: z.string().trim().max(40).optional().or(z.literal("")),
+  consents: z
+    .array(
+      z.object({
+        purpose: z.enum(["delivery", "invoice", "marketing"]),
+        granted: z.boolean(),
+      }),
+    )
+    .default([]),
   items: z
     .array(
       z.object({
@@ -159,6 +168,13 @@ export async function POST(req: Request) {
         await prisma.cartItem.deleteMany({ where: { cartId: guestCart.id } });
       }
     }
+
+    await recordConsents({
+      subject: order.customerEmail || order.customerPhone,
+      userId: session?.user?.id,
+      ip: clientIp(req),
+      grants: data.consents,
+    });
 
     void sendOrderConfirmationEmail({
       orderNumber: order.orderNumber,

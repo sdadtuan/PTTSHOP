@@ -430,3 +430,22 @@ model HomepageVersion {
   createdAt    DateTime @default(now())
   createdById  String?
 }
+
+model Consent {
+  id            String    @id @default(cuid())
+  subject       String
+  userId        String?
+  purpose       String
+  policyVersion String
+  granted       Boolean   @default(true)
+  ip            String?
+  kind          String    @default("grant")
+  requestType   String?
+  detail        String?
+  status        String    @default("recorded")
+  handledAt     DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([subject])
+  @@index([status])
+}

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/cart/cart-context";
 import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
+import { ConsentFields, consentsFromForm } from "@/components/legal/consent-fields";
 import { formatVnd } from "@/lib/format";
 
 export default function CheckoutPage() {
@@ -65,6 +66,7 @@ export default function CheckoutPage() {
       note: String(form.get("note") || ""),
       paymentMethod,
       couponCode: couponCode || undefined,
+      consents: consentsFromForm(form),
       items: items.map((i) => ({
         variantId: i.variantId,
         quantity: i.quantity,
@@ -200,6 +202,9 @@ export default function CheckoutPage() {
           {error ? (
             <p className="mt-3 text-sm text-red-600">{error}</p>
           ) : null}
+          <div className="mt-4">
+            <ConsentFields />
+          </div>
           <button
             type="submit"
             disabled={loading}

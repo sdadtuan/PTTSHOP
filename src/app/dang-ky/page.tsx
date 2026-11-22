@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
+import { ConsentFields, consentsFromForm } from "@/components/legal/consent-fields";
 
 export default function RegisterPage() {
   const a = useStorefrontUi().auth;
@@ -22,6 +23,7 @@ export default function RegisterPage() {
       email: String(form.get("email") || ""),
       password: String(form.get("password") || ""),
       phone: String(form.get("phone") || "") || undefined,
+      consents: consentsFromForm(form),
     };
 
     try {
@@ -61,6 +63,7 @@ export default function RegisterPage() {
         <Field label="Email" name="email" type="email" required />
         <Field label="Số điện thoại" name="phone" />
         <Field label="Mật khẩu" name="password" type="password" required />
+        <ConsentFields />
         {error ? <p className="text-sm text-red-600">{error}</p> : null}
         <button
           type="submit"

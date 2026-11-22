@@ -3,6 +3,7 @@ import { z } from "zod";
 import { handleApiError, jsonError, jsonOk } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
+import { clientIp, recordConsents } from "@/lib/consent";
 import { emailSchema, passwordSchema } from "@/lib/validation";
 
 const schema = z.object({
@@ -10,6 +11,14 @@ const schema = z.object({
   email: emailSchema,
   password: passwordSchema,
   phone: z.string().trim().max(20).optional(),
+  consents: z
+    .array(
+      z.object({
+        purpose: z.enum(["delivery", "invoice", "marketing"]),
+        granted: z.boolean(),
+      }),
+    )
+    .default([]),
 });
 
 export async function POST(req: Request) {
@@ -37,6 +46,13 @@ export async function POST(req: Request) {
         role: "CUSTOMER",
       },
       select: { id: true, email: true, name: true, role: true },
+    });
+
+    await recordConsents({
+      subject: email,
+      userId: user.id,
+      ip: clientIp(req),
+      grants: body.consents,
     });
 
     return jsonOk({ user }, { status: 201 });

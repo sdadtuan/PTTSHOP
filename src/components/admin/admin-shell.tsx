@@ -19,6 +19,7 @@ import {
   ImageIcon,
   PanelsTopLeft,
   FileText,
+  ShieldCheck,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
@@ -40,6 +41,7 @@ const nav = [
   { href: "/admin/customers", label: "Khách hàng", icon: Users },
   { href: "/admin/coupons", label: "Mã giảm", icon: TicketPercent },
   { href: "/admin/reviews", label: "Đánh giá", icon: Star },
+  { href: "/admin/yeu-cau-du-lieu", label: "Yêu cầu dữ liệu", icon: ShieldCheck },
 ];
 
 function isActive(pathname: string, href: string, exact?: boolean) {
