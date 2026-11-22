@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { COOKIE_CHOICE } from "@/lib/tracking";
 
@@ -14,13 +15,14 @@ function save(value: "essential" | "all") {
 }
 
 export function CookieBanner() {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
     setOpen(choice() === "");
   }, []);
 
-  if (!open) return null;
+  if (!open || pathname.startsWith("/admin")) return null;
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 border-t border-neutral-200 bg-white p-4 shadow-lg md:px-6">

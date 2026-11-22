@@ -27,7 +27,7 @@ test.describe("Admin login form", () => {
 
     expect(page.url()).not.toMatch(/password=/i);
     expect(page.url()).not.toContain(e2eAdmin().password);
-    await expect(page.getByRole("heading", { name: /Dashboard/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Tổng quan/i })).toBeVisible();
   });
 
   test("products list opens after login", async ({ page }) => {

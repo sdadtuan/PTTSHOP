@@ -1,3 +1,4 @@
+export { AdminFileInput } from "./file-input";
 export { AdminButton } from "./button";
 export { AdminInput, AdminTextarea } from "./input";
 export { AdminSelect } from "./select";

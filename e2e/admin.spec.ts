@@ -16,7 +16,7 @@ async function loginAdmin(page: import("@playwright/test").Page) {
 test.describe("Admin redesign", () => {
   test("admin can open dashboard, products, orders", async ({ page }) => {
     await loginAdmin(page);
-    await expect(page.getByRole("heading", { name: /Dashboard/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Tổng quan/i })).toBeVisible();
     const desktopNav = page.getByRole("navigation", { name: /Menu quản trị/i });
     if (await desktopNav.isVisible().catch(() => false)) {
       await expect(desktopNav).toBeVisible();
@@ -36,7 +36,7 @@ test.describe("Admin redesign", () => {
   test("admin shell is responsive on mobile viewport", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await loginAdmin(page);
-    await expect(page.getByRole("heading", { name: /Dashboard/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Tổng quan/i })).toBeVisible();
     await page.getByRole("button", { name: /Mở menu/i }).click();
     await expect(page.getByRole("navigation", { name: /Menu quản trị/i })).toBeVisible();
   });

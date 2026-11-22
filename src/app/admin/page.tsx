@@ -83,9 +83,9 @@ export default async function AdminPage() {
   return (
     <div>
       <AdminPageHeader
-        title="Dashboard"
+        title="Tổng quan"
         description={`Xin chào, ${session.user.name || session.user.email}`}
-        breadcrumbs={[{ href: "/admin", label: "Admin" }, { label: "Dashboard" }]}
+        breadcrumbs={[{ href: "/admin", label: "Admin" }, { label: "Tổng quan" }]}
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -99,15 +99,23 @@ export default async function AdminPage() {
         <AdminCard>
           <div className="mb-4 flex items-center justify-between gap-3">
             <h2 className="font-semibold">Doanh thu 14 ngày</h2>
-            <span className="text-xs text-[var(--admin-text-muted)]">Hover cột để xem chi tiết</span>
+            <span className="text-xs text-[var(--admin-text-muted)]">
+              {daily.some((d) => d.orders > 0) ? "Đưa chuột vào cột để xem chi tiết" : "Chưa có đơn chưa hủy trong 14 ngày"}
+            </span>
           </div>
+          {daily.some((d) => d.orders > 0) ? (
           <div className="flex h-52 items-end gap-1.5 rounded-[var(--admin-radius-md)] bg-[var(--admin-surface-muted)]/60 p-4">
             {daily.map((d) => (
-              <div key={d.date} className="group relative flex flex-1 flex-col items-center justify-end" title={`${d.date}: ${formatVnd(d.revenue)} · ${d.orders} đơn`}>
-                <div className="w-full rounded-t-md bg-gradient-to-t from-[var(--admin-accent-hover)] to-[var(--admin-accent)] transition group-hover:opacity-90" style={{ height: `${Math.max(6, (d.revenue / maxDayRevenue) * 100)}%` }} />
+              <div key={d.date} className="group relative flex h-full flex-1 flex-col items-center justify-end" title={`${d.date}: ${formatVnd(d.revenue)} · ${d.orders} đơn`}>
+                <div className="w-full rounded-t-md bg-gradient-to-t from-[var(--admin-accent-hover)] to-[var(--admin-accent)] transition group-hover:opacity-90" style={{ height: `${Math.max(8, Math.round((d.revenue / maxDayRevenue) * 160))}px` }} />
               </div>
             ))}
           </div>
+          ) : (
+            <p className="rounded-[var(--admin-radius-md)] bg-[var(--admin-surface-muted)]/60 px-4 py-10 text-sm text-[var(--admin-text-muted)]">
+              Chưa có doanh thu để vẽ. Cột sẽ hiện khi có đơn không bị hủy.
+            </p>
+          )}
           <div className="mt-4 overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead>

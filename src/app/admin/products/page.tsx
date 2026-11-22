@@ -11,9 +11,11 @@ import {
   AdminCard,
   AdminConfirmDialog,
   AdminEmptyState,
+  AdminFileInput,
   AdminInput,
   AdminPageHeader,
   AdminPagination,
+  AdminSelect,
   AdminTable,
   AdminTableSkeleton,
   AdminTd,
@@ -26,6 +28,7 @@ import {
   groupVariantsByColor,
   summarizeVariants,
 } from "@/lib/admin-product-summary";
+import { SALE_STATUS_LABEL, type SaleStatus } from "@/lib/catalog-visibility";
 import { formatVnd } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -46,6 +49,7 @@ type Product = {
   isFeatured: boolean;
   isNew: boolean;
   isBestSeller: boolean;
+  saleStatus?: SaleStatus;
   category?: { name: string } | null;
   variants: {
     id: string;
@@ -71,6 +75,7 @@ export default function AdminProductsPage() {
   const [videoBusy, setVideoBusy] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [q, setQ] = useState("");
+  const [status, setStatus] = useState<"ALL" | SaleStatus>("ALL");
   const [page, setPage] = useState(1);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -105,14 +110,16 @@ export default function AdminProductsPage() {
 
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase();
-    if (!query) return products;
-    return products.filter(
-      (p) =>
+    return products.filter((p) => {
+      if (status !== "ALL" && (p.saleStatus || "SELLING") !== status) return false;
+      if (!query) return true;
+      return (
         p.name.toLowerCase().includes(query) ||
         p.slug.toLowerCase().includes(query) ||
-        (p.category?.name || "").toLowerCase().includes(query),
-    );
-  }, [products, q]);
+        (p.category?.name || "").toLowerCase().includes(query)
+      );
+    });
+  }, [products, q, status]);
 
   const paged = paginate(filtered, page, 8);
 
@@ -267,15 +274,30 @@ export default function AdminProductsPage() {
       />
 
       <AdminCard className="mb-4">
-        <AdminInput
-          label="Tìm kiếm"
-          value={q}
-          onChange={(e) => {
-            setQ(e.target.value);
-            setPage(1);
-          }}
-          placeholder="Tên, slug, danh mục…"
-        />
+        <div className="grid gap-3 sm:grid-cols-[1fr_220px]">
+          <AdminInput
+            label="Tìm kiếm"
+            value={q}
+            onChange={(e) => {
+              setQ(e.target.value);
+              setPage(1);
+            }}
+            placeholder="Tên, slug, danh mục…"
+          />
+          <AdminSelect
+            label="Trạng thái bán"
+            value={status}
+            onChange={(e) => {
+              setStatus(e.target.value as "ALL" | SaleStatus);
+              setPage(1);
+            }}
+          >
+            <option value="ALL">Tất cả</option>
+            {Object.entries(SALE_STATUS_LABEL).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </AdminSelect>
+        </div>
       </AdminCard>
 
       {error ? (
@@ -319,10 +341,10 @@ export default function AdminProductsPage() {
               }}
             >
               <p className="text-sm">Kéo-thả hoặc chọn video MP4/WebM</p>
-              <input
-                type="file"
+              <AdminFileInput
+                label="Chọn video"
                 accept="video/mp4,video/webm"
-                className="mt-2 block text-sm"
+                className="mt-2"
                 data-testid="admin-manage-video-file"
                 disabled={videoBusy}
                 onChange={(e) => {
@@ -429,6 +451,7 @@ export default function AdminProductsPage() {
                 <AdminTh className="w-10" />
                 <AdminTh>Sản phẩm</AdminTh>
                 <AdminTh>Danh mục</AdminTh>
+                <AdminTh>Trạng thái bán</AdminTh>
                 <AdminTh>Tóm tắt</AdminTh>
                 <AdminTh>Thẻ</AdminTh>
                 <AdminTh />
@@ -497,6 +520,7 @@ export default function AdminProductsPage() {
                         </div>
                       </AdminTd>
                       <AdminTd>{p.category?.name ?? "—"}</AdminTd>
+                      <AdminTd>{SALE_STATUS_LABEL[(p.saleStatus || "SELLING") as SaleStatus] || p.saleStatus}</AdminTd>
                       <AdminTd>
                         <div className="space-y-0.5 text-xs text-[var(--admin-text-muted)]">
                           <p>
@@ -564,7 +588,7 @@ export default function AdminProductsPage() {
                         className="border-b border-[var(--admin-border)]/70 bg-[var(--admin-surface-muted)]/60"
                         data-testid={`product-expand-${p.slug}`}
                       >
-                        <td colSpan={6} className="px-4 py-4">
+                        <td colSpan={7} className="px-4 py-4">
                           {p.variants.length === 0 ? (
                             <p className="text-sm text-[var(--admin-text-muted)]">
                               Chưa có biến thể Màu × Size.

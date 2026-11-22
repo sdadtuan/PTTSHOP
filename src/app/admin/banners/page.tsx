@@ -6,6 +6,7 @@ import {
   AdminButton,
   AdminCard,
   AdminEmptyState,
+  AdminFileInput,
   AdminInput,
   AdminPageHeader,
   AdminTableSkeleton,
@@ -199,13 +200,12 @@ export default function AdminBannersPage() {
         <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
           <div className="space-y-3">
             <label className="block space-y-1.5 text-sm">
-              <span className="font-medium">Upload ảnh lớn</span>
-              <input
-                type="file"
+              <span className="font-medium">Tải ảnh lớn</span>
+              <AdminFileInput
+                label="Chọn ảnh"
                 accept="image/jpeg,image/png,image/webp,image/gif"
                 data-testid="admin-banner-upload"
                 disabled={busy}
-                className="block w-full rounded-[var(--admin-radius-md)] border border-dashed border-[var(--admin-border-strong)] bg-[var(--admin-surface-muted)] px-4 py-6 text-sm"
                 onChange={(e) => {
                   const f = e.target.files?.[0];
                   if (f) void uploadFile(f);

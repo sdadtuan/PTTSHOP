@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AdminButton, AdminPageHeader } from "@/components/admin/ui";
+import { AdminButton, AdminFileInput, AdminPageHeader } from "@/components/admin/ui";
 
 type Issue = { row: number; field: string; message: string };
 type Summary = {
@@ -80,8 +80,8 @@ export default function ImportProductsPage() {
       <div className="grid max-w-3xl gap-4 rounded-[var(--admin-radius-md)] border border-[var(--admin-border)] bg-white p-4">
         <label className="grid gap-1 text-sm">
           File CSV hoặc Excel
-          <input
-            type="file"
+          <AdminFileInput
+            label="Chọn file"
             accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             onChange={(e) => {
               setSheet(e.target.files?.[0] || null);
@@ -91,8 +91,8 @@ export default function ImportProductsPage() {
         </label>
         <label className="grid gap-1 text-sm">
           Ảnh: file zip hoặc nhiều file
-          <input
-            type="file"
+          <AdminFileInput
+            label="Chọn ảnh hoặc zip"
             accept=".zip,image/jpeg,image/png,image/webp,image/avif,image/gif"
             multiple
             onChange={(e) => {
@@ -103,11 +103,11 @@ export default function ImportProductsPage() {
         </label>
         <label className="grid gap-1 text-sm">
           Hoặc cả thư mục ảnh
-          <input
-            type="file"
+          <AdminFileInput
+            label="Chọn thư mục"
+            directory
             accept="image/jpeg,image/png,image/webp,image/avif,image/gif"
             multiple
-            ref={(node) => node?.setAttribute("webkitdirectory", "")}
             onChange={(e) => {
               setImages([...(e.target.files || [])]);
               setReady(false);
