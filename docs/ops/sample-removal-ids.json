@@ -1,0 +1,46 @@
+{
+  "users-demo": {
+    "table": "User",
+    "action": "giu-khoa",
+    "ids": ["cmwpxkjeu0000h28s71d3bk0s", "cmwpxkjio0001h28s0u23vf8j"]
+  },
+  "products": {
+    "table": "Product",
+    "action": "an",
+    "ids": [
+      "cmwpxkjl0000bh28sv33h87mo",
+      "cmwpxkjoj001ch28sb0dz5cwc",
+      "cmwpxkjqi0024h28s5sqt4pg0",
+      "cmwpxkjtc002wh28s5sa607py",
+      "cmwpxkjzr004eh28s1tzd500u",
+      "cmwpxkk1e004uh28s29cd4aow",
+      "cmwpxkk2i0059h28svmvh5gzo",
+      "cmwpxkk5y0061h28sbrvngtvp",
+      "cmwpxkka9006sh28sj60nhdqe",
+      "cmwpxkkbm0071h28s0bn7jkvi",
+      "cmwpxkkcv0078h28ssli06igt",
+      "cmwpxkkfs007rh28s858shnmy"
+    ]
+  },
+  "categories": {
+    "table": "Category",
+    "action": "an",
+    "ids": [
+      "cmwpxkjiy0002h28sx4qo9trh",
+      "cmwpxkjja0003h28sh1ces1fl",
+      "cmwpxkjjr0004h28sriqsb8vf",
+      "cmwpxkjjw0005h28sq7rsvpl8",
+      "cmwpxkjk10006h28sy38jb4yo"
+    ]
+  },
+  "collections": {
+    "table": "Collection",
+    "action": "an",
+    "ids": ["cmwpxkjk60007h28syg84sor7"]
+  },
+  "coupons": {
+    "table": "Coupon",
+    "action": "khoa",
+    "ids": ["cmwpxkjku0009h28szfs24bak"]
+  }
+}
