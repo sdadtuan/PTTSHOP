@@ -20,7 +20,7 @@ Bản nháp ngày 22/11/2026. Chưa nộp. Mẫu tờ khai chính thức là [c�
 - Giá: niêm yết trên website, đã gồm VAT
 - Vận chuyển: hãng [cần chốt], thời gian [cần chốt], ngưỡng miễn phí [cần chốt]
 - Thanh toán: COD và chuyển khoản. Cổng thanh toán trực tuyến: [cần chốt]
-- Đổi trả: [cần chốt] ngày. Đề xuất đang xét: 7 ngày
+- Đổi trả: 7 ngày kể từ khi nhận
 
 ## Điều kiện trước khi nhận đơn thật
 

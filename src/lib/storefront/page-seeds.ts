@@ -62,7 +62,7 @@ export const STOREFRONT_PAGE_SEEDS: StorefrontPageSeed[] = [
     slug: "ho-tro/doi-tra",
     title: "Đổi trả",
     body: [
-      "Đổi size/màu trong 30 ngày nếu còn tem và chưa qua sử dụng.",
+      "Đổi size hoặc màu trong 7 ngày nếu còn tem và chưa qua sử dụng.",
       "Liên hệ email [cần chốt] kèm mã đơn để được hỗ trợ.",
     ],
     sortOrder: 11,
