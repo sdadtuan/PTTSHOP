@@ -1,27 +1,24 @@
 import * as XLSX from "xlsx";
+import { colorNameToHex } from "@/lib/color-names";
+import { slugify } from "@/lib/slug";
 
 export const IMPORT_COLUMNS = [
-  "slug",
-  "name",
-  "category_slug",
-  "category_name",
-  "gender",
-  "description",
-  "material",
-  "color",
-  "color_hex",
-  "size",
   "sku",
-  "price",
-  "compare_at",
-  "cost_price",
+  "product_slug",
+  "product_name",
+  "category",
+  "description",
+  "size",
+  "color",
+  "price_vnd",
+  "compare_at_price_vnd",
+  "cost_vnd",
   "stock",
   "image_file",
-  "sale_status",
+  "status",
 ] as const;
 
 export type ImportColumn = (typeof IMPORT_COLUMNS)[number];
-export type ImportMode = "demo" | "catalog";
 
 export type ImportIssue = {
   row: number;
@@ -42,6 +39,8 @@ export type ImportVariant = {
   imageFile: string;
 };
 
+export type SaleStatus = "DRAFT" | "SELLING" | "HIDDEN" | "DISCONTINUED";
+
 export type ImportProduct = {
   slug: string;
   name: string;
@@ -49,21 +48,17 @@ export type ImportProduct = {
   categoryName: string;
   gender: "MALE" | "FEMALE" | "UNISEX";
   description: string | null;
-  material: string | null;
-  saleStatus: "DRAFT" | "SELLING" | "HIDDEN" | "DISCONTINUED";
+  saleStatus: SaleStatus;
   variants: ImportVariant[];
 };
 
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const DEMO_SLUG_RE = /^demo-[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const SKU_RE = /^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$/;
-const DEMO_SKU_RE = /^DEMO-[A-Z0-9]+(?:-[A-Z0-9]+)*$/;
-const HEX_RE = /^#[0-9A-Fa-f]{6}$/;
 
 export function templateCsv(): string {
   const header = IMPORT_COLUMNS.join(",");
   const note =
-    "# Dòng bắt đầu bằng # bị bỏ qua. Mỗi dòng là một biến thể. Cùng slug = cùng sản phẩm. Ảnh là tên file tải kèm, không phải link.";
+    "# Dòng bắt đầu bằng # bị bỏ qua. Mỗi dòng là một biến thể. Cùng product_slug = cùng sản phẩm. image_file là tên file trong zip hoặc thư mục ảnh, không phải link.";
   return `\uFEFF${header}\n${note}\n`;
 }
 
@@ -74,7 +69,9 @@ export function parseSpreadsheet(input: { name: string; bytes: Uint8Array }): st
   }
   if (lower.endsWith(".xlsx")) {
     const book = XLSX.read(input.bytes, { type: "array" });
-    const sheet = book.Sheets[book.SheetNames[0]];
+    const sheetName =
+      book.SheetNames.find((name) => name.trim().toLowerCase() === "bien the") || book.SheetNames[0];
+    const sheet = sheetName ? book.Sheets[sheetName] : undefined;
     if (!sheet) return [];
     const rows = XLSX.utils.sheet_to_json<(string | number | null)[]>(sheet, {
       header: 1,
@@ -132,150 +129,121 @@ export function parseCsv(text: string): string[][] {
   return rows;
 }
 
-function genderOf(raw: string): "MALE" | "FEMALE" | "UNISEX" | null {
+function genderOf(category: string, name: string): "MALE" | "FEMALE" | "UNISEX" {
+  const text = `${category} ${name}`;
+  if (/(^|[^\p{L}])nữ([^\p{L}]|$)/iu.test(text)) return "FEMALE";
+  if (/(^|[^\p{L}])nam([^\p{L}]|$)/iu.test(text)) return "MALE";
+  return "UNISEX";
+}
+
+function statusOf(raw: string): SaleStatus | null {
   const v = raw.trim().toLowerCase();
-  if (!v || v === "unisex" || v === "chung") return "UNISEX";
-  if (v === "male" || v === "nam" || v === "m") return "MALE";
-  if (v === "female" || v === "nu" || v === "nữ" || v === "f") return "FEMALE";
+  if (!v || v === "active" || v === "selling" || v === "dang ban" || v === "đang bán") return "SELLING";
+  if (v === "draft" || v === "nhap" || v === "nháp") return "DRAFT";
+  if (v === "hidden" || v === "an" || v === "ẩn" || v === "tam an" || v === "tạm ẩn") return "HIDDEN";
+  if (v === "discontinued" || v === "ngung" || v === "ngừng bán") return "DISCONTINUED";
   return null;
 }
 
-function money(raw: string): number | null {
-  const v = raw.trim().replace(/\s/g, "");
-  if (!/^\d+$/.test(v)) return null;
+function money(raw: string, allowEmpty: boolean): { ok: true; value: number | null } | { ok: false; message: string } {
+  const v = raw.trim().replace(/\s/g, "").replace(/[.,](?=\d{3}(\D|$))/g, "");
+  if (!v) {
+    if (allowEmpty) return { ok: true, value: null };
+    return { ok: false, message: "Thiếu số tiền" };
+  }
+  if (v.startsWith("-")) return { ok: false, message: "Không nhận giá âm" };
+  if (!/^\d+$/.test(v)) return { ok: false, message: "Phải là số nguyên, đơn vị đồng" };
   const n = Number(v);
-  if (!Number.isSafeInteger(n) || n <= 0) return null;
-  return n;
+  if (!Number.isSafeInteger(n) || n <= 0) return { ok: false, message: "Phải là số nguyên dương" };
+  return { ok: true, value: n };
 }
 
-function stockOf(raw: string): number | null {
+function stockOf(raw: string): { ok: true; value: number } | { ok: false; message: string } {
   const v = raw.trim();
-  if (!/^\d+$/.test(v)) return null;
+  if (v.startsWith("-")) return { ok: false, message: "Không nhận tồn âm" };
+  if (!/^\d+$/.test(v)) return { ok: false, message: "Tồn kho phải là số nguyên từ 0 trở lên" };
   const n = Number(v);
-  if (!Number.isSafeInteger(n) || n < 0) return null;
-  return n;
+  if (!Number.isSafeInteger(n)) return { ok: false, message: "Tồn kho không hợp lệ" };
+  return { ok: true, value: n };
+}
+
+function sizeOf(raw: string): string {
+  const v = raw.trim();
+  if (/^free\s*size$/i.test(v) || v.toUpperCase() === "FS") return "Free size";
+  return v.toUpperCase();
 }
 
 export function validateCatalogSheet(
   grid: string[][],
-  opts: { mode: ImportMode; fileNames: Set<string> },
+  opts: { fileNames: Set<string> },
 ): { issues: ImportIssue[]; products: ImportProduct[] } {
   const issues: ImportIssue[] = [];
   if (grid.length === 0) {
     return { issues: [{ row: 1, field: "file", message: "File trống" }], products: [] };
   }
-  const header = grid[0].map((h) => h.trim().toLowerCase());
+  const header = grid[0].map((cell) => cell.trim().toLowerCase());
   const index = new Map<string, number>();
   header.forEach((name, i) => {
     if (name) index.set(name, i);
   });
-  for (const col of ["slug", "name", "category_slug", "color", "color_hex", "size", "sku", "price", "stock", "image_file"]) {
-    if (!index.has(col)) {
-      issues.push({ row: 1, field: col, message: `Thiếu cột ${col}` });
-    }
+  for (const col of IMPORT_COLUMNS) {
+    if (!index.has(col)) issues.push({ row: 1, field: col, message: `Thiếu cột ${col}` });
   }
   if (issues.length) return { issues, products: [] };
 
   const products = new Map<string, ImportProduct>();
   const skus = new Map<string, number>();
+  const get = (cells: string[], col: ImportColumn) => {
+    const at = index.get(col);
+    return at === undefined ? "" : (cells[at] || "").trim();
+  };
 
   grid.forEach((cells, idx) => {
     const row = idx + 1;
     if (row === 1) return;
-    const first = (cells[0] || "").trim();
-    if (cells.every((c) => !c.trim()) || first.startsWith("#")) return;
+    if (cells.every((cell) => !cell.trim()) || (cells[0] || "").trim().startsWith("#")) return;
+    if (!get(cells, "product_slug") && !get(cells, "product_name") && !get(cells, "price_vnd")) return;
 
-    const get = (col: ImportColumn) => {
-      const at = index.get(col);
-      return at === undefined ? "" : (cells[at] || "").trim();
-    };
+    const sku = get(cells, "sku").toUpperCase();
+    const slug = get(cells, "product_slug").toLowerCase();
+    const name = get(cells, "product_name");
+    const categoryName = get(cells, "category");
+    const description = get(cells, "description");
+    const size = sizeOf(get(cells, "size"));
+    const color = get(cells, "color");
+    const imageFile = get(cells, "image_file").split(/[/\\]/).pop() || "";
+    const saleStatus = statusOf(get(cells, "status"));
+    const price = money(get(cells, "price_vnd"), false);
+    const compareAt = money(get(cells, "compare_at_price_vnd"), true);
+    const cost = money(get(cells, "cost_vnd"), true);
+    const stock = stockOf(get(cells, "stock"));
+    const colorHex = colorNameToHex(color);
 
-    const slug = get("slug").toLowerCase();
-    const name = get("name");
-    const categorySlug = get("category_slug").toLowerCase();
-    const categoryName = get("category_name");
-    const gender = genderOf(get("gender"));
-    const color = get("color");
-    const colorHex = get("color_hex").toUpperCase();
-    const size = get("size").toUpperCase();
-    const sku = get("sku").toUpperCase();
-    const price = money(get("price"));
-    const compareRaw = get("compare_at");
-    const costRaw = get("cost_price");
-    const stock = stockOf(get("stock"));
-    const imageFile = get("image_file");
-    const statusRaw = get("sale_status").toUpperCase();
-    const saleStatus = (statusRaw || "SELLING") as ImportProduct["saleStatus"];
-
-    if (opts.mode === "demo") {
-      if (!DEMO_SLUG_RE.test(slug)) {
-        issues.push({ row, field: "slug", message: "Chế độ DEMO chỉ nhận slug bắt đầu bằng demo-" });
-      }
-      if (!DEMO_SKU_RE.test(sku)) {
-        issues.push({ row, field: "sku", message: "Chế độ DEMO chỉ nhận SKU bắt đầu bằng DEMO-" });
-      }
-    } else {
-      if (!SLUG_RE.test(slug)) issues.push({ row, field: "slug", message: "Slug chỉ gồm chữ thường, số và dấu -" });
-      if (!SKU_RE.test(sku)) issues.push({ row, field: "sku", message: "SKU chỉ gồm chữ, số và dấu -" });
+    if (!SKU_RE.test(sku)) issues.push({ row, field: "sku", message: "Thiếu SKU hoặc SKU có ký tự không hợp lệ" });
+    if (!SLUG_RE.test(slug)) issues.push({ row, field: "product_slug", message: "Slug chỉ gồm chữ thường, số và dấu -" });
+    if (name.length < 2) issues.push({ row, field: "product_name", message: "Thiếu tên sản phẩm" });
+    if (categoryName.length < 2) issues.push({ row, field: "category", message: "Thiếu danh mục" });
+    if (!size || size.length > 12 || /[/,;]/.test(size)) {
+      issues.push({ row, field: "size", message: "Mỗi size một dòng, tối đa 12 ký tự, không dùng / hoặc ," });
     }
-    if (name.length < 2) issues.push({ row, field: "name", message: "Thiếu tên sản phẩm" });
-    if (!SLUG_RE.test(categorySlug)) issues.push({ row, field: "category_slug", message: "Thiếu slug danh mục" });
-    if (!gender) issues.push({ row, field: "gender", message: "Giới tính: nam, nữ hoặc unisex" });
     if (!color) issues.push({ row, field: "color", message: "Thiếu tên màu" });
-    if (!HEX_RE.test(colorHex)) issues.push({ row, field: "color_hex", message: "Mã màu phải dạng #RRGGBB" });
-    if (!size || /[/,;]/.test(size)) issues.push({ row, field: "size", message: "Mỗi size một dòng, không dùng / hoặc ," });
-    if (price === null) issues.push({ row, field: "price", message: "Giá bán phải là số nguyên dương, đơn vị đồng" });
-    let compareAt: number | null = null;
-    if (compareRaw) {
-      compareAt = money(compareRaw);
-      if (compareAt === null) issues.push({ row, field: "compare_at", message: "Giá gốc phải là số nguyên dương hoặc để trống" });
-    }
-    let costPrice: number | null = null;
-    if (costRaw) {
-      costPrice = money(costRaw);
-      if (costPrice === null) issues.push({ row, field: "cost_price", message: "Giá vốn phải là số nguyên dương hoặc để trống" });
-    }
-    if (stock === null) issues.push({ row, field: "stock", message: "Tồn kho phải là số nguyên từ 0 trở lên" });
-    if (!["DRAFT", "SELLING", "HIDDEN", "DISCONTINUED"].includes(saleStatus)) {
-      issues.push({ row, field: "sale_status", message: "Trạng thái: DRAFT, SELLING, HIDDEN hoặc DISCONTINUED" });
-    }
-    if (/^https?:/i.test(imageFile)) {
-      issues.push({ row, field: "image_file", message: "Không nhận link ảnh. Hãy tải file ảnh kèm theo." });
-    } else if (!imageFile || /[/\\]/.test(imageFile) || imageFile.includes("..")) {
-      issues.push({ row, field: "image_file", message: "Ảnh phải là tên file tải kèm, không có đường dẫn" });
+    else if (!colorHex) issues.push({ row, field: "color", message: `Không nhận ra màu "${color}"` });
+    if (!price.ok) issues.push({ row, field: "price_vnd", message: price.message });
+    if (!compareAt.ok) issues.push({ row, field: "compare_at_price_vnd", message: compareAt.message });
+    if (!cost.ok) issues.push({ row, field: "cost_vnd", message: cost.message });
+    if (!stock.ok) issues.push({ row, field: "stock", message: stock.message });
+    if (!saleStatus) issues.push({ row, field: "status", message: "Trạng thái: active, draft, hidden hoặc discontinued" });
+    if (!imageFile || imageFile.includes("..")) {
+      issues.push({ row, field: "image_file", message: "Thiếu tên file ảnh" });
+    } else if (/^https?:/i.test(imageFile)) {
+      issues.push({ row, field: "image_file", message: "Không nhận link ảnh. Hãy tải zip hoặc thư mục ảnh." });
     } else if (!opts.fileNames.has(imageFile)) {
-      issues.push({ row, field: "image_file", message: `Chưa thấy file ảnh ${imageFile}` });
+      issues.push({ row, field: "image_file", message: `Thiếu file ảnh ${imageFile}` });
     }
+    if (skus.has(sku)) issues.push({ row, field: "sku", message: `SKU trùng dòng ${skus.get(sku)}` });
+    else if (sku) skus.set(sku, row);
 
-    if (skus.has(sku)) {
-      issues.push({ row, field: "sku", message: `SKU trùng dòng ${skus.get(sku)}` });
-    } else if (sku) {
-      skus.set(sku, row);
-    }
-
-    const prev = products.get(slug);
-    if (prev) {
-      if (prev.name !== name) issues.push({ row, field: "name", message: "Cùng slug nhưng tên khác nhau" });
-      if (prev.categorySlug !== categorySlug) issues.push({ row, field: "category_slug", message: "Cùng slug nhưng danh mục khác nhau" });
-      if (gender && prev.gender !== gender) issues.push({ row, field: "gender", message: "Cùng slug nhưng giới tính khác nhau" });
-      if (prev.saleStatus !== saleStatus) issues.push({ row, field: "sale_status", message: "Cùng slug nhưng trạng thái khác nhau" });
-      const dup = prev.variants.some((v) => v.color.toLowerCase() === color.toLowerCase() && v.size === size);
-      if (dup) issues.push({ row, field: "size", message: `Trùng màu + size: ${color} / ${size}` });
-      const hex = prev.variants.find((v) => v.color.toLowerCase() === color.toLowerCase());
-      if (hex && hex.colorHex !== colorHex) issues.push({ row, field: "color_hex", message: `Màu ${color} có hai mã khác nhau` });
-    }
-
-    if (
-      !slug ||
-      price === null ||
-      stock === null ||
-      !gender ||
-      !HEX_RE.test(colorHex) ||
-      !color ||
-      !size
-    ) {
-      return;
-    }
+    if (!slug || !price.ok || !stock.ok || !saleStatus || !colorHex || !size) return;
 
     const variant: ImportVariant = {
       row,
@@ -283,27 +251,32 @@ export function validateCatalogSheet(
       colorHex,
       size,
       sku,
-      price,
-      compareAt,
-      costPrice,
-      stock,
+      price: price.value!,
+      compareAt: compareAt.ok ? compareAt.value : null,
+      costPrice: cost.ok ? cost.value : null,
+      stock: stock.value,
       imageFile,
     };
+    const prev = products.get(slug);
     if (!prev) {
       products.set(slug, {
         slug,
         name,
-        categorySlug,
+        categorySlug: slugify(categoryName),
         categoryName,
-        gender,
-        description: get("description") || null,
-        material: get("material") || null,
+        gender: genderOf(categoryName, name),
+        description: description || null,
         saleStatus,
         variants: [variant],
       });
-    } else {
-      prev.variants.push(variant);
+      return;
     }
+    if (prev.name !== name) issues.push({ row, field: "product_name", message: "Cùng slug nhưng tên khác nhau" });
+    if (prev.categoryName !== categoryName) issues.push({ row, field: "category", message: "Cùng slug nhưng danh mục khác nhau" });
+    if (prev.saleStatus !== saleStatus) issues.push({ row, field: "status", message: "Cùng slug nhưng trạng thái khác nhau" });
+    const dup = prev.variants.some((item) => item.color.toLowerCase() === color.toLowerCase() && item.size === size);
+    if (dup) issues.push({ row, field: "size", message: `Trùng màu + size: ${color} / ${size}` });
+    prev.variants.push(variant);
   });
 
   return { issues, products: [...products.values()] };

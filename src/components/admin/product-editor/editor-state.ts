@@ -25,6 +25,7 @@ export type EditorSize = {
   size: string;
   price: number;
   compareAt: number | null;
+  costPrice?: number | null;
   stock: number;
 };
 
@@ -57,6 +58,7 @@ export type ApiProduct = {
     size: string;
     price: number;
     compareAt?: number | null;
+    costPrice?: number | null;
     stock: number;
   }[];
 };
@@ -103,7 +105,15 @@ export function colorsFromApi(p: ApiProduct): EditorColor[] {
       };
       map.set(v.color, c);
     }
-    c.sizes.push({ key: v.id, id: v.id, size: v.size, price: v.price, compareAt: v.compareAt ?? null, stock: v.stock });
+    c.sizes.push({
+      key: v.id,
+      id: v.id,
+      size: v.size,
+      price: v.price,
+      compareAt: v.compareAt ?? null,
+      costPrice: v.costPrice ?? null,
+      stock: v.stock,
+    });
   }
   const list = [...map.values()];
   list.forEach((c) => c.sizes.sort((a, b) => sizeRank(a.size) - sizeRank(b.size)));
@@ -161,6 +171,7 @@ export function buildSavePayload(
         size: s.size.trim(),
         price: Math.round(s.price),
         compareAt: s.compareAt ? Math.round(s.compareAt) : null,
+        costPrice: s.costPrice ? Math.round(s.costPrice) : null,
         stock: Math.max(0, Math.round(s.stock)),
       })),
     ),
@@ -204,6 +215,7 @@ export function splitColorEntry(c: EditorColor): EditorColor[] {
         size: s.size,
         price: s.price,
         compareAt: s.compareAt,
+        costPrice: s.costPrice ?? null,
         stock: base + extra,
       };
     }),

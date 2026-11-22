@@ -61,6 +61,7 @@ type Info = {
   material: string;
   fit: string;
   gender: "MALE" | "FEMALE" | "UNISEX";
+  saleStatus: "DRAFT" | "SELLING" | "HIDDEN" | "DISCONTINUED";
   categoryId: string;
   isFeatured: boolean;
   isNew: boolean;
@@ -87,6 +88,7 @@ const EMPTY_INFO: Info = {
   material: "",
   fit: "",
   gender: "UNISEX",
+  saleStatus: "SELLING",
   categoryId: "",
   isFeatured: false,
   isNew: true,
@@ -145,6 +147,7 @@ export function ProductEditor({ productId }: { productId?: string }) {
       material: p.material || "",
       fit: p.fit || "",
       gender: (p.gender as Info["gender"]) || "UNISEX",
+      saleStatus: (p.saleStatus as Info["saleStatus"]) || "SELLING",
       categoryId: p.categoryId || "",
       isFeatured: Boolean(p.isFeatured),
       isNew: Boolean(p.isNew),
@@ -349,6 +352,7 @@ export function ProductEditor({ productId }: { productId?: string }) {
         material: info.material || null,
         fit: info.fit || null,
         gender: info.gender,
+        saleStatus: info.saleStatus,
         categoryId: info.categoryId || null,
         isFeatured: info.isFeatured,
         isNew: info.isNew,
@@ -541,6 +545,17 @@ export function ProductEditor({ productId }: { productId?: string }) {
               <option value="UNISEX">Unisex</option>
               <option value="MALE">Nam</option>
               <option value="FEMALE">Nữ</option>
+            </AdminSelect>
+            <AdminSelect
+              name="saleStatus"
+              label="Trạng thái bán"
+              value={info.saleStatus}
+              onChange={(e) => setInfo((p) => ({ ...p, saleStatus: e.target.value as Info["saleStatus"] }))}
+            >
+              <option value="DRAFT">Nháp</option>
+              <option value="SELLING">Đang bán</option>
+              <option value="HIDDEN">Tạm ẩn</option>
+              <option value="DISCONTINUED">Ngừng bán</option>
             </AdminSelect>
             <AdminInput
               name="material"
@@ -957,6 +972,7 @@ export function ProductEditor({ productId }: { productId?: string }) {
                         <th className="py-1 pr-2 font-medium">Size</th>
                         <th className="py-1 pr-2 font-medium">Giá (đ)</th>
                         <th className="py-1 pr-2 font-medium">Giá gốc</th>
+                        <th className="py-1 pr-2 font-medium">Giá vốn</th>
                         <th className="py-1 pr-2 font-medium">Tồn kho</th>
                         <th />
                       </tr>
@@ -994,6 +1010,18 @@ export function ProductEditor({ productId }: { productId?: string }) {
                               }
                               className="w-28 rounded border border-[var(--admin-border)] px-2 py-1"
                               aria-label={`Giá gốc ${c.name} ${s.size}`}
+                            />
+                          </td>
+                          <td className="py-1 pr-2">
+                            <input
+                              type="number"
+                              min={0}
+                              value={s.costPrice ?? ""}
+                              onChange={(e) =>
+                                patchSize(c.key, s.key, { costPrice: e.target.value ? Number(e.target.value) : null })
+                              }
+                              className="w-28 rounded border border-[var(--admin-border)] px-2 py-1"
+                              aria-label={`Giá vốn ${c.name} ${s.size}`}
                             />
                           </td>
                           <td className="py-1 pr-2">

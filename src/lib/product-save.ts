@@ -46,6 +46,7 @@ export const variantInputSchema = z.object({
     .refine((s) => !/[\/,;]/.test(s), "Mỗi size phải nhập riêng (không dùng / hoặc ,)"),
   price: z.number().int().positive(),
   compareAt: z.number().int().positive().optional().nullable(),
+  costPrice: z.number().int().positive().optional().nullable(),
   stock: z.number().int().nonnegative(),
 });
 
@@ -74,6 +75,7 @@ export const productSaveSchema = z
       .optional(),
     shippingBullets: z.union([z.array(z.string().max(2000)).max(30), z.null()]).optional(),
     gender: z.enum(["MALE", "FEMALE", "UNISEX"]).default("UNISEX"),
+    saleStatus: z.enum(["DRAFT", "SELLING", "HIDDEN", "DISCONTINUED"]).optional(),
     categoryId: z.string().optional().nullable(),
     isFeatured: z.boolean().optional(),
     isNew: z.boolean().optional(),
@@ -170,6 +172,7 @@ export async function saveProductFull(
       isFeatured: input.isFeatured ?? false,
       isNew: input.isNew ?? false,
       isBestSeller: input.isBestSeller ?? false,
+      ...(input.saleStatus ? { saleStatus: input.saleStatus } : {}),
       ...(input.origin !== undefined ? { origin: plainOrNull(input.origin) } : {}),
       ...(input.thickness !== undefined ? { thickness: plainOrNull(input.thickness) } : {}),
       ...(input.detailBullets !== undefined ? { detailBulletsJson: bulletsToJson(input.detailBullets) } : {}),
@@ -251,6 +254,7 @@ export async function saveProductFull(
         size: v.size,
         price: v.price,
         compareAt: v.compareAt || null,
+        ...(v.costPrice !== undefined ? { costPrice: v.costPrice } : {}),
         stock: v.stock,
       };
       if (v.id) {

@@ -1,3 +1,5 @@
+import type { PrismaClient } from "@prisma/client";
+
 export type DemoRemovalRow = {
   slug: string;
   skus: string[];
@@ -31,3 +33,60 @@ export function planDemoRemoval(row: DemoRemovalRow): DemoRemovalPlan {
   }
   return { action: "delete" };
 }
+
+export async function inspectDemoCatalog(prisma: PrismaClient) {
+  const products = await prisma.product.findMany({
+    where: {
+      OR: [{ slug: { startsWith: "demo-" } }, { variants: { some: { sku: { startsWith: "DEMO-" } } } }],
+    },
+    select: { id: true, slug: true, variants: { select: { id: true, sku: true } } },
+    orderBy: { slug: "asc" },
+  });
+  const rows = [];
+  for (const product of products) {
+    const items = product.variants.length
+      ? await prisma.orderItem.findMany({
+          where: { variantId: { in: product.variants.map((variant) => variant.id) } },
+          select: {
+            orderId: true,
+            order: {
+              select: {
+                note: true,
+                items: { select: { variant: { select: { sku: true, product: { select: { slug: true } } } } } },
+              },
+            },
+          },
+        })
+      : [];
+    const orderIds = [...new Set(items.map((item) => item.orderId))];
+    const plan = planDemoRemoval({
+      slug: product.slug,
+      skus: product.variants.map((variant) => variant.sku),
+      orderNotes: orderIds.map((id) => items.find((item) => item.orderId === id)?.order.note || ""),
+      orderIds,
+      orderHasForeignItem: items.some((item) =>
+        item.order.items.some(
+          (line) => !line.variant.sku.startsWith("DEMO-") || !line.variant.product.slug.startsWith("demo-"),
+        ),
+      ),
+    });
+    rows.push({ productId: product.id, slug: product.slug, skus: product.variants.map((variant) => variant.sku), plan, orderIds });
+  }
+  return rows;
+}
+
+export async function applyDemoRemoval(
+  prisma: PrismaClient,
+  rows: Awaited<ReturnType<typeof inspectDemoCatalog>>,
+) {
+  const blocked = rows.filter((row) => row.plan.action === "blocked");
+  if (blocked.length) return { deleted: 0, blocked: blocked.length };
+  const deleting = rows.filter((row) => row.plan.action === "delete");
+  for (const row of deleting) {
+    if (row.orderIds.length) await prisma.order.deleteMany({ where: { id: { in: row.orderIds } } });
+    await prisma.product.delete({ where: { id: row.productId } });
+  }
+  await prisma.category.deleteMany({ where: { slug: { startsWith: "demo-" }, products: { none: {} } } });
+  return { deleted: deleting.length, blocked: 0 };
+}
+

@@ -1,29 +1,29 @@
-import { mkdtemp, rm } from "fs/promises";
+import { readFile, readdir, mkdtemp, rm } from "fs/promises";
 import { tmpdir } from "os";
 import path from "path";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { PrismaClient } from "@prisma/client";
-import * as XLSX from "xlsx";
-import { addToCart } from "@/lib/cart-service";
-import { parseCsv, parseSpreadsheet, validateCatalogSheet } from "@/lib/catalog-import";
+import { parseSpreadsheet, validateCatalogSheet } from "@/lib/catalog-import";
 import { commitCatalogImport } from "@/lib/catalog-import-commit";
-import { planDemoRemoval } from "@/lib/demo-catalog-removal";
+import { applyDemoRemoval, inspectDemoCatalog, planDemoRemoval } from "@/lib/demo-catalog-removal";
 import { cleanDb, resetTestDb } from "./helpers";
 
-const png = Buffer.from(
-  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
-  "base64",
-);
-
-const header =
-  "slug,name,category_slug,category_name,gender,description,material,color,color_hex,size,sku,price,compare_at,cost_price,stock,image_file,sale_status";
-
-function csv(...lines: string[]) {
-  return parseCsv([header, ...lines].join("\n"));
-}
-
+const root = path.join(process.cwd(), "docs/demo-products");
 const prisma = new PrismaClient();
 let mediaDir = "";
+
+async function demoFiles() {
+  const names = (await readdir(path.join(root, "images"))).filter((name) => name.endsWith(".jpg"));
+  const files = new Map<string, { name: string; bytes: Buffer; mime: string }>();
+  for (const name of names) {
+    files.set(name, {
+      name,
+      bytes: await readFile(path.join(root, "images", name)),
+      mime: "image/jpeg",
+    });
+  }
+  return files;
+}
 
 beforeAll(async () => {
   mediaDir = await mkdtemp(path.join(tmpdir(), "ptt-media-"));
@@ -40,80 +40,79 @@ afterAll(async () => {
   await rm(mediaDir, { recursive: true, force: true });
 });
 
-describe("catalog import", () => {
-  it("reports each bad row and rejects remote images", () => {
-    const grid = csv(
-      "demo-ao,Ao demo,demo-ao,Ao,nam,,cotton,Den,#111111,M,DEMO-AO-M,100000,, ,2,https://images.example/a.jpg,SELLING",
-      "demo-ao,Ao demo,demo-ao,Ao,nam,,cotton,Den,#111111,M,DEMO-AO-M,100000,,,1,a.png,SELLING",
-    );
-    const result = validateCatalogSheet(grid, { mode: "demo", fileNames: new Set(["a.png"]) });
-    expect(result.issues.map((issue) => issue.field)).toEqual(expect.arrayContaining(["image_file", "sku"]));
-    expect(result.issues.some((issue) => issue.message.includes("link"))).toBe(true);
+describe("demo catalog file", () => {
+  it("rejects a negative price and a missing image before save", () => {
+    const grid = parseSpreadsheet({
+      name: "a.csv",
+      bytes: new TextEncoder().encode(
+        "sku,product_slug,product_name,category,description,size,color,price_vnd,compare_at_price_vnd,cost_vnd,stock,image_file,status\nDEMO-X-1,demo-x,Ao demo,Nam,,M,Đen,-1,,100,1,missing.jpg,active\n",
+      ),
+    });
+    const result = validateCatalogSheet(grid, { fileNames: new Set() });
+    expect(result.issues.map((issue) => issue.field).sort()).toEqual(["image_file", "price_vnd"]);
+    expect(result.products).toHaveLength(0);
   });
 
-  it("groups variants and reads xlsx", () => {
-    const sheet = XLSX.utils.aoa_to_sheet([
-      header.split(","),
-      ["demo-ao", "Ao demo", "demo-ao", "Ao", "nam", "", "", "Den", "#111111", "M", "DEMO-AO-M", "100000", "150000", "", "2", "a.png", "SELLING"],
-      ["demo-ao", "Ao demo", "demo-ao", "Ao", "nam", "", "", "Den", "#111111", "L", "DEMO-AO-L", "100000", "", "", "0", "a.png", "SELLING"],
-    ]);
-    const book = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(book, sheet, "Hang");
-    const bytes = XLSX.write(book, { type: "buffer", bookType: "xlsx" }) as Buffer;
-    const grid = parseSpreadsheet({ name: "hang.xlsx", bytes });
-    const result = validateCatalogSheet(grid, { mode: "demo", fileNames: new Set(["a.png"]) });
-    expect(result.issues).toEqual([]);
-    expect(result.products).toHaveLength(1);
-    expect(result.products[0].variants.map((v) => v.stock)).toEqual([2, 0]);
-    expect(result.products[0].variants[0].compareAt).toBe(150000);
-    expect(result.products[0].variants[0].costPrice).toBeNull();
-  });
+  it("imports 15 products and 120 variants, updates on the second run, then removal leaves other products", async () => {
+    const csv = await readFile(path.join(root, "demo-products.csv"));
+    const xlsx = await readFile(path.join(root, "demo-products.xlsx"));
+    const fromCsv = parseSpreadsheet({ name: "demo-products.csv", bytes: csv });
+    const fromXlsx = parseSpreadsheet({ name: "demo-products.xlsx", bytes: xlsx });
+    const files = await demoFiles();
+    const sheet = validateCatalogSheet(fromCsv, { fileNames: new Set(files.keys()) });
+    const fromSheet = validateCatalogSheet(fromXlsx, { fileNames: new Set(files.keys()) });
+    expect(fromSheet.issues).toEqual([]);
+    expect(fromSheet.products).toHaveLength(15);
+    expect(sheet.issues).toEqual([]);
+    expect(sheet.products).toHaveLength(15);
+    expect(sheet.products.reduce((sum, product) => sum + product.variants.length, 0)).toBe(120);
 
-  it("saves a new demo product and refuses to overwrite an existing one", async () => {
     await prisma.product.create({
       data: {
         name: "Ao thun cu",
         slug: "ao-thun-oversize",
-        variants: { create: { sku: "VIZ-1", color: "Den", colorHex: "#000000", size: "M", price: 1000, stock: 3 } },
+        variants: { create: { sku: "VIZ-1", color: "Den", colorHex: "#111111", size: "M", price: 1000, stock: 3 } },
       },
     });
-    const grid = csv(
-      "demo-ao,Ao demo,demo-ao,Ao demo,nam,,cotton,Den,#111111,M,DEMO-AO-M,120000,180000,,1,a.png,SELLING",
-      "demo-ao,Ao demo,demo-ao,Ao demo,nam,,cotton,Den,#111111,L,DEMO-AO-L,120000,,,0,a.png,SELLING",
-    );
-    const sheet = validateCatalogSheet(grid, { mode: "demo", fileNames: new Set(["a.png"]) });
-    const files = new Map([["a.png", { name: "a.png", bytes: png, mime: "image/png" }]]);
-    const saved = await commitCatalogImport(prisma, { mode: "demo", products: sheet.products, issues: sheet.issues, files });
-    expect("created" in saved && saved.created.map((row) => row.slug)).toEqual(["demo-ao"]);
-    const product = await prisma.product.findUnique({
-      where: { slug: "demo-ao" },
-      include: { variants: true, images: true, category: true },
-    });
-    expect(product?.category?.slug).toBe("demo-ao");
-    expect(product?.images[0].url.startsWith("/media/catalog/")).toBe(true);
-    expect(product?.variants.find((v) => v.sku === "DEMO-AO-L")?.stock).toBe(0);
-    expect(product?.variants.find((v) => v.sku === "DEMO-AO-M")?.costPrice).toBeNull();
-    const old = await prisma.product.findUnique({ where: { slug: "ao-thun-oversize" } });
-    expect(old?.name).toBe("Ao thun cu");
 
-    const again = await commitCatalogImport(prisma, { mode: "demo", products: sheet.products, issues: sheet.issues, files });
-    expect("issues" in again).toBe(true);
+    const saved = await commitCatalogImport(prisma, { products: sheet.products, issues: sheet.issues, files });
+    expect("summary" in saved && saved.summary.productsCreate).toBe(15);
+    expect("summary" in saved && saved.summary.variantsCreate).toBe(120);
+    expect("summary" in saved && saved.summary.categoriesCreate.sort()).toEqual(["Giày", "Nam", "Nữ", "Phụ kiện"]);
+    expect(await prisma.product.count({ where: { slug: { startsWith: "demo-" } } })).toBe(15);
+    expect(await prisma.productVariant.count({ where: { sku: { startsWith: "DEMO-" } } })).toBe(120);
+    const soldOut = await prisma.productVariant.findUnique({ where: { sku: "DEMO-AT-NAVY-XL" } });
+    expect(soldOut?.stock).toBe(0);
+    expect(soldOut?.costPrice).toBeGreaterThan(0);
+    const image = await prisma.productImage.findFirst({ where: { product: { slug: "demo-ao-thun-nam-cotton-basic" } } });
+    expect(image?.url.startsWith("/media/catalog/")).toBe(true);
+    expect(await prisma.product.findUnique({ where: { slug: "ao-thun-oversize" } })).toMatchObject({ name: "Ao thun cu" });
 
-    const out = product?.variants.find((v) => v.sku === "DEMO-AO-L");
-    await expect(addToCart({ sessionId: "s1", variantId: out!.id, quantity: 1 })).rejects.toThrow(/hết hàng/);
+    const again = await commitCatalogImport(prisma, { products: sheet.products, issues: sheet.issues, files });
+    expect("summary" in again && again.summary).toMatchObject({ productsCreate: 0, productsUpdate: 15, variantsCreate: 0, variantsUpdate: 120 });
+    expect(await prisma.product.count({ where: { slug: { startsWith: "demo-" } } })).toBe(15);
+
+    const inspected = await inspectDemoCatalog(prisma);
+    expect(inspected.filter((row) => row.plan.action === "delete")).toHaveLength(15);
+    expect(inspected.some((row) => row.slug === "ao-thun-oversize")).toBe(false);
+    const removed = await applyDemoRemoval(prisma, inspected);
+    expect(removed).toEqual({ deleted: 15, blocked: 0 });
+    expect(await prisma.product.count({ where: { slug: { startsWith: "demo-" } } })).toBe(0);
+    expect(await prisma.productVariant.count({ where: { sku: { startsWith: "DEMO-" } } })).toBe(0);
+    expect(await prisma.product.findUnique({ where: { slug: "ao-thun-oversize" } })).not.toBeNull();
   });
 });
 
 describe("demo removal plan", () => {
-  it("deletes only a pure demo product and blocks everything else", () => {
+  it("blocks an order that is not marked TEST", () => {
     expect(
-      planDemoRemoval({ slug: "demo-ao", skus: ["DEMO-AO-M"], orderNotes: [], orderIds: [], orderHasForeignItem: false }).action,
-    ).toBe("delete");
-    expect(
-      planDemoRemoval({ slug: "ao-thun-oversize", skus: ["VIZ-1"], orderNotes: [], orderIds: [], orderHasForeignItem: false }).action,
-    ).toBe("skip");
-    expect(
-      planDemoRemoval({ slug: "demo-ao", skus: ["DEMO-AO-M"], orderNotes: ["giao that"], orderIds: ["o1"], orderHasForeignItem: false }).action,
+      planDemoRemoval({
+        slug: "demo-ao",
+        skus: ["DEMO-AO-M"],
+        orderNotes: ["giao that"],
+        orderIds: ["o1"],
+        orderHasForeignItem: false,
+      }).action,
     ).toBe("blocked");
   });
 });
