@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { companyPolicyLinks } from "@/content/company";
 import { prisma } from "@/lib/prisma";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -13,6 +14,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/bo-suu-tap`, changeFrequency: "weekly", priority: 0.7 },
     { url: `${base}/lien-he`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${base}/ve-chung-toi`, changeFrequency: "monthly", priority: 0.5 },
+    ...companyPolicyLinks.map((link) => ({
+      url: `${base}${link.href}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.4,
+    })),
     ...products.map((p) => ({
       url: `${base}/san-pham/${p.slug}`,
       lastModified: p.updatedAt,

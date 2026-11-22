@@ -1,3 +1,5 @@
+import { POLICY_PAGES } from "@/content/policies";
+
 export type StorefrontPageSeed = {
   slug: string;
   title: string;
@@ -147,4 +149,11 @@ export const STOREFRONT_PAGE_SEEDS: StorefrontPageSeed[] = [
     ],
     sortOrder: 23,
   },
+  ...POLICY_PAGES.map((page, index) => ({
+    slug: page.slug,
+    title: page.title,
+    description: page.description,
+    body: [`Ngày hiệu lực: ${page.effectiveLabel}`, ...page.body],
+    sortOrder: 40 + index,
+  })),
 ];
