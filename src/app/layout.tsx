@@ -6,6 +6,7 @@ import { CartProvider } from "@/components/cart/cart-context";
 import { SiteBrandProvider } from "@/components/cms/site-brand-context";
 import { FloatingSocial } from "@/components/layout/floating-social";
 import { Footer } from "@/components/layout/footer";
+import { CookieBanner } from "@/components/legal/cookie-banner";
 import { Header } from "@/components/layout/header";
 import { Providers } from "@/components/providers";
 import { getSiteSettingsForRequest, getStorefrontLayoutForRequest } from "@/lib/cms/published";
@@ -65,6 +66,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
                 <Header />
                 <main className="min-w-0 flex-1 pb-20 md:pb-0">{children}</main>
                 <Footer />
+                <CookieBanner />
                 <FloatingSocial />
               </CartProvider>
             </StorefrontLayoutProvider>
