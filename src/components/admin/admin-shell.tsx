@@ -30,6 +30,7 @@ const nav = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/orders", label: "Đơn hàng", icon: ShoppingBag },
   { href: "/admin/products", label: "Sản phẩm", icon: Package },
+  { href: "/admin/nhap-san-pham", label: "Nhập sản phẩm", icon: Package },
   {
     href: "/admin/giao-dien",
     label: "Quản lý giao diện",

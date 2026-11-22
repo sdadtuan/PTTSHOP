@@ -95,6 +95,11 @@ if [ "$head_sha" != "$remote_sha" ]; then
   die "HEAD không trùng origin/${DEPLOY_BRANCH}."
 fi
 
+install -d -m 755 "$APP_DIR/data/media"
+if [ ! -e "$APP_DIR/public/media" ]; then
+  ln -s ../data/media "$APP_DIR/public/media"
+fi
+
 chown -R "$SERVICE_USER:$SERVICE_USER" "$APP_DIR"
 sudo -u "$SERVICE_USER" env NODE_ENV=development npm ci
 

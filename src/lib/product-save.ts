@@ -20,7 +20,7 @@ const mediaUrl = z
     (u) =>
       (u.startsWith("/") && !u.startsWith("//") && !/[\s"'()<>\\]/.test(u)) ||
       u.startsWith("https://images.unsplash.com/"),
-    "URL ảnh/video không hợp lệ (chỉ /uploads, /images, /videos hoặc images.unsplash.com)",
+    "URL ảnh/video không hợp lệ (chỉ /media, /uploads, /images, /videos hoặc images.unsplash.com)",
   );
 
 export const mediaInputSchema = z.object({

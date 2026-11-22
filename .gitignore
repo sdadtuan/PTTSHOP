@@ -64,3 +64,5 @@ prisma/test.db-journal
 # local uploads (keep folder)
 /public/uploads/*
 !/public/uploads/.gitkeep
+/public/media
+/data/media/

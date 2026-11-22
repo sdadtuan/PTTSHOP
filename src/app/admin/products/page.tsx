@@ -247,14 +247,22 @@ export default function AdminProductsPage() {
           { label: "Sản phẩm" },
         ]}
         actions={
-          <Link
-            href="/admin/products/new"
-            className="inline-flex h-10 items-center gap-2 rounded-[var(--admin-radius-md)] bg-[var(--admin-accent)] px-4 text-sm font-medium text-white hover:bg-[var(--admin-accent-hover)]"
-            data-testid="admin-product-new"
-          >
-            <Plus className="h-4 w-4" />
-            Thêm sản phẩm
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/admin/nhap-san-pham"
+              className="inline-flex h-10 items-center rounded-[var(--admin-radius-md)] border border-[var(--admin-border)] bg-white px-4 text-sm font-medium text-neutral-900"
+            >
+              Nhập file
+            </Link>
+            <Link
+              href="/admin/products/new"
+              className="inline-flex h-10 items-center gap-2 rounded-[var(--admin-radius-md)] bg-[var(--admin-accent)] px-4 text-sm font-medium text-white hover:bg-[var(--admin-accent-hover)]"
+              data-testid="admin-product-new"
+            >
+              <Plus className="h-4 w-4" />
+              Thêm sản phẩm
+            </Link>
+          </div>
         }
       />
 
