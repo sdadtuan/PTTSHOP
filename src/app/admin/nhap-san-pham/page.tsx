@@ -93,7 +93,7 @@ export default function ImportProductsPage() {
           Ảnh: file zip hoặc nhiều file
           <input
             type="file"
-            accept=".zip,image/jpeg,image/png,image/webp,image/gif"
+            accept=".zip,image/jpeg,image/png,image/webp,image/avif,image/gif"
             multiple
             onChange={(e) => {
               setImages([...(e.target.files || [])]);
@@ -105,7 +105,7 @@ export default function ImportProductsPage() {
           Hoặc cả thư mục ảnh
           <input
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
+            accept="image/jpeg,image/png,image/webp,image/avif,image/gif"
             multiple
             ref={(node) => node?.setAttribute("webkitdirectory", "")}
             onChange={(e) => {

@@ -3,6 +3,7 @@ export const IMAGE_MIME = new Set([
   "image/png",
   "image/webp",
   "image/gif",
+  "image/avif",
 ]);
 
 export const VIDEO_MIME = new Set(["video/mp4", "video/webm"]);
@@ -10,7 +11,7 @@ export const VIDEO_MIME = new Set(["video/mp4", "video/webm"]);
 export const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 export const VIDEO_MAX_BYTES = 100 * 1024 * 1024;
 
-const IMAGE_EXT = new Set(["jpg", "jpeg", "png", "webp", "gif"]);
+const IMAGE_EXT = new Set(["jpg", "jpeg", "png", "webp", "gif", "avif"]);
 const VIDEO_EXT = new Set(["mp4", "webm"]);
 
 export type UploadKind = "image" | "video";
@@ -47,6 +48,8 @@ function expectedExtForMime(mime: string): string[] {
       return ["webp"];
     case "image/gif":
       return ["gif"];
+    case "image/avif":
+      return ["avif"];
     case "video/mp4":
       return ["mp4"];
     case "video/webm":
@@ -85,8 +88,10 @@ export function detectMimeFromBuffer(buf: Uint8Array): string | null {
   ) {
     return "image/webp";
   }
-  // MP4 / ISO BMFF — ftyp at offset 4
+  // AVIF is also an ftyp box. A video file keeps the mp4 result.
   if (buf[4] === 0x66 && buf[5] === 0x74 && buf[6] === 0x79 && buf[7] === 0x70) {
+    const brand = String.fromCharCode(buf[8], buf[9], buf[10], buf[11]);
+    if (brand === "avif" || brand === "avis") return "image/avif";
     return "video/mp4";
   }
   // WebM (EBML)
@@ -141,7 +146,7 @@ export function validateUploadFile(input: {
     return {
       ok: false,
       status: 400,
-      error: "Chỉ nhận JPEG/PNG/WebP/GIF hoặc MP4/WebM",
+      error: "Chỉ nhận JPEG/PNG/WebP/AVIF/GIF hoặc MP4/WebM",
     };
   }
 
@@ -184,11 +189,42 @@ export function validateUploadFile(input: {
         ? "webp"
         : mime === "image/gif"
           ? "gif"
-          : mime === "video/mp4"
+          : mime === "image/avif"
+            ? "avif"
+            : mime === "video/mp4"
             ? "mp4"
             : mime === "video/webm"
               ? "webm"
               : "jpg");
 
   return { ok: true, kind, ext: resolvedExt, maxBytes, detectedMime };
+}
+
+const CATALOG_IMAGE_EXT: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif",
+  "image/avif": "avif",
+};
+
+/** Ảnh nhập catalog: chỉ tin nội dung file, và tên lưu chỉ dùng đuôi an toàn. */
+export function validateCatalogImage(input: {
+  name?: string;
+  size: number;
+  buffer: Uint8Array;
+}): UploadValidationResult {
+  if (input.size > IMAGE_MAX_BYTES) {
+    return { ok: false, status: 400, error: "File tối đa 5MB" };
+  }
+  const detected = detectMimeFromBuffer(input.buffer);
+  const ext = CATALOG_IMAGE_EXT[detected || ""];
+  if (!detected || !ext) {
+    return { ok: false, status: 400, error: "Chỉ nhận ảnh JPEG, PNG, WebP, AVIF hoặc GIF" };
+  }
+  const claimed = extFromName(input.name || "");
+  if (claimed && !expectedExtForMime(detected).includes(claimed)) {
+    return { ok: false, status: 400, error: "Đuôi file không khớp nội dung ảnh" };
+  }
+  return { ok: true, kind: "image", ext, maxBytes: IMAGE_MAX_BYTES, detectedMime: detected };
 }

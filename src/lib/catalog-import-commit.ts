@@ -6,7 +6,7 @@ import path from "path";
 import type { PrismaClient } from "@prisma/client";
 import { ApiError } from "@/lib/api";
 import type { ImportIssue, ImportProduct } from "@/lib/catalog-import";
-import { validateUploadFile } from "@/lib/upload-validate";
+import { validateCatalogImage } from "@/lib/upload-validate";
 
 export type ImportSummary = {
   productsCreate: number;
@@ -197,8 +197,7 @@ export async function commitCatalogImport(
     for (const [name, file] of opts.files) {
       const needed = opts.products.some((product) => product.variants.some((variant) => variant.imageFile === name));
       if (!needed) continue;
-      const checked = validateUploadFile({
-        mime: file.mime,
+      const checked = validateCatalogImage({
         size: file.bytes.length,
         name: file.name,
         buffer: file.bytes,
