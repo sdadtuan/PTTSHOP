@@ -26,10 +26,12 @@
 | Category | cmwpxkjjw0005h28sq7rsvpl8 | Phụ kiện | Seed cùng mốc | Ẩn sau khi sản phẩm đã ẩn |
 | Category | cmwpxkjk10006h28sy38jb4yo | Hoodie | Seed cùng mốc | Ẩn sau khi sản phẩm đã ẩn |
 | Collection | cmwpxkjk60007h28syg84sor7 | Essentials Collection | Seed cùng mốc | Ẩn |
-| Coupon | cmwpxkjku0009h28szfs24bak | VIZFAS10 | Mã giảm giá mẫu | Khóa |
+| Coupon | cmwpxkjku0009h28szfs24bak | VIZFAS10 | Mã giảm giá mẫu | Đã tắt `isActive` ngày 22/11/2026, không xóa |
 | ProductImage | 19 dòng | Ảnh Unsplash | Toàn bộ ảnh sản phẩm đang trỏ `images.unsplash.com` | Ẩn theo sản phẩm, không xóa riêng |
 | SiteSettings | default | VIZFAS | Tên thương hiệu mẫu | Đổi nội dung, không xóa dòng |
 | StorefrontPage | 15 trang | Đánh giá, tin tức, về VIZFAS, hỗ trợ, chính sách | Nội dung mẫu VIZFAS | Viết lại, không xóa |
+
+Quyết định 22/11/2026: hai user demo giữ khóa, không xóa. Mã VIZFAS10 đã tắt. 12 sản phẩm, 5 danh mục và 1 bộ sưu tập chưa đụng, sẽ ẩn khi nhập sản phẩm thật ở prompt 03.
 
 ## Giữ lại
 
