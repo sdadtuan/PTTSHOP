@@ -14,6 +14,7 @@ export function resetTestDb() {
 }
 
 export async function cleanDb(prisma: PrismaClient) {
+  await prisma.consent.deleteMany();
   await prisma.review.deleteMany();
   await prisma.orderItem.deleteMany();
   await prisma.order.deleteMany();
@@ -74,7 +75,7 @@ export async function seedMinimal(prisma: PrismaClient) {
       images: {
         create: [
           {
-            url: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=400&q=80",
+            url: "/images/placeholder-product.svg",
             sortOrder: 0,
           },
         ],

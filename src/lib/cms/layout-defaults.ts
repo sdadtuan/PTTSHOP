@@ -24,7 +24,7 @@ export const DEFAULT_DEMO_PRIMARY_NAV: NavLink[] = [
   { href: "/bo-suu-tap", label: "Bộ Sưu Tập" },
   { href: "/san-pham", label: "Sản Phẩm" },
   { href: "/demo-v2#danh-gia", label: "ĐÁNH GIÁ", match: "/demo-v2", hash: "#danh-gia" },
-  { href: "/ve-chung-toi", label: "Về VIZFAS" },
+  { href: "/ve-chung-toi", label: "Về PTT Shop" },
   { href: "/lien-he", label: "Liên Hệ" },
 ];
 
@@ -95,7 +95,7 @@ export function defaultDemoHeroSlides(ctaLabel: string): DemoHeroSlide[] {
   return [
     {
       eyebrow: "ESSENTIALS",
-      title: "VIZFAS",
+      title: "PTT Shop",
       subtitle: "Form rộng, chất dày — dễ mặc mỗi ngày.",
       ctaHref: "/san-pham?category=hoodie",
       ctaLabel,
@@ -105,7 +105,7 @@ export function defaultDemoHeroSlides(ctaLabel: string): DemoHeroSlide[] {
     },
     {
       eyebrow: "COLOR PLAY",
-      title: "VIZFAS",
+      title: "PTT Shop",
       subtitle: "Phối màu tạo chất — nổi bật mà vẫn tối giản.",
       ctaHref: "/bo-suu-tap",
       ctaLabel,

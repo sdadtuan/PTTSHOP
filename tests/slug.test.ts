@@ -32,7 +32,7 @@ const CASES: [string, string][] = [
   ["2 in 1 Jacket", "2-in-1-jacket"],
   // special characters
   ["Hoodie & Jogger Set", "hoodie-jogger-set"],
-  ["Áo khoác (Limited) #1 @VIZFAS", "ao-khoac-limited-1-vizfas"],
+  ["Áo khoác (Limited) #1 @PTT Shop", "ao-khoac-limited-1-ptt-shop"],
   ["Quần \"Cargo\" 'Túi Hộp'", "quan-cargo-tui-hop"],
   ["Sale 50% + Free ship", "sale-50-free-ship"],
   ["Áo/Quần/Váy", "ao-quan-vay"],

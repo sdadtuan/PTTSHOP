@@ -22,7 +22,7 @@ type Props = {
 export function DemoHero({
   content,
   eyebrow = "NEW COLLECTION",
-  title = "VIZFAS",
+  title = "PTT Shop",
   subtitle = "Streetwear hiện đại / Cho phong cách của riêng bạn.",
   ctaHref = "/san-pham",
   ctaLabel = "Khám Phá Ngay",
@@ -32,7 +32,7 @@ export function DemoHero({
   const primary: Slide = {
     key: "primary",
     eyebrow,
-    title: title.includes("VIZFAS") ? "VIZFAS" : title,
+    title: title.includes("PTT Shop") ? "PTT Shop" : title,
     subtitle,
     ctaHref: content.ctaHref || ctaHref,
     ctaLabel: labelCta,
@@ -110,7 +110,7 @@ export function DemoHero({
             <Image
               key={slide.mainImage}
               src={slide.mainImage}
-              alt="Mẫu streetwear VIZFAS"
+              alt="Mẫu streetwear PTT Shop"
               fill
               priority
               sizes="(max-width:900px) 85vw, 48vw"

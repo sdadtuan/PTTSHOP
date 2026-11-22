@@ -29,7 +29,7 @@ function Stars({ rating }: { rating: number }) {
 
 export function DemoReviews({
   reviews,
-  title = "Khách Hàng Nói Gì Về VIZFAS",
+  title = "Khách Hàng Nói Gì Về PTT Shop",
   emptyLine1 = "Chưa có đánh giá công khai.",
   emptyLine2 = "Khi khách mua hàng để lại review, chúng sẽ hiện tại đây.",
 }: {

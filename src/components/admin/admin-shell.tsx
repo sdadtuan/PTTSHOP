@@ -104,7 +104,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           href="/admin"
           className="font-[family-name:var(--font-display)] text-xl font-extrabold tracking-tight text-[var(--admin-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--admin-accent)]/40"
         >
-          VIZFAS
+          PTT Shop
         </Link>
         <span className="rounded-full bg-[var(--admin-accent-soft)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--admin-accent-hover)]">
           Admin

@@ -10,7 +10,7 @@ type SendMailInput = {
  */
 export async function sendMail(input: SendMailInput): Promise<{ sent: boolean }> {
   const host = process.env.SMTP_HOST?.trim();
-  const from = process.env.EMAIL_FROM || "VIZFAS <noreply@vizfas.vn>";
+  const from = process.env.EMAIL_FROM || "PTT Shop <noreply@pttshop.vn>";
 
   if (!host) {
     console.info("[mail:dev]", {
@@ -58,8 +58,8 @@ export async function sendOrderConfirmationEmail(order: {
   if (!order.customerEmail) return;
   await sendMail({
     to: order.customerEmail,
-    subject: `Xác nhận đơn ${order.orderNumber} — VIZFAS`,
-    text: `Xin chào ${order.customerName},\n\nĐơn hàng ${order.orderNumber} đã được tạo.\nTổng: ${order.total.toLocaleString("vi-VN")}đ\nTrạng thái: ${order.status}\n\nCảm ơn bạn đã mua sắm tại VIZFAS.`,
+    subject: `Xác nhận đơn ${order.orderNumber} — PTT Shop`,
+    text: `Xin chào ${order.customerName},\n\nĐơn hàng ${order.orderNumber} đã được tạo.\nTổng: ${order.total.toLocaleString("vi-VN")}đ\nTrạng thái: ${order.status}\n\nCảm ơn bạn đã mua sắm tại PTT Shop.`,
   });
 }
 
@@ -72,7 +72,7 @@ export async function sendOrderStatusEmail(order: {
   if (!order.customerEmail) return;
   await sendMail({
     to: order.customerEmail,
-    subject: `Cập nhật đơn ${order.orderNumber} — VIZFAS`,
-    text: `Xin chào ${order.customerName},\n\nĐơn hàng ${order.orderNumber} đã chuyển sang trạng thái: ${order.status}.\n\nVIZFAS`,
+    subject: `Cập nhật đơn ${order.orderNumber} — PTT Shop`,
+    text: `Xin chào ${order.customerName},\n\nĐơn hàng ${order.orderNumber} đã chuyển sang trạng thái: ${order.status}.\n\nPTT Shop`,
   });
 }

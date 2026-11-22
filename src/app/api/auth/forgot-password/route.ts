@@ -51,7 +51,7 @@ export async function POST(req: Request) {
 
     await sendMail({
       to: normalized,
-      subject: "Đặt lại mật khẩu VIZFAS",
+      subject: "Đặt lại mật khẩu PTT Shop",
       text: `Xin chào,\n\nNhấn liên kết sau để đặt lại mật khẩu (hết hạn sau 1 giờ):\n${link}\n\nNếu bạn không yêu cầu, hãy bỏ qua email này.`,
     });
 

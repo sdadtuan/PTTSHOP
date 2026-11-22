@@ -40,6 +40,11 @@ describe("auth: register & login", () => {
         name: "New User",
         email: "new@test.local",
         password: "secret12",
+        consents: [
+          { purpose: "delivery", granted: true },
+          { purpose: "invoice", granted: true },
+          { purpose: "marketing", granted: false },
+        ],
       }),
     );
     expect(res.status).toBe(201);

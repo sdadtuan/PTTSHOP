@@ -86,7 +86,7 @@ describe("demo-v2 isolation", () => {
     expect(read("src/components/demo-v2/demo-header.tsx")).toContain("useStorefrontLayout");
     expect(read("src/components/demo-v2/demo-reviews.tsx")).toContain('id="danh-gia"');
     expect(read("src/components/demo-v2/demo-reviews.tsx")).toContain(
-      "Khách Hàng Nói Gì Về VIZFAS",
+      "Khách Hàng Nói Gì Về PTT Shop",
     );
     expect(read("src/app/demo-v2/page.tsx")).toContain("notFound");
     expect(read("src/app/page.tsx")).not.toContain("ĐÁNH GIÁ");

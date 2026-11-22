@@ -84,7 +84,7 @@ test.describe("Admin product slug", () => {
 
     const samples: [string, string][] = [
       ["ĐẦM DỰ TIỆC Cao Cấp", "dam-du-tiec-cao-cap"],
-      ["Hoodie Oversize (Limited) #1 @VIZFAS", "hoodie-oversize-limited-1-vizfas"],
+      ["Hoodie Oversize (Limited) #1 @PTT Shop", "hoodie-oversize-limited-1-ptt-shop"],
       ["Quần \"Cargo\" 50% + Free", "quan-cargo-50-free"],
       ["  🔥 Áo   khoác   gió 🔥  ", "ao-khoac-gio"],
       ["🔥🔥", "san-pham"],

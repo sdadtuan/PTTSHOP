@@ -18,7 +18,7 @@ const m = await page.evaluate(() => {
   );
   const feature = document.querySelector("ul.mt-12 span");
   const footerLogo = [...document.querySelectorAll("footer p")].find((p) =>
-    /^VIZFAS$/.test((p.textContent || "").trim()),
+    /^PTT Shop$/.test((p.textContent || "").trim()),
   );
   const productName = document.querySelector("article h3");
   return {

@@ -194,39 +194,39 @@ const COLORS = [
   { key: "kem", name: "Kem", hex: "#E8DCC8", brand: "ESSENTIALS" },
   { key: "den", name: "Đen", hex: "#1A1A1A", brand: "ESSENTIALS" },
   { key: "nau", name: "Nâu", hex: "#6B4423", brand: "ESSENTIALS" },
-  { key: "xam", name: "Xám", hex: "#B8B8B8", brand: "VIZFAS" },
-  { key: "hong", name: "Hồng", hex: "#E8A0BF", brand: "VIZFAS" },
+  { key: "xam", name: "Xám", hex: "#B8B8B8", brand: "PTT Shop" },
+  { key: "hong", name: "Hồng", hex: "#E8A0BF", brand: "PTT Shop" },
 ];
 
 const HOME_REMOTE = [
   {
     file: "hero-1.jpg",
-    url: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=1000&q=85",
+    url: "/images/placeholder-product.svg",
     plate: { w: 900, h: 1100, bg: "#e8f5e9", accent: "#c8e6c9", title: "TEE", subtitle: "oversized", shirt: "#7cb342", pants: "#333" },
   },
   {
     file: "hero-2.jpg",
-    url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1000&q=85",
+    url: "/images/placeholder-product.svg",
     plate: { w: 900, h: 1100, bg: "#fff3e0", accent: "#ffe0b2", title: "LOOK", subtitle: "street", shirt: "#ffb74d", pants: "#222" },
   },
   {
     file: "hero-3.jpg",
-    url: "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=1000&q=85",
+    url: "/images/placeholder-product.svg",
     plate: { w: 900, h: 1100, bg: "#eceff1", accent: "#cfd8dc", title: "FIT", subtitle: "city", shirt: "#90a4ae", pants: "#37474f" },
   },
   {
     file: "hero-4.jpg",
-    url: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=1000&q=85",
+    url: "/images/placeholder-product.svg",
     plate: { w: 900, h: 1100, bg: "#fce4ec", accent: "#f8bbd0", title: "LAYER", subtitle: "soft", shirt: "#f48fb1", pants: "#212121" },
   },
   {
     file: "hero-5.jpg",
-    url: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1000&q=85",
+    url: "/images/placeholder-product.svg",
     plate: { w: 900, h: 1100, bg: "#e3f2fd", accent: "#bbdefb", title: "CITY", subtitle: "walk", shirt: "#64b5f6", pants: "#263238" },
   },
   {
     file: "hero-6.jpg",
-    url: "https://images.unsplash.com/photo-1520975916090-3105956dac38?auto=format&fit=crop&w=1000&q=85",
+    url: "/images/placeholder-product.svg",
     plate: { w: 900, h: 1100, bg: "#f3e5f5", accent: "#e1bee7", title: "VIBE", subtitle: "new", shirt: "#ab47bc", pants: "#1a1a1a" },
   },
 ];
@@ -234,32 +234,32 @@ const HOME_REMOTE = [
 const LOOKBOOK_REMOTE = [
   {
     file: "look-1.jpg",
-    url: "https://images.unsplash.com/photo-1516826957135-700dedea698c?auto=format&fit=crop&w=1200&q=85",
+    url: "/images/placeholder-product.svg",
     plate: { w: 1000, h: 1200, bg: "#efebe9", accent: "#d7ccc8", title: "BACK", subtitle: "cargo", shirt: "#fff", pants: "#8d6e63" },
   },
   {
     file: "look-2.jpg",
-    url: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=800&q=85",
+    url: "/images/placeholder-product.svg",
     plate: { w: 800, h: 800, bg: "#e8f5e9", accent: "#a5d6a7", title: "GREEN", subtitle: "tee", shirt: "#66bb6a", pants: "#333" },
   },
   {
     file: "look-3.jpg",
-    url: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=85",
+    url: "/images/placeholder-product.svg",
     plate: { w: 800, h: 800, bg: "#fff8e1", accent: "#ffe082", title: "SHORTS", subtitle: "summer", shirt: "#111", pants: "#fdd835" },
   },
   {
     file: "look-4.jpg",
-    url: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=800&q=85",
+    url: "/images/placeholder-product.svg",
     plate: { w: 800, h: 800, bg: "#efebe9", accent: "#bcaaa4", title: "CARGO", subtitle: "detail", shirt: "#8d6e63", pants: "#5d4037" },
   },
   {
     file: "look-5.jpg",
-    url: "https://images.unsplash.com/photo-1578587018452-892bacefd3f2?auto=format&fit=crop&w=800&q=85",
+    url: "/images/placeholder-product.svg",
     plate: { w: 800, h: 800, bg: "#fafafa", accent: "#e0e0e0", title: "HOODIE", subtitle: "layer", shirt: "#e0d5c5", pants: "#424242" },
   },
   {
     file: "look-6.jpg",
-    url: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=800&q=85",
+    url: "/images/placeholder-product.svg",
     plate: { w: 800, h: 800, bg: "#e0f2f1", accent: "#80cbc4", title: "STYLE", subtitle: "mix", shirt: "#26a69a", pants: "#212121" },
   },
 ];
@@ -267,17 +267,17 @@ const LOOKBOOK_REMOTE = [
 const BANNER_REMOTE = [
   {
     file: "banner-left.jpg",
-    url: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=900&q=85",
+    url: "/images/placeholder-product.svg",
     plate: { w: 900, h: 1200, bg: "#eceff1", accent: "#b0bec5", title: "SIMPLE", subtitle: "tee", shirt: "#90a4ae", pants: "#263238" },
   },
   {
     file: "banner-right.jpg",
-    url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=85",
+    url: "/images/placeholder-product.svg",
     plate: { w: 900, h: 1200, bg: "#fff3e0", accent: "#ffcc80", title: "BOLD", subtitle: "set", shirt: "#ffa726", pants: "#1b1b1b" },
   },
   {
     file: "pants-hero.jpg",
-    url: "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=1200&q=85",
+    url: "/images/placeholder-product.svg",
     plate: { w: 1000, h: 1400, bg: "#e8f5e9", accent: "#a5d6a7", title: "WEEKLY", subtitle: "cargo", shirt: "#81c784", pants: "#a5d6a7" },
   },
 ];
@@ -285,17 +285,17 @@ const BANNER_REMOTE = [
 const CAT_REMOTE = [
   {
     file: "ao-thun.jpg",
-    url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=85",
+    url: "/images/placeholder-product.svg",
     plate: { w: 900, h: 1200, bg: "#e8f5e9", accent: "#81c784", title: "ÁO THUN", subtitle: "graphic", shirt: "#66bb6a", pants: "#333" },
   },
   {
     file: "quan.jpg",
-    url: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=1200&q=85",
+    url: "/images/placeholder-product.svg",
     plate: { w: 1200, h: 700, bg: "#efebe9", accent: "#d7ccc8", title: "QUẦN", subtitle: "cargo", shirt: "#fff", pants: "#a1887f" },
   },
   {
     file: "phu-kien.jpg",
-    url: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=900&q=85",
+    url: "/images/placeholder-product.svg",
     plate: { w: 900, h: 900, bg: "#e0f2f1", accent: "#80cbc4", title: "PHỤ KIỆN", subtitle: "cap", shirt: "#26a69a", pants: "#004d40" },
   },
 ];

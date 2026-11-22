@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
 test.describe("Storefront", () => {
   test("homepage matches key design copy", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("link", { name: "VIZFAS" }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: "PTT Shop" }).first()).toBeVisible();
     await expect(page.getByRole("heading", { name: /Mặc Đơn Giản/i })).toBeVisible();
     await expect(page.getByText(/Vẫn Nổi Bật/i).first()).toBeVisible();
     await expect(page.getByTestId("hero-badge")).toBeVisible();

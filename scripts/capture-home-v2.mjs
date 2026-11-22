@@ -133,7 +133,7 @@ const typeSizes = await desktop.evaluate(() => {
     vertical: pick('[data-testid="phoi-vertical-label"] p'),
     footerLogo: (() => {
       const el = [...document.querySelectorAll("footer p")].find((p) =>
-        /^VIZFAS$/.test((p.textContent || "").trim()),
+        /^PTT Shop$/.test((p.textContent || "").trim()),
       );
       if (!el) return null;
       return { fontSize: getComputedStyle(el).fontSize };

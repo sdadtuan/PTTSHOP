@@ -10,7 +10,7 @@ import type { NavLink } from "@/lib/cms/types";
 
 type NavItem = NavLink;
 
-export function DemoHeader({ brandName = "VIZFAS" }: { brandName?: string }) {
+export function DemoHeader({ brandName = "PTT Shop" }: { brandName?: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const { count } = useCart();

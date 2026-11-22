@@ -24,8 +24,8 @@ describe("storefront static pages", () => {
   it("seeds ve-chung-toi with original copy", async () => {
     await ensureStorefrontPagesSeeded();
     const page = await getStorefrontPageBySlug("ve-chung-toi");
-    expect(page?.title).toBe("Về VIZFAS");
-    expect(page?.body.some((l) => l.includes("VIZFAS là thương hiệu"))).toBe(true);
+    expect(page?.title).toBe("Về PTT Shop");
+    expect(page?.body.some((l) => l.includes("PTT Shop là thương hiệu"))).toBe(true);
   });
 
   it("concurrent lazy seed does not throw unique errors", async () => {

@@ -1,3 +1,6 @@
+// Nguồn: docs/02-P0-PHAP-LY-NOI-DUNG.md, mục "Đã có".
+// Điền: tên, MST, ngày cấp, trụ sở, người đại diện.
+// Để nguyên [cần chốt]: nơi cấp, hotline, email.
 export const company = {
   name: "CÔNG TY TNHH GIẢI PHÁP QUẢNG CÁO PTT",
   taxId: "0319378318",

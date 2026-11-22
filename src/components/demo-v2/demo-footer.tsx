@@ -8,7 +8,7 @@ export function DemoFooter({
   settings: SiteSettingsData;
   footerLinks: FooterLinksContent;
 }) {
-  const brand = settings.brandName || "VIZFAS";
+  const brand = settings.brandName || "PTT Shop";
   const social = [
     { href: settings.socialInstagram || "https://instagram.com", label: "Instagram" },
     { href: settings.socialFacebook || "https://facebook.com", label: "Facebook" },

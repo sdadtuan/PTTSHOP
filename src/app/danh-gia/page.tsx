@@ -9,7 +9,7 @@ export async function generateMetadata() {
   const page = await getStorefrontPageBySlug("danh-gia");
   return {
     title: page?.title || "Đánh giá",
-    description: page?.description || "Đánh giá sản phẩm từ khách hàng VIZFAS",
+    description: page?.description || "Đánh giá sản phẩm từ khách hàng PTT Shop",
   };
 }
 
@@ -33,7 +33,7 @@ export default async function ReviewsPage() {
   const intro =
     page?.body?.[0] ||
     page?.description ||
-    "Xem nhận xét thật từ khách đã mua và trải nghiệm sản phẩm VIZFAS.";
+    "Xem nhận xét thật từ khách đã mua và trải nghiệm sản phẩm PTT Shop.";
 
   const initialClient = {
     ...initial,

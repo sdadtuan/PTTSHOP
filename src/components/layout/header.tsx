@@ -21,7 +21,7 @@ export function Header() {
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [q, setQ] = useState("");
-  const brandName = brand.brandName || "VIZFAS";
+  const brandName = brand.brandName || "PTT Shop";
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";

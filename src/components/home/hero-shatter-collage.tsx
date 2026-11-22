@@ -90,7 +90,7 @@ export function HeroShatterCollage({
       data-piece-count={count}
       key={reduced ? "static" : `cycle-${tick}`}
       role="img"
-      aria-label="Hero collage VIZFAS"
+      aria-label="Hero collage PTT Shop"
     >
       {cells.map((cell) => (
         <div

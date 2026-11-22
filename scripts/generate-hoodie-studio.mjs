@@ -13,8 +13,8 @@ const COLORS = [
   { name: "Kem", key: "kem", hex: "#E8DCC8", brand: "ESSENTIALS", ink: "#1a1a1a" },
   { name: "Đen", key: "den", hex: "#1C1C1C", brand: "ESSENTIALS", ink: "#f5f5f5" },
   { name: "Nâu", key: "nau", hex: "#6B4423", brand: "ESSENTIALS", ink: "#f5f5f5" },
-  { name: "Xám", key: "xam", hex: "#C4C4C4", brand: "VIZFAS", ink: "#1a1a1a" },
-  { name: "Hồng", key: "hong", hex: "#E8A0BF", brand: "VIZFAS", ink: "#1a1a1a" },
+  { name: "Xám", key: "xam", hex: "#C4C4C4", brand: "PTT Shop", ink: "#1a1a1a" },
+  { name: "Hồng", key: "hong", hex: "#E8A0BF", brand: "PTT Shop", ink: "#1a1a1a" },
 ];
 
 function shade(hex, amt) {

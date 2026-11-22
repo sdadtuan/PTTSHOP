@@ -12,9 +12,9 @@ export const STOREFRONT_PAGE_SEEDS: StorefrontPageSeed[] = [
   {
     slug: "danh-gia",
     title: "Đánh giá",
-    description: "Nhận xét từ khách hàng VIZFAS.",
+    description: "Nhận xét từ khách hàng PTT Shop.",
     body: [
-      "Xem nhận xét thật từ khách đã mua và trải nghiệm sản phẩm VIZFAS.",
+      "Xem nhận xét thật từ khách đã mua và trải nghiệm sản phẩm PTT Shop.",
       "Bạn cũng có thể để lại đánh giá trên trang chi tiết sản phẩm sau khi đặt hàng thành công.",
     ],
     sortOrder: 4,
@@ -22,9 +22,9 @@ export const STOREFRONT_PAGE_SEEDS: StorefrontPageSeed[] = [
   {
     slug: "tin-tuc",
     title: "Tin tức",
-    description: "Cập nhật thương hiệu và bộ sưu tập VIZFAS.",
+    description: "Cập nhật thương hiệu và bộ sưu tập PTT Shop.",
     body: [
-      "Chào mừng bạn đến với khu vực tin tức VIZFAS.",
+      "Chào mừng bạn đến với khu vực tin tức PTT Shop.",
       "Chúng tôi sẽ cập nhật bài viết về bộ sưu tập, sự kiện và mẹo phối đồ tại đây.",
     ],
     sortOrder: 5,
@@ -32,19 +32,19 @@ export const STOREFRONT_PAGE_SEEDS: StorefrontPageSeed[] = [
   {
     slug: "tuyen-dung",
     title: "Tuyển dụng",
-    description: "Gia nhập đội ngũ VIZFAS.",
+    description: "Gia nhập đội ngũ PTT Shop.",
     body: [
-      "VIZFAS đang tìm kiếm đồng đội yêu thích thời trang và trải nghiệm khách hàng.",
-      "Gửi CV qua hello@vizfas.vn với tiêu đề \"Ứng tuyển VIZFAS\".",
+      "PTT Shop đang tìm kiếm đồng đội yêu thích thời trang và trải nghiệm khách hàng.",
+      "Gửi CV qua email [cần chốt] với tiêu đề \"Ứng tuyển PTT Shop\".",
     ],
     sortOrder: 6,
   },
   {
     slug: "ve-chung-toi",
-    title: "Về VIZFAS",
-    description: "Câu chuyện thương hiệu VIZFAS.",
+    title: "Về PTT Shop",
+    description: "Câu chuyện thương hiệu PTT Shop.",
     body: [
-      "VIZFAS là thương hiệu thời trang tối giản với tinh thần đường phố: mặc đơn giản vẫn nổi bật. Chúng tôi tập trung vào form dễ mặc, chất liệu bền và bảng màu dễ phối cho Nam · Nữ mỗi ngày.",
+      "PTT Shop là thương hiệu thời trang tối giản với tinh thần đường phố: mặc đơn giản vẫn nổi bật. Chúng tôi tập trung vào form dễ mặc, chất liệu bền và bảng màu dễ phối cho Nam · Nữ mỗi ngày.",
       "Từ áo thun Essential đến hoodie form rộng, mỗi sản phẩm được thiết kế để bạn dựng outfit nhanh mà vẫn chỉn chu.",
     ],
     sortOrder: 0,
@@ -63,7 +63,7 @@ export const STOREFRONT_PAGE_SEEDS: StorefrontPageSeed[] = [
     title: "Đổi trả",
     body: [
       "Đổi size/màu trong 30 ngày nếu còn tem và chưa qua sử dụng.",
-      "Liên hệ hello@vizfas.vn kèm mã đơn để được hỗ trợ.",
+      "Liên hệ email [cần chốt] kèm mã đơn để được hỗ trợ.",
     ],
     sortOrder: 11,
   },
@@ -117,7 +117,7 @@ export const STOREFRONT_PAGE_SEEDS: StorefrontPageSeed[] = [
     slug: "chinh-sach/dieu-khoan",
     title: "Điều khoản sử dụng",
     body: [
-      "Khi sử dụng website VIZFAS, bạn đồng ý với các điều khoản mua bán và bảo mật thông tin.",
+      "Khi sử dụng website PTT Shop, bạn đồng ý với các điều khoản mua bán và bảo mật thông tin.",
       "Giá và tồn kho có thể thay đổi; đơn hàng chỉ được xác nhận sau khi hệ thống ghi nhận thành công.",
     ],
     sortOrder: 20,
@@ -153,7 +153,7 @@ export const STOREFRONT_PAGE_SEEDS: StorefrontPageSeed[] = [
     slug: page.slug,
     title: page.title,
     description: page.description,
-    body: [`Ngày hiệu lực: ${page.effectiveLabel}`, ...page.body],
+    body: page.body,
     sortOrder: 40 + index,
   })),
 ];

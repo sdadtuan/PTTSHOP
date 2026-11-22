@@ -177,7 +177,7 @@ describe("pdp tab persistence", () => {
     const body = await saved.json();
     expect(body.bullets).toEqual(["Giao site", "Đổi trong 7 ngày"]);
     const row = await prisma.siteSettings.findUniqueOrThrow({ where: { id: "default" } });
-    expect(row.brandName).toBe("VIZFAS");
+    expect(row.brandName).toBe("PTT Shop");
     expect(parseBulletList(row.shippingPolicyJson)).toEqual(["Giao site", "Đổi trong 7 ngày"]);
 
     const read = await shippingGET();

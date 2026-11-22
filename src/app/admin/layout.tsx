@@ -3,8 +3,8 @@ import { AdminShell } from "@/components/admin/admin-shell";
 import "./admin.css";
 
 export const metadata: Metadata = {
-  title: "Admin VIZFAS",
-  description: "Bảng quản trị cửa hàng VIZFAS",
+  title: "Admin PTT Shop",
+  description: "Bảng quản trị cửa hàng PTT Shop",
 };
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

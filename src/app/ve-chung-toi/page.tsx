@@ -6,13 +6,13 @@ export async function generateMetadata() {
   const page = await getStorefrontPageBySlug("ve-chung-toi");
   return {
     title: page?.title || "Về chúng tôi",
-    description: page?.description || "Câu chuyện thương hiệu VIZFAS.",
+    description: page?.description || "Câu chuyện thương hiệu PTT Shop.",
   };
 }
 
 export default async function AboutPage() {
   const page = await getStorefrontPageBySlug("ve-chung-toi");
-  const title = page?.title || "Về VIZFAS";
+  const title = page?.title || "Về PTT Shop";
   const body = page?.body ?? [];
 
   return (

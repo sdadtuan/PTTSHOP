@@ -5,7 +5,7 @@ import { getSiteSettingsForRequest, getStorefrontLayoutForRequest } from "@/lib/
 import "@/components/demo-v2/demo-v2.css";
 
 export const metadata: Metadata = {
-  title: "Demo V2 — VIZFAS",
+  title: "Demo V2 — PTT Shop",
   description:
     "Bản thiết kế storefront Version B (demo so sánh). Không thay thế trang chủ chính.",
   robots: {
@@ -27,7 +27,7 @@ export default async function DemoV2Layout({
 
   return (
     <div className="demo-v2" data-testid="demo-v2-root">
-      <DemoHeader brandName={settings.brandName || "VIZFAS"} />
+      <DemoHeader brandName={settings.brandName || "PTT Shop"} />
       {children}
       <DemoFooter settings={settings} footerLinks={layoutCms.footerLinks} />
     </div>

@@ -748,7 +748,7 @@ export default function AdminGiaoDienPage() {
                               ...((selected.draftContent.demoExtraSlides as DemoHeroSlide[]) || []),
                               {
                                 eyebrow: "NEW",
-                                title: "VIZFAS",
+                                title: "PTT Shop",
                                 subtitle: "Mô tả slide",
                                 ctaHref: "/san-pham",
                                 ctaLabel: "Khám phá",

@@ -264,21 +264,21 @@ export type HomepageSnapshot = {
 };
 
 export const DEFAULT_SITE_SETTINGS: SiteSettingsData = {
-  brandName: "VIZFAS",
+  brandName: "PTT Shop",
   brandColor: "#f97316",
   logoUrl: null,
   logoLayout: DEFAULT_LOGO_LAYOUT,
   footerTagline:
     "Thời trang hiện đại, tối giản và khác biệt cho thế hệ trẻ tự tin thể hiện phong cách mỗi ngày.",
   contactAddress: "TP. Hồ Chí Minh, Việt Nam",
-  contactEmail: "hello@vizfas.vn",
+  contactEmail: "",
   contactPhone: "0321 456 789",
   contactHours: "Thứ 2 – Chủ Nhật 8:00 – 22:00",
   socialInstagram: "https://instagram.com",
   socialFacebook: "https://facebook.com",
   socialTiktok: "https://tiktok.com",
   socialYoutube: "https://youtube.com",
-  seoTitle: "VIZFAS — Thời trang mỗi ngày đều chất",
+  seoTitle: "PTT Shop — Thời trang mỗi ngày đều chất",
   seoDescription:
     "Cửa hàng thời trang & phụ kiện Nam · Nữ. Chất liệu bền, form hiện đại, dễ phối mỗi ngày.",
 };
@@ -305,7 +305,7 @@ export function defaultSectionContent(
   switch (key) {
     case "header":
       return {
-        brandName: "VIZFAS",
+        brandName: "PTT Shop",
         logoUrl: null,
       } satisfies HeaderContent;
     case "navigation":
@@ -331,14 +331,14 @@ export function defaultSectionContent(
       return {
         items: [
           { href: "https://facebook.com", label: "Facebook", preset: "facebook" },
-          { href: "https://m.me/vizfas", label: "Messenger", preset: "messenger" },
+          { href: "https://pttshop.vn", label: "Messenger", preset: "messenger" },
           { href: "https://zalo.me/0901234567", label: "Zalo", preset: "zalo" },
           { href: "tel:0901234567", label: "Gọi điện", preset: "phone" },
         ],
       } satisfies FloatingContactContent;
     case "reviews":
       return {
-        title: "Khách Hàng Nói Gì Về VIZFAS",
+        title: "Khách Hàng Nói Gì Về PTT Shop",
         emptyLine1: "Chưa có đánh giá công khai.",
         emptyLine2: "Khi khách mua hàng để lại review, chúng sẽ hiện tại đây.",
       } satisfies ReviewsSectionContent;
@@ -429,7 +429,7 @@ export function defaultSectionContent(
         gridImages: [...homeImages.colorPlay.grid],
         headline: "Xu Hướng Màu Sắc: Tự Do Thể Hiện Phong Cách Riêng",
         paragraph1:
-          "Từ kem trung tính đến đen tối giản hay cam nổi bật — VIZFAS giúp bạn phối màu tạo chất mà vẫn mặc được mỗi ngày.",
+          "Từ kem trung tính đến đen tối giản hay cam nổi bật — PTT Shop giúp bạn phối màu tạo chất mà vẫn mặc được mỗi ngày.",
         paragraph2:
           "Chọn một item Essential, thêm phụ kiện, và hoàn thiện look trong vài phút — giữ form sạch, điểm nhấn rõ.",
         introImage1: homeImages.colorPlay.intro[0],

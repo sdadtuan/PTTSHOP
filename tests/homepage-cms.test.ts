@@ -48,7 +48,7 @@ describe("CMS validation / sanitising", () => {
     expect(isSafeHref(" JavaScript:alert(1)")).toBe(false);
     expect(isSafeHref("//evil.com")).toBe(false);
     expect(isSafeHref("/san-pham")).toBe(true);
-    expect(isSafeHref("https://vizfas.vn")).toBe(true);
+    expect(isSafeHref("https://pttshop.vn")).toBe(true);
     expect(isSafeMediaUrl("data:text/html,hi")).toBe(false);
     expect(isSafeMediaUrl("javascript:alert(1)")).toBe(false);
     expect(isSafeMediaUrl("/images/home-v2/hero-main.jpg")).toBe(true);

@@ -1,6 +1,6 @@
 # Homepage v2 AI photo mapping
 
-Source mock: `/workspace/mock-v2/homepage-mau-v2.png` (510x2560, VIZFAS streetwear homepage).
+Source mock: `/workspace/mock-v2/homepage-mau-v2.png` (510x2560, PTT Shop streetwear homepage).
 All images are newly generated photoreal shots matching each mock slot (existing `/workspace/home-ai` and `/workspace/hoodies` photos did not match this mock closely enough to reuse).
 Format: JPEG quality 85, longest side max 1600px. Reference crops used for generation live in `/workspace/mock-v2/crops/`.
 Style: East Asian models, warm off-white / light-gray studio, soft light, no UI text.

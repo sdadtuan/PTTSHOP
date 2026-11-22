@@ -1,4 +1,4 @@
-# VIZFAS (PTTSHOP)
+# PTT Shop (PTTSHOP)
 
 Hệ thống thương mại điện tử thời trang / phụ kiện (Nam · Nữ) — Next.js 16 + Prisma + SQLite + NextAuth v5.
 
@@ -44,7 +44,7 @@ Copy `.env.example` → `.env`.
 
 1. Đăng ký `/dang-ky` hoặc đăng nhập tài khoản vừa seed
 2. Thêm sản phẩm vào giỏ (DB cart + cookie `vizfas_cart_sid`)
-3. Checkout COD hoặc chuyển khoản; thử mã `VIZFAS10` (đơn ≥ 500k)
+3. Checkout COD hoặc chuyển khoản. Mã giảm giá mẫu trong seed đang tắt.
 4. Admin `/admin` → Đơn hàng → đổi trạng thái (COMPLETED = “Đã giao”)
 5. Khách đánh giá sản phẩm đã mua trên PDP
 6. Admin quản lý sản phẩm / danh mục / coupon / review / doanh thu 14 ngày

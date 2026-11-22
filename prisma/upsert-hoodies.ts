@@ -363,11 +363,11 @@ async function main() {
   });
 
   await upsertHoodie({
-    name: "Áo Hoodie Nữ Form Rộng VIZFAS Essential",
+    name: "Áo Hoodie Nữ Form Rộng PTT Shop Essential",
     slug: "ao-hoodie-nu-essential",
     gender: "FEMALE",
     description:
-      "Áo Hoodie nữ form rộng VIZFAS Essential — in VIZFAS, mềm mại, dễ layer. Gallery ảnh thật Xám / Hồng / Đen (front / back / fabric).",
+      "Áo Hoodie nữ form rộng PTT Shop Essential — in PTT Shop, mềm mại, dễ layer. Gallery ảnh thật Xám / Hồng / Đen (front / back / fabric).",
     categoryId: hoodie.id,
     price: 579000,
     compareAt: 849000,

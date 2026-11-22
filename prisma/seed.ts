@@ -12,8 +12,7 @@ if (process.env.NODE_ENV === "production") {
 
 const prisma = new PrismaClient();
 
-const img = (id: string) =>
-  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=800&q=80`;
+const img = (_id: string) => "/images/placeholder-product.svg";
 
 async function main() {
   const admin = readAdminCredentials();
@@ -40,7 +39,7 @@ async function main() {
 
   await prisma.user.create({
     data: {
-      name: "Admin VIZFAS",
+      name: "Admin PTT Shop",
       email: admin.email,
       password,
       role: "ADMIN",
@@ -111,12 +110,12 @@ async function main() {
 
   await prisma.coupon.create({
     data: {
-      code: "VIZFAS10",
+      code: "PTTSHOP10",
       description: "Giảm 10% đơn từ 500.000đ",
       discountType: "PERCENT",
       discountValue: 10,
       minOrder: 500000,
-      isActive: true,
+      isActive: false,
     },
   });
 
@@ -133,7 +132,7 @@ async function main() {
     isBestSeller?: boolean;
     /** Product-level fallback images (no colour scope). */
     images: string[];
-    /** Optional per-colour galleries (Unsplash placeholders OK). */
+    /** Optional per-colour galleries. Local placeholder until real photos exist. */
     colorImages?: Record<string, string[]>;
     colors: { name: string; hex: string }[];
     sizes: string[];
@@ -258,10 +257,10 @@ async function main() {
       compareAt: 899000,
     },
     {
-      name: "Áo Hoodie Nữ Form Rộng VIZFAS Essential",
+      name: "Áo Hoodie Nữ Form Rộng PTT Shop Essential",
       slug: "ao-hoodie-nu-essential",
       description:
-        "Hoodie nữ form rộng — ảnh Unsplash là placeholder theo màu Xám nhạt / Hồng / Đen.",
+        "Hoodie nữ form rộng. Ảnh màu dùng ảnh cục bộ cho đến khi có ảnh thật.",
       material: "Nỉ cotton",
       fit: "Oversize",
       gender: "FEMALE",

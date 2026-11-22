@@ -80,7 +80,7 @@ export const TYPE_SCALE = {
     css: "clamp(1.25rem, 2.2vw, 1.75rem)",
   },
   footerLogo: {
-    label: "Footer VIZFAS (+40%)",
+    label: "Footer PTT Shop (+40%)",
     desktopPx: 67,
     css: "clamp(2.5rem, 8vw, 4.2rem)", // ~40–67px
   },

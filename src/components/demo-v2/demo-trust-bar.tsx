@@ -21,7 +21,7 @@ export function DemoTrustBar({
         ? items.slice(0, 4).map((title, i) => ({
             icon: FALLBACK_ICONS[i % FALLBACK_ICONS.length]!,
             title,
-            subtitle: "VIZFAS",
+            subtitle: "PTT Shop",
           }))
         : [
             { icon: Truck, title: "Giao Hàng Nhanh", subtitle: "Toàn Quốc" },

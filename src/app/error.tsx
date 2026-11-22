@@ -13,7 +13,7 @@ export default function Error({
         Đã xảy ra lỗi
       </h1>
       <p className="mt-3 text-sm text-neutral-500">
-        Vui lòng thử lại. Nếu lỗi kéo dài, liên hệ hello@vizfas.vn.
+        Vui lòng thử lại. Nếu lỗi kéo dài, liên hệ [cần chốt].
       </p>
       <button
         type="button"

@@ -76,7 +76,7 @@ export function Footer() {
     { href: brand.socialYoutube || "https://youtube.com", label: "YouTube", Icon: YoutubeIcon },
   ] as const;
 
-  const brandName = brand.brandName || "VIZFAS";
+  const brandName = brand.brandName || "PTT Shop";
   const showFooterBrandText = Boolean(brand.logoUrl && brand.logoLayout.footerShowBrandName);
 
   return (
