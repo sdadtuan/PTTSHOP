@@ -7,6 +7,7 @@ import { BrandLogoImg } from "@/components/cms/brand-logo-img";
 import { useSiteBrand } from "@/components/cms/site-brand-context";
 import { useStorefrontLayout } from "@/components/cms/storefront-layout-context";
 import { TYPE_SCALE } from "@/config/home-type-scale";
+import { company, companyPolicyLinks } from "@/content/company";
 
 function InstagramIcon({ className }: { className?: string }) {
   return (
@@ -220,6 +221,32 @@ export function Footer() {
         </div>
       </div>
 
+      <div className="border-t border-black/5">
+        <div className="mx-auto max-w-7xl space-y-3 px-4 py-6 text-xs leading-relaxed text-neutral-500 md:px-6">
+          <p className="font-semibold text-neutral-800">{company.name}</p>
+          <p>
+            MST {company.taxId}, cấp ngày {company.issuedOn}, nơi cấp {company.issuedBy}. Người đại diện: {company.representative}.
+          </p>
+          <p>
+            {company.address}. Hotline {company.hotline}. Email             {company.email}.
+          </p>
+          <p>
+            <Link href="/yeu-cau-du-lieu" className="hover:text-neutral-800">
+              Yêu cầu xem, sửa, xóa dữ liệu hoặc rút đồng ý
+            </Link>
+          </p>
+          <p className="flex flex-wrap gap-x-3 gap-y-1">
+            {companyPolicyLinks.map((link) => (
+              <Link key={link.href} href={link.href} className="hover:text-neutral-800">
+                {link.label}
+              </Link>
+            ))}
+          </p>
+          {company.tradeConfirmCode ? (
+            <p>Đã thông báo Bộ Công Thương. Mã: {company.tradeConfirmCode}</p>
+          ) : null}
+        </div>
+      </div>
       <div className="border-t border-black/5">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-3 px-4 py-5 text-xs text-neutral-500 md:flex-row md:items-center md:px-6">
           <p>
