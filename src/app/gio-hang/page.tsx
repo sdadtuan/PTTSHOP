@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { StorefrontImage } from "@/components/product/storefront-image";
 import Link from "next/link";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useCart } from "@/components/cart/cart-context";
@@ -54,7 +54,7 @@ export default function CartPage() {
             <li key={item.variantId} className="flex gap-4 p-4 md:p-5">
               <div className="relative h-28 w-24 shrink-0 overflow-hidden bg-neutral-100">
                 {item.image ? (
-                  <Image
+                  <StorefrontImage
                     src={item.image}
                     alt={item.name}
                     fill

@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import { StorefrontImage } from "@/components/product/storefront-image";
 import { ShoppingBag } from "lucide-react";
 import { FRAME_ASPECT, OBJECT_POSITION } from "@/config/home-frame-specs";
 import { TYPE_SCALE } from "@/config/home-type-scale";
@@ -87,7 +87,7 @@ export function ProductCard({
           style={useSplitMobileFrame ? undefined : { aspectRatio: aspect }}
         >
           {imageUrl ? (
-            <Image
+            <StorefrontImage
               src={imageUrl}
               alt={imageAlt}
               fill

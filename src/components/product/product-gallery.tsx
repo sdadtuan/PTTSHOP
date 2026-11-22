@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { StorefrontImage } from "@/components/product/storefront-image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Pause, Play, Search, Volume2, VolumeX } from "lucide-react";
 import { mediaListKey } from "@/lib/media-list-key";
@@ -129,7 +129,7 @@ export function ProductGallery({ images, name, selectedColor, colorPickNonce = 0
               </span>
             </>
           ) : (
-            <Image
+            <StorefrontImage
               src={img.url}
               alt={img.alt || name}
               fill
@@ -204,7 +204,7 @@ export function ProductGallery({ images, name, selectedColor, colorPickNonce = 0
             </>
           ) : (
             <>
-              <Image
+              <StorefrontImage
                 src={current.url}
                 alt={current.alt || name}
                 fill

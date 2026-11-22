@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { StorefrontImage } from "@/components/product/storefront-image";
 import { useMemo, useState } from "react";
 import { ProductGallery, type GalleryImage } from "@/components/product/product-gallery";
 import { ProductPurchase } from "@/components/product/product-purchase";
@@ -208,7 +208,7 @@ export function ProductDetailClient({ product, shippingPolicyJson }: Props) {
             ) : null}
           </div>
           <div className="relative min-h-[320px] min-w-0 overflow-hidden rounded-sm bg-neutral-100 md:min-h-[380px]">
-            <Image
+            <StorefrontImage
               src={detailImage || "/images/ai-hoodies/kem-fabric.jpg"}
               alt={`Chi tiết chất liệu ${color}`}
               fill

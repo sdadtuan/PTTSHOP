@@ -1,5 +1,5 @@
 import { Fragment, type CSSProperties, type ReactNode } from "react";
-import Image from "next/image";
+import { StorefrontImage } from "@/components/product/storefront-image";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -219,7 +219,7 @@ export default async function HomePage() {
             >
               <ArrowUpRight className="h-6 w-6" />
             </Link>
-            <Image
+            <StorefrontImage
               src={heroSrc}
               alt=""
               width={864}
@@ -243,7 +243,7 @@ export default async function HomePage() {
           {/* Left photo — only touches title edge */}
           <div className="absolute top-6 left-[1%] z-10 w-[20%] max-w-[260px] -rotate-[8deg] overflow-hidden rounded-xl bg-neutral-200 shadow-md">
             <div className="relative" style={{ aspectRatio: FRAME_ASPECT.bannerLeft }}>
-              <Image
+              <StorefrontImage
                 src={dual.leftImage || homeImages.dualBanner.left}
                 alt="Look đơn giản — banner trái"
                 fill
@@ -289,7 +289,7 @@ export default async function HomePage() {
             />
             <div className="relative z-10 overflow-hidden rounded-xl bg-neutral-200 shadow-lg">
               <div className="relative" style={{ aspectRatio: FRAME_ASPECT.bannerRight }}>
-                <Image
+                <StorefrontImage
                   src={dual.rightImage || homeImages.dualBanner.right}
                   alt="Look đơn giản — banner phải"
                   fill
@@ -307,7 +307,7 @@ export default async function HomePage() {
           <div className="mb-5 flex items-end justify-center gap-4">
             <div className="w-[38%] -rotate-[6deg] overflow-hidden rounded-xl bg-neutral-200 shadow-md">
               <div className="relative" style={{ aspectRatio: FRAME_ASPECT.bannerLeft }}>
-                <Image
+                <StorefrontImage
                   src={dual.leftImage || homeImages.dualBanner.left}
                   alt="Look đơn giản — banner trái"
                   fill
@@ -324,7 +324,7 @@ export default async function HomePage() {
               />
               <div className="relative overflow-hidden rounded-xl bg-neutral-200 shadow-md">
                 <div className="relative" style={{ aspectRatio: FRAME_ASPECT.bannerRight }}>
-                  <Image
+                  <StorefrontImage
                     src={dual.rightImage || homeImages.dualBanner.right}
                     alt="Look đơn giản — banner phải"
                     fill
@@ -386,7 +386,7 @@ export default async function HomePage() {
             }
             className="group relative aspect-[5/4] max-h-[380px] overflow-hidden rounded-2xl bg-neutral-200 md:row-span-2 md:aspect-[233/266] md:max-h-none"
           >
-            <Image
+            <StorefrontImage
               src={col.tiles[0]?.imageUrl || homeImages.collections.aoThun}
               alt={col.tiles[0]?.title || mosaicCats.ao?.name || "Áo thun"}
               fill
@@ -419,7 +419,7 @@ export default async function HomePage() {
             className="group relative overflow-hidden rounded-2xl bg-neutral-200"
             style={{ aspectRatio: FRAME_ASPECT.catQuan }}
           >
-            <Image
+            <StorefrontImage
               src={col.tiles[1]?.imageUrl || homeImages.collections.quan}
               alt={col.tiles[1]?.title || mosaicCats.quan?.name || "Quần"}
               fill
@@ -452,7 +452,7 @@ export default async function HomePage() {
             className="group relative overflow-hidden rounded-2xl bg-neutral-200"
             style={{ aspectRatio: FRAME_ASPECT.catPhuKien }}
           >
-            <Image
+            <StorefrontImage
               src={col.tiles[2]?.imageUrl || homeImages.collections.phuKien}
               alt={col.tiles[2]?.title || mosaicCats.pk?.name || "Phụ kiện"}
               fill
@@ -516,7 +516,7 @@ export default async function HomePage() {
               {/* Model ~15–18% page ≈ ~38% of left col; tall nearly full card */}
               <div className="pointer-events-none absolute top-0 right-0 z-10 h-[38vh] max-h-[300px] w-[36%] max-w-[220px] min-w-[130px] md:inset-y-0 md:h-auto md:max-h-none md:w-[38%]">
                 <div className="relative h-full w-full overflow-hidden bg-gradient-to-b from-neutral-100/60 to-transparent">
-                  <Image
+                  <StorefrontImage
                     src={diverse.modelImage || homeImages.diverse.model}
                     alt="Đa dạng kiểu dáng"
                     fill
@@ -610,7 +610,7 @@ export default async function HomePage() {
         <section className="bg-neutral-900 py-12 text-white" data-testid="promo-banner">
           <div className="mx-auto flex max-w-7xl flex-col items-start gap-6 px-4 md:flex-row md:items-center md:justify-between md:px-6">
             <div className="relative h-40 w-full overflow-hidden rounded-xl md:h-48 md:w-72">
-              <Image
+              <StorefrontImage
                 src={promo.imageUrl}
                 alt={promo.title}
                 fill
@@ -640,7 +640,7 @@ export default async function HomePage() {
       <section className="relative mx-auto max-w-7xl overflow-hidden px-4 py-10 md:px-6 md:py-20">
         <div className="relative grid grid-cols-1 gap-x-3 gap-y-4 max-md:grid-cols-[minmax(0,47fr)_minmax(0,53fr)] max-md:items-start md:pr-11 lg:grid-cols-[minmax(200px,0.26fr)_minmax(220px,0.3fr)_minmax(0,0.44fr)] lg:[grid-template-areas:'model_type_copy'_'model_grid_grid'] lg:pr-14">
           <div className="relative z-10 aspect-[3/4] w-full max-md:col-start-2 max-md:row-span-2 max-md:row-start-1 max-md:max-h-none max-md:self-start md:aspect-auto md:h-[420px] md:max-h-none lg:h-auto lg:[grid-area:model]">
-            <Image
+            <StorefrontImage
               src={colorPlay.mainImage || homeImages.colorPlay.main}
               alt="Phối màu tạo chất"
               fill
@@ -695,7 +695,7 @@ export default async function HomePage() {
                   className="relative aspect-[3/4] overflow-hidden bg-neutral-100 lg:aspect-auto lg:h-full lg:min-h-[10rem]"
                   data-testid={`phoi-intro-cell-${i + 1}`}
                 >
-                  <Image
+                  <StorefrontImage
                     src={img.src}
                     alt={img.alt}
                     fill
@@ -720,7 +720,7 @@ export default async function HomePage() {
                   className="relative aspect-[4/5] overflow-hidden bg-neutral-100 sm:aspect-[4/3]"
                   data-testid={`phoi-grid-cell-${i + 1}`}
                 >
-                  <Image
+                  <StorefrontImage
                     src={src}
                     alt={`Look phối màu ${i + 1}`}
                     fill

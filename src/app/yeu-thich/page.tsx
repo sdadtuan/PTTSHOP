@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
+import { StorefrontImage } from "@/components/product/storefront-image";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { formatVnd } from "@/lib/format";
@@ -101,7 +101,7 @@ export default function WishlistPage() {
           <li key={i.variantId} className="flex gap-4 p-4">
             <Link href={`/san-pham/${i.slug}`} className="relative h-20 w-16 shrink-0 overflow-hidden bg-neutral-100">
               {i.image ? (
-                <Image src={i.image} alt={i.name} fill className="object-cover" sizes="64px" />
+                <StorefrontImage src={i.image} alt={i.name} fill className="object-cover" sizes="64px" />
               ) : null}
             </Link>
             <div className="min-w-0 flex-1">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Heart,
   Minus,
@@ -19,6 +19,7 @@ import { primaryImage } from "@/lib/product-media";
 import { cn } from "@/lib/utils";
 import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
 import { formatStockTemplate } from "@/lib/storefront/ui-copy-types";
+import { colorOutOfStock, pickSizeForColor } from "@/lib/variant-stock";
 
 type Variant = {
   id: string;
@@ -84,12 +85,16 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
         .sort((a, b) => sizeRank(a.size) - sizeRank(b.size)),
     [product.variants, color],
   );
-  const [size, setSize] = useState(
-    sizesForColor.find((v) => v.stock > 0)?.size ?? sizesForColor[0]?.size ?? "",
+  const [size, setSize] = useState(() =>
+    pickSizeForColor(product.variants, color, ""),
   );
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const [showChart, setShowChart] = useState(false);
+
+  useEffect(() => {
+    setSize((current) => pickSizeForColor(product.variants, color, current));
+  }, [color, product.variants]);
 
   const selected =
     product.variants.find((v) => v.color === color && v.size === size) ??
@@ -201,37 +206,37 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
           <span className="font-normal text-neutral-500">{color}</span>
         </p>
         <div className="flex flex-wrap gap-2">
-          {colors.map((c) => (
+          {colors.map((c) => {
+            const out = colorOutOfStock(product.variants, c.name);
+            return (
             <button
               key={c.name}
               type="button"
-              onClick={() => {
-                onColorChange(c.name);
-                const next =
-                  product.variants.find(
-                    (v) => v.color === c.name && v.size === size && v.stock > 0,
-                  ) ??
-                  product.variants.find((v) => v.color === c.name && v.stock > 0) ??
-                  product.variants.find((v) => v.color === c.name);
-                if (next) setSize(next.size);
-              }}
+              disabled={out}
+              onClick={() => onColorChange(c.name)}
               className={cn(
-                "h-9 w-9 rounded-full border-2 p-0.5 transition",
+                "relative h-9 w-9 rounded-full border-2 p-0.5 transition",
                 color === c.name ? "border-neutral-900" : "border-transparent",
+                out && "cursor-not-allowed opacity-40",
               )}
-              aria-label={c.name}
+              aria-label={out ? `${c.name}, Hết hàng` : c.name}
               aria-pressed={color === c.name}
-              title={c.name}
+              title={out ? `${c.name} — Hết hàng` : c.name}
               data-testid="pdp-color-dot"
               data-color={c.name}
               data-hex={c.hex || ""}
+              data-stock={out ? "0" : "1"}
             >
               <span
                 className="block h-full w-full rounded-full ring-1 ring-black/10"
                 style={{ background: c.bg }}
               />
+              {out ? (
+                <span className="pointer-events-none absolute inset-1 rotate-45 border-t border-neutral-900" aria-hidden="true" />
+              ) : null}
             </button>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -317,6 +322,8 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
               data-size={v.size}
               data-stock={v.stock}
               aria-pressed={size === v.size}
+              aria-label={v.stock <= 0 ? `${v.size}, Hết hàng` : v.size}
+              title={v.stock <= 0 ? "Hết hàng" : v.size}
               className={cn(
                 "min-w-12 rounded border px-3 py-2 text-sm font-medium transition",
                 size === v.size
@@ -325,7 +332,10 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
                 v.stock <= 0 && "cursor-not-allowed opacity-40",
               )}
             >
-              {v.size}
+              <span className={cn(v.stock <= 0 && "line-through")}>{v.size}</span>
+              {v.stock <= 0 ? (
+                <span className="mt-0.5 block text-[10px] font-normal leading-none">Hết hàng</span>
+              ) : null}
             </button>
           ))}
         </div>

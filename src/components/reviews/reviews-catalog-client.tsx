@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { StorefrontImage } from "@/components/product/storefront-image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { StarRating } from "@/components/reviews/star-rating";
@@ -168,7 +168,7 @@ export function ReviewsCatalogClient({
                   className="relative h-20 w-16 shrink-0 overflow-hidden bg-neutral-100"
                 >
                   {r.product.image ? (
-                    <Image src={r.product.image} alt="" fill className="object-cover" sizes="64px" />
+                    <StorefrontImage src={r.product.image} alt="" fill className="object-cover" sizes="64px" />
                   ) : null}
                 </Link>
                 <div className="min-w-0 flex-1">

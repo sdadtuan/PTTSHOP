@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { StorefrontImage } from "@/components/product/storefront-image";
 import Link from "next/link";
 import { publicCatalogWhere } from "@/lib/catalog-visibility";
 import { prisma } from "@/lib/prisma";
@@ -42,7 +42,7 @@ export default async function CollectionsPage() {
             href={`/san-pham?collection=${c.slug}`}
             className="group relative aspect-[16/10] max-h-[min(40vh,280px)] overflow-hidden bg-neutral-200 md:aspect-auto md:max-h-none md:min-h-[360px]"
           >
-            <Image
+            <StorefrontImage
               src={
                 c.image ||
                 c.products[0]?.product.images[0]?.url ||
