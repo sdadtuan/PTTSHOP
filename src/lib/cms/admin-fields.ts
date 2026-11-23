@@ -92,7 +92,7 @@ export const SECTION_FIELDS: Partial<Record<HomepageSectionKey, FieldDef[]>> = {
       path: "introImage1",
       label: "Ảnh intro 1 (dưới đoạn văn)",
       kind: "image",
-      hint: "Hai ảnh dưới “Xu Hướng Màu Sắc” — thay bằng tải lên hoặc URL /uploads/…",
+      hint: "Hai ảnh dưới “Xu Hướng Màu Sắc” — thay bằng tải lên hoặc URL /media/uploads/…",
     },
     { path: "introImage1Alt", label: "Alt ảnh intro 1", kind: "text" },
     {

@@ -1,4 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { unlink } from "fs/promises";
+import path from "path";
 import { PrismaClient } from "@prisma/client";
 import { cleanDb, resetTestDb, seedMinimal } from "./helpers";
 
@@ -225,5 +227,22 @@ describe("CMS API access control", () => {
     fd.append("file", new File(["hello world, not an image"], "x.txt", { type: "text/plain" }));
     const res = await uploadPOST(new Request("http://localhost/api/upload", { method: "POST", body: fd }));
     expect(res.status).toBe(400);
+  });
+
+  it("admin image upload is stored under data/media/uploads and returns /media/uploads", async () => {
+    authMock.mockResolvedValue({ user: { id: "a1", role: "ADMIN" } });
+    const png = Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+      "base64",
+    );
+    const fd = new FormData();
+    fd.append("file", new File([png], "logo.png", { type: "image/png" }));
+    const res = await uploadPOST(new Request("http://localhost/api/upload", { method: "POST", body: fd }));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.kind).toBe("image");
+    expect(body.url).toMatch(/^\/media\/uploads\/\d+-[a-f0-9]{8}\.png$/);
+    const full = path.join(process.cwd(), "data", "media", "uploads", path.basename(body.url));
+    await unlink(full);
   });
 });

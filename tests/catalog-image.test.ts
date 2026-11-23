@@ -6,6 +6,7 @@ describe("isCatalogMediaSrc", () => {
   it("bỏ tối ưu Next cho ảnh /media/ do Nginx phục vụ", () => {
     expect(isCatalogMediaSrc("/media/catalog/ao.jpg")).toBe(true);
     expect(isCatalogMediaSrc("/media/catalog/a.JPEG")).toBe(true);
+    expect(isCatalogMediaSrc("/media/uploads/logo.png")).toBe(true);
   });
 
   it("giữ tối ưu cho ảnh trong public và link ngoài", () => {

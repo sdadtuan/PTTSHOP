@@ -94,7 +94,7 @@ export function ImageField({
           <AdminInput
             aria-label={`${label} (đường dẫn)`}
             value={value}
-            placeholder="/uploads/… hoặc https://…"
+            placeholder="/media/uploads/… hoặc https://…"
             onChange={(e) => onChange(e.target.value)}
           />
           <div className="flex flex-wrap gap-2">
