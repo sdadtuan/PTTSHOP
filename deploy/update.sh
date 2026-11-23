@@ -35,6 +35,26 @@ die() {
   exit 1
 }
 
+find_next_server() {
+  local pid="$1"
+  local cmd child found
+  cmd="$(ps -o cmd= -p "$pid" 2>/dev/null || true)"
+  case "$cmd" in
+    *next-server*)
+      echo "$pid"
+      return 0
+      ;;
+  esac
+  for child in $(ps -o pid= --ppid "$pid" 2>/dev/null); do
+    found="$(find_next_server "$child" || true)"
+    if [ -n "$found" ]; then
+      echo "$found"
+      return 0
+    fi
+  done
+  return 1
+}
+
 trap 'status=$?; echo "Lỗi ở dòng ${LINENO} (mã ${status})." >&2; rollback_hint; exit "$status"' ERR
 
 if [ -z "${DEPLOY_BRANCH:-}" ]; then
@@ -114,7 +134,32 @@ fi
 
 sudo -u "$SERVICE_USER" bash -lc 'cd /var/www/pttshop && set +x && set -a && { [ ! -f .env ] || . ./.env; } && set +x && set +a && npx prisma migrate deploy'
 sudo -u "$SERVICE_USER" npm run build
+build_done_epoch="$(date +%s)"
+echo "Build xong lúc $(date -d "@${build_done_epoch}" '+%Y-%m-%d %H:%M:%S %Z') (epoch ${build_done_epoch})."
 systemctl restart pttshop
+
+main_pid=""
+next_pid=""
+for _try in 1 2 3 4 5 6 7 8 9 10; do
+  main_pid="$(systemctl show pttshop -p MainPID --value)"
+  if [ -n "$main_pid" ] && [ "$main_pid" != "0" ]; then
+    next_pid="$(find_next_server "$main_pid" || true)"
+  fi
+  if [ -n "$next_pid" ]; then
+    break
+  fi
+  sleep 0.5
+done
+if [ -z "$next_pid" ]; then
+  die "Không thấy next-server sau systemctl restart pttshop."
+fi
+start_raw="$(ps -o lstart= -p "$next_pid" | sed 's/^ *//')"
+start_epoch="$(date -d "$start_raw" +%s)"
+active_enter="$(systemctl show pttshop -p ActiveEnterTimestamp --value)"
+echo "next-server PID=${next_pid} khởi động ${start_raw} (epoch ${start_epoch}). MainPID=${main_pid}. ActiveEnterTimestamp=${active_enter}."
+if [ "$start_epoch" -lt "$build_done_epoch" ]; then
+  die "next-server PID ${next_pid} khởi động trước khi build xong. Tiến trình cũ vẫn đang chạy."
+fi
 
 deadline=$((SECONDS + 30))
 home_code="000"
