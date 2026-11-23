@@ -15,6 +15,7 @@ import { CmsFieldList, ImageField, setPath } from "@/components/cms/cms-fields";
 import { LogoLayoutEditor } from "@/components/cms/logo-layout-editor";
 import { FooterColumnsEditor, LinkListEditor } from "@/components/cms/link-list-editor";
 import { LAYOUT_SECTIONS, SECTION_FIELDS, SECTION_HELP } from "@/lib/cms/admin-fields";
+import { uploadAdminFile } from "@/lib/admin-upload-client";
 import { ShippingPolicyCard } from "@/components/admin/shipping-policy-card";
 import type {
   DemoHeroSlide,
@@ -171,16 +172,14 @@ export default function AdminGiaoDienPage() {
       toast("Ảnh tối đa 5MB", "error");
       return null;
     }
-    const fd = new FormData();
-    fd.append("file", file);
-    const res = await fetch("/api/upload", { method: "POST", body: fd });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      toast(data.error || "Upload thất bại", "error");
+    try {
+      const data = await uploadAdminFile(file);
+      toast("Đã tải ảnh lên — nhớ Lưu nháp", "success");
+      return data.url;
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Upload thất bại", "error");
       return null;
     }
-    toast("Đã tải ảnh lên — nhớ Lưu nháp", "success");
-    return data.url as string;
   }
 
   async function post(body: Record<string, unknown>, fallbackError: string) {

@@ -17,6 +17,7 @@ import {
   useAdminToast,
 } from "@/components/admin/ui";
 import { HEX_RE } from "@/lib/product-media";
+import { uploadAdminFile } from "@/lib/admin-upload-client";
 import {
   autoSlugOnNameChange,
   autoSlugOnSlugBlur,
@@ -99,12 +100,12 @@ const IMAGE_ACCEPT = "image/jpeg,image/png,image/webp,image/gif";
 const VIDEO_ACCEPT = "video/mp4,video/webm";
 
 async function uploadFile(file: File) {
-  const body = new FormData();
-  body.set("file", file);
-  const res = await fetch("/api/upload", { method: "POST", body });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || `Upload thất bại: ${file.name}`);
-  return data as { url: string; kind: string };
+  try {
+    return await uploadAdminFile(file);
+  } catch (err) {
+    if (err instanceof Error && err.message !== "Upload thất bại") throw err;
+    throw new Error(`Upload thất bại: ${file.name}`);
+  }
 }
 
 function defaultColor(price = 0): EditorColor {

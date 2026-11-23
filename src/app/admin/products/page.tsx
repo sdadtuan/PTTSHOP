@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronDown, ChevronRight, Plus, Pencil, Trash2, Film } from "lucide-react";
+import { uploadAdminFile } from "@/lib/admin-upload-client";
 import {
   AdminBadge,
   AdminButton,
@@ -133,12 +134,7 @@ export default function AdminProductsPage() {
   }
 
   async function uploadFile(file: File) {
-    const upload = new FormData();
-    upload.set("file", file);
-    const upRes = await fetch("/api/upload", { method: "POST", body: upload });
-    const upData = await upRes.json();
-    if (!upRes.ok) throw new Error(upData.error || "Upload thất bại");
-    return upData as { url: string; kind: string };
+    return uploadAdminFile(file);
   }
 
   async function handleVideoFiles(

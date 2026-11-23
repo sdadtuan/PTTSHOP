@@ -79,6 +79,32 @@ test.describe("Homepage CMS (Quản lý giao diện)", () => {
     await home.close();
   });
 
+  test("logo upload on giao-dien returns /media/uploads", async ({ page }, info) => {
+    test.skip(info.project.name !== "chromium", "desktop admin");
+    await loginAdmin(page);
+    await openCms(page);
+    await page.getByTestId("cms-section-header").click();
+
+    const png = path.join(process.cwd(), "test-results", "cms-logo.png");
+    fs.mkdirSync(path.dirname(png), { recursive: true });
+    fs.writeFileSync(
+      png,
+      Buffer.from(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+        "base64",
+      ),
+    );
+
+    const [res] = await Promise.all([
+      page.waitForResponse((r) => r.url().includes("/api/upload") && r.request().method() === "POST"),
+      page.getByTestId("cms-logo-upload").setInputFiles(png),
+    ]);
+    expect(res.status()).toBe(200);
+    const body = await res.json();
+    expect(String(body.url || "")).toMatch(/^\/media\/uploads\//);
+    await expect(page.getByLabel(/Logo \(để trống/)).toHaveValue(/^\/media\/uploads\//);
+  });
+
   test("upload rejects a non-image file", async ({ page }, info) => {
     test.skip(info.project.name !== "chromium", "desktop admin");
     await loginAdmin(page);

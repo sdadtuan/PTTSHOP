@@ -12,6 +12,7 @@ import {
   AdminTableSkeleton,
   useAdminToast,
 } from "@/components/admin/ui";
+import { uploadAdminFile } from "@/lib/admin-upload-client";
 
 type HeroBanner = {
   id: string;
@@ -100,11 +101,7 @@ export default function AdminBannersPage() {
   async function uploadFile(file: File) {
     setBusy(true);
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Upload thất bại");
+      const data = await uploadAdminFile(file);
       setDraftUrl(data.url);
       toast("Đã upload ảnh", "success");
     } catch (e) {

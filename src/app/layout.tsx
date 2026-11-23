@@ -34,6 +34,13 @@ export async function generateMetadata(): Promise<Metadata> {
       template: `%s | ${brand}`,
     },
     description: settings.seoDescription || DEFAULT_SITE_SETTINGS.seoDescription,
+    icons: {
+      icon: [
+        { url: "/favicon.ico" },
+        { url: "/icon.png", type: "image/png", sizes: "512x512" },
+      ],
+      apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+    },
   };
 }
 

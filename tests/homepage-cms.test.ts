@@ -25,6 +25,7 @@ import { isSafeHref, isSafeMediaUrl, parseSectionContent, sanitizePlainText, sit
 import { detectMimeFromBuffer, validateUploadFile } from "@/lib/upload-validate";
 import { GET as cmsGET, POST as cmsPOST } from "@/app/api/admin/homepage-cms/route";
 import { POST as uploadPOST } from "@/app/api/upload/route";
+import { ADMIN_UPLOAD_PATH } from "@/lib/admin-upload-path";
 
 const prisma = new PrismaClient();
 type Hero = { title: string; ctaHref: string; trustItems: string[] };
@@ -229,7 +230,7 @@ describe("CMS API access control", () => {
     expect(res.status).toBe(400);
   });
 
-  it("admin image upload is stored under data/media/uploads and returns /media/uploads", async () => {
+  it("logo field on /admin/giao-dien posts to /api/upload and stores /media/uploads", async () => {
     authMock.mockResolvedValue({ user: { id: "a1", role: "ADMIN" } });
     const png = Buffer.from(
       "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
@@ -237,10 +238,12 @@ describe("CMS API access control", () => {
     );
     const fd = new FormData();
     fd.append("file", new File([png], "logo.png", { type: "image/png" }));
-    const res = await uploadPOST(new Request("http://localhost/api/upload", { method: "POST", body: fd }));
+    expect(ADMIN_UPLOAD_PATH).toBe("/api/upload");
+    const res = await uploadPOST(new Request(`http://localhost${ADMIN_UPLOAD_PATH}`, { method: "POST", body: fd }));
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.kind).toBe("image");
+    expect(String(body.url)).toMatch(/^\/media\/uploads\//);
     expect(body.url).toMatch(/^\/media\/uploads\/\d+-[a-f0-9]{8}\.png$/);
     const full = path.join(process.cwd(), "data", "media", "uploads", path.basename(body.url));
     await unlink(full);
