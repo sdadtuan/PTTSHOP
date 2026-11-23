@@ -16,3 +16,15 @@ export const ORDER_STATUS_FLOW: OrderStatus[] = [
   "COMPLETED",
   "CANCELLED",
 ];
+
+const NEXT_STATUS: Record<OrderStatus, OrderStatus[]> = {
+  PENDING: ["CONFIRMED", "CANCELLED"],
+  CONFIRMED: ["SHIPPING", "CANCELLED"],
+  SHIPPING: ["COMPLETED", "CANCELLED"],
+  COMPLETED: [],
+  CANCELLED: [],
+};
+
+export function canTransitionOrder(from: OrderStatus, to: OrderStatus) {
+  return from === to || NEXT_STATUS[from].includes(to);
+}

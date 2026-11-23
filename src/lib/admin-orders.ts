@@ -4,6 +4,7 @@ import { primaryImage } from "@/lib/product-media";
 export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   COD: "Thu tiền khi giao (COD)",
   BANK_TRANSFER: "Chuyển khoản",
+  PAYOS: "payOS",
 };
 
 export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {

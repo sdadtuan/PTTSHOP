@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/cart/cart-context";
@@ -13,13 +13,46 @@ export default function CheckoutPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"COD" | "BANK_TRANSFER">(
-    "COD",
-  );
+  const [paymentMethod, setPaymentMethod] = useState<"" | "COD" | "BANK_TRANSFER" | "PAYOS">("");
+  const [options, setOptions] = useState<{
+    codEnabled: boolean;
+    codMaxAmount: number;
+    bankReady: boolean;
+    payosEnabled: boolean;
+  } | null>(null);
+  const [provinces, setProvinces] = useState<{ code: string; name: string }[]>([]);
+  const [wards, setWards] = useState<{ code: string; name: string }[]>([]);
+  const [provinceCode, setProvinceCode] = useState("");
   const [couponCode, setCouponCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [couponMsg, setCouponMsg] = useState("");
   const ck = useStorefrontUi().checkout;
+
+  useEffect(() => {
+    void fetch("/api/payments/options")
+      .then((res) => res.json())
+      .then((data) => {
+        setOptions({
+          codEnabled: Boolean(data.codEnabled),
+          codMaxAmount: Number(data.codMaxAmount) || 0,
+          bankReady: Boolean(data.bankReady),
+          payosEnabled: Boolean(data.payosEnabled),
+        });
+      })
+      .catch(() => setOptions({ codEnabled: true, codMaxAmount: 5_000_000, bankReady: false, payosEnabled: false }));
+    void fetch("/api/address")
+      .then((res) => res.json())
+      .then((data) => setProvinces(data.provinces || []))
+      .catch(() => setProvinces([]));
+  }, []);
+
+  useEffect(() => {
+    if (!provinceCode) return;
+    void fetch(`/api/address?province=${encodeURIComponent(provinceCode)}`)
+      .then((res) => res.json())
+      .then((data) => setWards(data.wards || []))
+      .catch(() => setWards([]));
+  }, [provinceCode]);
 
   if (items.length === 0) {
     return (
@@ -34,6 +67,18 @@ export default function CheckoutPage() {
 
   const shipping = subtotal >= 500000 ? 0 : 30000;
   const total = Math.max(0, subtotal + shipping - discount);
+  const codAllowed = Boolean(options?.codEnabled && total <= (options?.codMaxAmount ?? 0));
+  const payosAllowed = Boolean(options?.payosEnabled);
+  const selected =
+    paymentMethod === "PAYOS" && payosAllowed
+      ? "PAYOS"
+      : paymentMethod === "BANK_TRANSFER"
+        ? "BANK_TRANSFER"
+        : paymentMethod === "COD" && codAllowed
+          ? "COD"
+          : codAllowed
+            ? "COD"
+            : "BANK_TRANSFER";
 
   async function applyCoupon() {
     setCouponMsg("");
@@ -63,8 +108,14 @@ export default function CheckoutPage() {
       customerPhone: String(form.get("phone") || ""),
       customerEmail: String(form.get("email") || ""),
       address: String(form.get("address") || ""),
+      provinceCode: String(form.get("provinceCode") || ""),
+      wardCode: String(form.get("wardCode") || ""),
       note: String(form.get("note") || ""),
-      paymentMethod,
+      paymentMethod: selected,
+      invoiceCompanyName: String(form.get("invoiceCompanyName") || ""),
+      invoiceTaxCode: String(form.get("invoiceTaxCode") || ""),
+      invoiceAddress: String(form.get("invoiceAddress") || ""),
+      invoiceEmail: String(form.get("invoiceEmail") || ""),
       couponCode: couponCode || undefined,
       consents: consentsFromForm(form),
       items: items.map((i) => ({
@@ -108,7 +159,37 @@ export default function CheckoutPage() {
             <Field label={ck.fieldPhone} name="phone" required />
           </div>
           <Field label={ck.fieldEmail} name="email" type="email" />
-          <Field label={ck.fieldAddress} name="address" required />
+          <Field label="Số nhà, đường" name="address" required />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block text-sm">
+              <span className="mb-1.5 block text-neutral-600">Tỉnh / thành phố</span>
+              <select
+                name="provinceCode"
+                required
+                value={provinceCode}
+                onChange={(e) => setProvinceCode(e.target.value)}
+                className="w-full rounded border border-neutral-200 px-3 py-2.5 outline-none focus:border-neutral-900"
+              >
+                <option value="">Chọn tỉnh</option>
+                {provinces.map((province) => (
+                  <option key={province.code} value={province.code}>{province.name}</option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-sm">
+              <span className="mb-1.5 block text-neutral-600">Phường / xã</span>
+              <select
+                name="wardCode"
+                required
+                className="w-full rounded border border-neutral-200 px-3 py-2.5 outline-none focus:border-neutral-900"
+              >
+                <option value="">Chọn phường/xã</option>
+                {wards.map((ward) => (
+                  <option key={ward.code} value={ward.code}>{ward.name}</option>
+                ))}
+              </select>
+            </label>
+          </div>
           <label className="block text-sm">
             <span className="mb-1.5 block text-neutral-600">{ck.fieldNote}</span>
             <textarea
@@ -118,25 +199,40 @@ export default function CheckoutPage() {
             />
           </label>
 
+          <details className="text-sm">
+            <summary className="cursor-pointer font-medium">Yêu cầu hoá đơn công ty</summary>
+            <div className="mt-3 grid gap-3">
+              <Field label="Tên công ty" name="invoiceCompanyName" />
+              <Field label="Mã số thuế" name="invoiceTaxCode" />
+              <Field label="Địa chỉ hoá đơn" name="invoiceAddress" />
+              <Field label="Email nhận hoá đơn" name="invoiceEmail" type="email" />
+            </div>
+          </details>
+
           <div>
             <p className="mb-2 text-sm font-medium">{ck.paymentSectionTitle}</p>
             <div className="space-y-2">
+              {codAllowed ? (
+                <label className="flex items-center gap-3 border border-neutral-200 p-3 text-sm">
+                  <input type="radio" checked={selected === "COD"} onChange={() => setPaymentMethod("COD")} />
+                  {ck.paymentCod}
+                </label>
+              ) : null}
               <label className="flex items-center gap-3 border border-neutral-200 p-3 text-sm">
-                <input
-                  type="radio"
-                  checked={paymentMethod === "COD"}
-                  onChange={() => setPaymentMethod("COD")}
-                />
-                {ck.paymentCod}
+                <input type="radio" checked={selected === "BANK_TRANSFER"} onChange={() => setPaymentMethod("BANK_TRANSFER")} />
+                <span>
+                  {ck.paymentBank}
+                  {options && !options.bankReady ? (
+                    <span className="mt-1 block text-xs text-red-600">Tài khoản nhận tiền chưa được cấu hình. Đơn chuyển khoản sẽ chưa đặt được.</span>
+                  ) : null}
+                </span>
               </label>
-              <label className="flex items-center gap-3 border border-neutral-200 p-3 text-sm">
-                <input
-                  type="radio"
-                  checked={paymentMethod === "BANK_TRANSFER"}
-                  onChange={() => setPaymentMethod("BANK_TRANSFER")}
-                />
-                {ck.paymentBank}
-              </label>
+              {payosAllowed ? (
+                <label className="flex items-center gap-3 border border-neutral-200 p-3 text-sm">
+                  <input type="radio" checked={selected === "PAYOS"} onChange={() => setPaymentMethod("PAYOS")} />
+                  payOS
+                </label>
+              ) : null}
             </div>
           </div>
         </div>

@@ -20,6 +20,7 @@ import {
   PanelsTopLeft,
   FileText,
   ShieldCheck,
+  Wallet,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
@@ -29,6 +30,7 @@ import { AdminToastProvider } from "./ui/toast";
 const nav = [
   { href: "/admin", label: "Tổng quan", icon: LayoutDashboard, exact: true },
   { href: "/admin/orders", label: "Đơn hàng", icon: ShoppingBag },
+  { href: "/admin/thanh-toan", label: "Thanh toán", icon: Wallet },
   { href: "/admin/products", label: "Sản phẩm", icon: Package },
   { href: "/admin/nhap-san-pham", label: "Nhập sản phẩm", icon: Package },
   {
@@ -53,12 +55,9 @@ function isActive(pathname: string, href: string, exact?: boolean) {
 export function AdminShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [menuPath, setMenuPath] = useState<string | null>(null);
+  const mobileOpen = menuPath === pathname;
   const [query, setQuery] = useState("");
-
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
@@ -160,7 +159,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 type="button"
                 className="absolute inset-0 bg-neutral-900/40"
                 aria-label="Đóng menu"
-                onClick={() => setMobileOpen(false)}
+                onClick={() => setMenuPath(null)}
               />
               <div className="relative z-10 h-full w-[min(100%,var(--admin-sidebar))] shadow-[var(--admin-shadow-lg)]">
                 {sidebar}
@@ -175,7 +174,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 size="sm"
                 className="lg:hidden"
                 aria-label={mobileOpen ? "Đóng menu" : "Mở menu"}
-                onClick={() => setMobileOpen((v) => !v)}
+                onClick={() => setMenuPath((current) => (current === pathname ? null : pathname))}
               >
                 {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </AdminButton>

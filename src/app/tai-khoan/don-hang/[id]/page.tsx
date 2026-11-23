@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
+import QRCode from "qrcode";
+import { PaymentInstructions } from "@/components/checkout/payment-instructions";
 import { formatVnd } from "@/lib/format";
+import { transferView } from "@/lib/payments/instructions";
+import { getPaymentConfig } from "@/lib/payments/store";
 import { ORDER_STATUS_LABELS } from "@/lib/order-status";
 import { prisma } from "@/lib/prisma";
 
@@ -19,6 +23,15 @@ export default async function OrderDetailPage({ params }: Props) {
     include: { items: true },
   });
   if (!order) notFound();
+  const transfer = order.paymentMethod === "BANK_TRANSFER"
+    ? transferView({
+        config: await getPaymentConfig(),
+        amount: order.total,
+        orderNumber: order.orderNumber,
+        dueAt: order.paymentDueAt,
+      })
+    : null;
+  const qrPng = transfer ? await QRCode.toDataURL(transfer.qrPayload, { margin: 1, width: 280 }) : "";
 
   const steps = ["PENDING", "CONFIRMED", "SHIPPING", "COMPLETED"] as const;
   const stepIndex =
@@ -90,6 +103,8 @@ export default async function OrderDetailPage({ params }: Props) {
           </div>
         </div>
       </div>
+
+      {transfer ? <PaymentInstructions view={transfer} qrPng={qrPng} /> : null}
 
       <div className="mt-6 text-sm text-neutral-600">
         <p className="font-semibold text-neutral-900">Giao tới</p>

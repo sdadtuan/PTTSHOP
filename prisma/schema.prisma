@@ -29,6 +29,7 @@ enum OrderStatus {
 enum PaymentMethod {
   COD
   BANK_TRANSFER
+  PAYOS
 }
 
 enum PaymentStatus {
@@ -282,8 +283,22 @@ model Order {
   discount        Int            @default(0)
   total           Int
   receiptTokenHash String?
+  paymentConfirmedAt DateTime?
+  paymentConfirmedById String?
+  paymentDueAt    DateTime?
+  provinceCode    String?
+  provinceName    String?
+  wardCode        String?
+  wardName        String?
+  invoiceCompanyName String?
+  invoiceTaxCode  String?
+  invoiceAddress  String?
+  invoiceEmail    String?
+  payosOrderCode  Int?           @unique
+  payosQr         String?
   items           OrderItem[]
   reviews         Review[]
+  paymentAudits   PaymentAuditLog[]
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 }
@@ -457,4 +472,36 @@ model Consent {
 
   @@index([subject])
   @@index([status])
+}
+
+/// Cài đặt COD, hạn giữ hàng và tài khoản nhận chuyển khoản. Null = mặc định trong code. Không có số tài khoản mẫu.
+model PaymentSettings {
+  id                  String  @id @default("default")
+  codEnabled          Boolean?
+  codMaxAmount        Int?
+  holdHours           Int?
+  codConfirmHours     Int?
+  bankBin             String?
+  bankName            String?
+  bankAccountNumber   String?
+  bankAccountName     String?
+  bankBranch          String?
+}
+
+model PaymentAuditLog {
+  id        String   @id @default(cuid())
+  orderId   String?
+  order     Order?   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  action    String?
+  actorId   String?
+  amount    Int?
+  createdAt DateTime @default(now())
+}
+
+model WebhookEvent {
+  id        String   @id @default(cuid())
+  eventId   String?  @unique
+  orderNumber String?
+  amount    Int?
+  createdAt DateTime @default(now())
 }

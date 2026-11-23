@@ -9,10 +9,11 @@ export function ConsentFields() {
       <label className="flex items-start gap-2">
         <input className="mt-1" type="checkbox" name="consentDelivery" required />
         <span>
-          Tôi đồng ý dùng họ tên, số điện thoại, email và địa chỉ để giao hàng và liên hệ về đơn.{" "}
-          <Link href="/chinh-sach-bao-mat" className="underline">
-            Chính sách bảo mật
-          </Link>
+          Tôi đồng ý với{" "}
+          <Link href="/dieu-khoan" className="underline">Điều khoản</Link>
+          {" "}và{" "}
+          <Link href="/chinh-sach-bao-mat" className="underline">Chính sách bảo mật</Link>
+          .
         </span>
       </label>
       <label className="flex items-start gap-2">

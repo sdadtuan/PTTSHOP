@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "images.unsplash.com",
       },
+      {
+        protocol: "https",
+        hostname: "cdn.vietqr.io",
+      },
     ],
     // Next.js 16 only allows listed qualities on next/image
     qualities: [75, 85, 90],

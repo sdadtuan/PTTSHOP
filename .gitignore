@@ -66,3 +66,8 @@ prisma/test.db-journal
 !/public/uploads/.gitkeep
 /public/media
 /data/media/
+prisma/pay-test.db
+prisma/pay-test.db-journal
+prisma/vitest.db
+prisma/vitest.db-journal
+prisma/prisma/

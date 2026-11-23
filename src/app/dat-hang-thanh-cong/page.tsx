@@ -1,8 +1,12 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
+import QRCode from "qrcode";
+import { PaymentInstructions } from "@/components/checkout/payment-instructions";
 import { formatVnd } from "@/lib/format";
 import { orderReceipt } from "@/lib/order-receipt";
 import { canShowReceipt, RECEIPT_COOKIE } from "@/lib/order-receipt-token";
+import { transferView } from "@/lib/payments/instructions";
+import { getPaymentConfig } from "@/lib/payments/store";
 import { prisma } from "@/lib/prisma";
 import { displayBrandName } from "@/lib/public-brand";
 import { getStorefrontUi } from "@/lib/storefront/ui-copy";
@@ -32,6 +36,18 @@ export default async function OrderSuccessPage({ searchParams }: Props) {
         cookieOrder === row.orderNumber ? cookieToken : null,
       ]),
   );
+  const transfer = row && allowed && row.paymentMethod === "BANK_TRANSFER"
+    ? transferView({
+        config: await getPaymentConfig(),
+        amount: row.total,
+        orderNumber: row.orderNumber,
+        dueAt: row.paymentDueAt,
+      })
+    : null;
+  const qrPng = transfer ? await QRCode.toDataURL(transfer.qrPayload, { margin: 1, width: 280 }) : "";
+  const payosQr = row && allowed && row.paymentMethod === "PAYOS" && row.payosQr
+    ? await QRCode.toDataURL(row.payosQr, { margin: 1, width: 280 })
+    : "";
   const receipt = row && allowed
     ? orderReceipt({
         orderNumber: row.orderNumber,
@@ -55,6 +71,28 @@ export default async function OrderSuccessPage({ searchParams }: Props) {
         </p>
       ) : null}
       <p className="mt-2 text-center text-sm text-neutral-500">{ui.body}</p>
+
+      {transfer ? <PaymentInstructions view={transfer} qrPng={qrPng} /> : null}
+      {payosQr && row?.paymentDueAt ? (
+        <PaymentInstructions
+          view={{
+            bankName: "payOS",
+            bankShortName: "payOS",
+            logoUrl: null,
+            accountNumber: "",
+            accountName: "",
+            branch: null,
+            amountLabel: formatVnd(row.total),
+            amountCopy: String(row.total),
+            content: row.orderNumber,
+            qrPayload: row.payosQr || "",
+            deadlineLabel: new Intl.DateTimeFormat("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit", year: "numeric" }).format(row.paymentDueAt),
+            note: "Đơn được xác nhận sau khi PTT Shop nhận đủ tiền",
+          }}
+          qrPng={payosQr}
+          hideAccount
+        />
+      ) : null}
 
       {receipt ? (
         <div className="mt-8 border border-neutral-100 bg-white p-5 text-sm">

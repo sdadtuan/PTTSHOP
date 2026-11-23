@@ -23,6 +23,7 @@ import {
   orderItemImageUrl,
 } from "@/lib/admin-orders";
 import { formatVnd } from "@/lib/format";
+import { isCodConfirmOverdue, isPaymentOverdue } from "@/lib/payments/policy";
 import { ORDER_STATUS_FLOW, ORDER_STATUS_LABELS } from "@/lib/order-status";
 
 type OrderDetail = {
@@ -44,6 +45,9 @@ type OrderDetail = {
   discount: number;
   total: number;
   userId: string | null;
+  paymentDueAt?: string | null;
+  paymentConfirmedAt?: string | null;
+  paymentConfirmedById?: string | null;
   createdAt: string;
   updatedAt: string;
   user: { id: string; name: string | null; email: string } | null;
@@ -86,8 +90,30 @@ export function OrderDetailClient({ orderId }: { orderId: string }) {
   }, [orderId]);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    let cancelled = false;
+    void fetch(`/api/admin/orders?id=${encodeURIComponent(orderId)}`)
+      .then(async (res) => {
+        const data = await res.json();
+        if (cancelled) return;
+        if (!res.ok) {
+          setError(data.error || "Không tải được đơn hàng");
+          setOrder(null);
+        } else {
+          setError("");
+          const o = data.order as OrderDetail;
+          setOrder(o);
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setError("Không tải được đơn hàng");
+        setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [orderId]);
 
   async function updateStatus(next: string) {
     if (!order) return;
@@ -209,6 +235,23 @@ export function OrderDetailClient({ orderId }: { orderId: string }) {
               <span className="text-[var(--admin-text-muted)]"> · Mã: {order.paymentRef}</span>
             ) : null}
           </p>
+          {isPaymentOverdue({
+            method: order.paymentMethod,
+            status: order.status,
+            paymentStatus: order.paymentStatus,
+            dueAt: order.paymentDueAt ?? null,
+          }) ? <p className="mt-2 text-sm font-medium text-[var(--admin-danger)]">Quá hạn thanh toán</p> : null}
+          {isCodConfirmOverdue({
+            method: order.paymentMethod,
+            status: order.status,
+            dueAt: order.paymentDueAt ?? null,
+          }) ? <p className="mt-2 text-sm font-medium text-[var(--admin-danger)]">Quá hạn xác nhận COD</p> : null}
+          {order.paymentConfirmedAt ? (
+            <p className="mt-2 text-xs text-[var(--admin-text-muted)]">
+              Đã xác nhận {new Date(order.paymentConfirmedAt).toLocaleString("vi-VN")}
+              {order.paymentConfirmedById ? ` · ${order.paymentConfirmedById}` : ""}
+            </p>
+          ) : null}
           {order.paymentStatus !== "PAID" ? (
             <AdminButton
               variant="ghost"

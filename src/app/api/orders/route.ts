@@ -1,7 +1,9 @@
 import { cookies } from "next/headers";
 import { randomBytes } from "crypto";
+import QRCode from "qrcode";
 import { z } from "zod";
 import { ApiError, handleApiError, jsonOk } from "@/lib/api";
+import { resolveAddress } from "@/lib/address/vn-admin";
 import { getOptionalSession } from "@/lib/auth-guards";
 import { getCartSessionId } from "@/lib/cart-session";
 import {
@@ -11,6 +13,11 @@ import {
 } from "@/lib/coupons";
 import { sendOrderConfirmationEmail } from "@/lib/mail";
 import { getPaymentProvider } from "@/lib/payments";
+import { holdEnforceFrom, releaseExpiredUnpaid } from "@/lib/payments/hold";
+import { transferEmailLogText, transferEmailText, transferView } from "@/lib/payments/instructions";
+import { createPayosLink, payosEnv } from "@/lib/payments/payos";
+import { checkoutMethodError, quoteFromServerPrices } from "@/lib/payments/policy";
+import { getPaymentConfig } from "@/lib/payments/store";
 import { prisma } from "@/lib/prisma";
 import { clientIp, recordConsents } from "@/lib/consent";
 import { orderBuyerId } from "@/lib/order-buyer";
@@ -22,10 +29,16 @@ const bodySchema = z.object({
   customerName: z.string().trim().min(2).max(80),
   customerPhone: phoneSchema,
   customerEmail: emailSchema.optional().or(z.literal("")),
-  address: z.string().trim().min(5).max(300),
+  address: z.string().trim().min(5).max(200),
+  provinceCode: z.string().trim().min(2).max(2),
+  wardCode: z.string().trim().min(5).max(5),
   note: z.string().max(500).optional(),
-  paymentMethod: z.enum(["COD", "BANK_TRANSFER"]),
+  paymentMethod: z.enum(["COD", "BANK_TRANSFER", "PAYOS"]),
   couponCode: z.string().trim().max(40).optional().or(z.literal("")),
+  invoiceCompanyName: z.string().trim().max(160).optional().or(z.literal("")),
+  invoiceTaxCode: z.string().trim().max(14).optional().or(z.literal("")),
+  invoiceAddress: z.string().trim().max(200).optional().or(z.literal("")),
+  invoiceEmail: emailSchema.optional().or(z.literal("")),
   consents: z
     .array(
       z.object({
@@ -48,11 +61,30 @@ function orderNumber() {
   return nextOrderNumber();
 }
 
+function appBase() {
+  return (process.env.AUTH_URL || "http://127.0.0.1:3000").replace(/\/$/, "");
+}
+
+function invoiceFields(data: z.infer<typeof bodySchema>) {
+  const company = data.invoiceCompanyName || "";
+  const tax = data.invoiceTaxCode || "";
+  const address = data.invoiceAddress || "";
+  const email = data.invoiceEmail || "";
+  const any = Boolean(company || tax || address || email);
+  if (!any) return { company: null, tax: null, address: null, email: null };
+  if (!company || !tax || !address || !email) {
+    throw new ApiError("Hoá đơn công ty cần đủ tên, mã số thuế, địa chỉ và email.", 400);
+  }
+  if (!/^\d{10}(\d{3})?$/.test(tax)) throw new ApiError("Mã số thuế không hợp lệ.", 400);
+  return { company, tax, address, email };
+}
+
 export async function POST(req: Request) {
   try {
     const data = bodySchema.parse(await req.json());
     const session = await getOptionalSession();
     const sessionId = await getCartSessionId();
+    await releaseExpiredUnpaid(prisma, new Date(), holdEnforceFrom());
 
     const variants = await prisma.productVariant.findMany({
       where: { id: { in: data.items.map((i) => i.variantId) } },
@@ -74,27 +106,56 @@ export async function POST(req: Request) {
       return { item, variant };
     });
 
-    const subtotal = lines.reduce(
-      (sum, l) => sum + l.variant.price * l.item.quantity,
-      0,
-    );
-    const shippingFee = subtotal >= 500000 ? 0 : 30000;
+    const catalogLines = lines.map((line) => ({
+      price: line.variant.price,
+      quantity: line.item.quantity,
+    }));
+    const subtotalPreview = catalogLines.reduce((sum, line) => sum + line.price * line.quantity, 0);
+    const shippingFee = subtotalPreview >= 500000 ? 0 : 30000;
 
     let discount = 0;
     let couponCode: string | null = null;
     let couponId: string | null = null;
 
     if (data.couponCode) {
-      const coupon = await findValidCoupon(prisma, data.couponCode, subtotal);
-      discount = computeCouponDiscount(coupon, subtotal);
+      const coupon = await findValidCoupon(prisma, data.couponCode, subtotalPreview);
+      discount = computeCouponDiscount(coupon, subtotalPreview);
       couponCode = coupon.code;
       couponId = coupon.id;
     }
 
-    const total = Math.max(0, subtotal + shippingFee - discount);
+    const priced = quoteFromServerPrices(catalogLines, shippingFee, discount);
+    const subtotal = priced.subtotal;
+    const total = priced.total;
+    const paymentConfig = await getPaymentConfig();
+    const payos = payosEnv();
+    const methodError = checkoutMethodError(data.paymentMethod, total, paymentConfig, payos.enabled);
+    if (methodError) throw new ApiError(methodError, 400);
+    const place = resolveAddress(data.provinceCode, data.wardCode);
+    if (!place) throw new ApiError("Tỉnh hoặc phường/xã không hợp lệ.", 400);
+    const invoice = invoiceFields(data);
     const provider = getPaymentProvider(data.paymentMethod);
     const receiptToken = randomBytes(16).toString("hex");
     const buyerId = orderBuyerId(session?.user);
+    const paymentDueAt = new Date(
+      Date.now() +
+        (data.paymentMethod === "COD" ? paymentConfig.codConfirmHours : paymentConfig.holdHours) *
+          60 *
+          60 *
+          1000,
+    );
+    let payosOrderCode: number | null = null;
+    if (data.paymentMethod === "PAYOS") {
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const code = Math.floor(100000000 + Math.random() * 900000000);
+        const taken = await prisma.order.findUnique({ where: { payosOrderCode: code } });
+        if (!taken) {
+          payosOrderCode = code;
+          break;
+        }
+      }
+      if (!payosOrderCode) throw new ApiError("Không tạo được mã payOS.", 500);
+    }
 
     const order = await prisma.$transaction(async (tx) => {
       for (const { item, variant } of lines) {
@@ -126,13 +187,23 @@ export async function POST(req: Request) {
           customerName: data.customerName,
           customerPhone: data.customerPhone,
           customerEmail: data.customerEmail || null,
-          address: data.address,
+          address: `${data.address}, ${place.wardName}, ${place.provinceName}`,
+          provinceCode: place.provinceCode,
+          provinceName: place.provinceName,
+          wardCode: place.wardCode,
+          wardName: place.wardName,
           note: data.note || null,
           couponCode,
           subtotal,
           shippingFee,
           discount,
           total,
+          paymentDueAt,
+          payosOrderCode,
+          invoiceCompanyName: invoice.company,
+          invoiceTaxCode: invoice.tax,
+          invoiceAddress: invoice.address,
+          invoiceEmail: invoice.email,
           receiptTokenHash: hashReceiptToken(receiptToken),
           items: {
             create: lines.map(({ item, variant }) => ({
@@ -145,6 +216,7 @@ export async function POST(req: Request) {
             })),
           },
         },
+        include: { items: true },
       });
 
       const payment = await provider.createPayment(created);
@@ -155,25 +227,46 @@ export async function POST(req: Request) {
           paymentProvider: payment.paymentProvider,
           paymentRef: payment.paymentRef ?? null,
         },
+        include: { items: true },
       });
     });
 
-    // Clear server cart after successful order
+    if (data.paymentMethod === "PAYOS" && payosOrderCode) {
+      try {
+        const link = await createPayosLink({
+          env: payos,
+          orderCode: payosOrderCode,
+          amount: order.total,
+          description: order.orderNumber.slice(0, 25),
+          returnUrl: `${appBase()}/dat-hang-thanh-cong?order=${encodeURIComponent(order.orderNumber)}`,
+          cancelUrl: `${appBase()}/thanh-toan`,
+          expiredAt: Math.floor(paymentDueAt.getTime() / 1000),
+        });
+        await prisma.order.update({
+          where: { id: order.id },
+          data: { payosQr: link.qrCode, paymentRef: link.paymentLinkId || link.checkoutUrl },
+        });
+      } catch {
+        await prisma.$transaction(async (tx) => {
+          await tx.order.update({ where: { id: order.id }, data: { status: "CANCELLED" } });
+          for (const item of order.items) {
+            await tx.productVariant.update({
+              where: { id: item.variantId },
+              data: { stock: { increment: item.quantity } },
+            });
+          }
+        });
+        throw new ApiError("payOS không tạo được mã thanh toán.", 502);
+      }
+    }
+
     const cartOwnerId = session?.user?.id ?? null;
     if (cartOwnerId) {
-      const userCart = await prisma.cart.findUnique({
-        where: { userId: cartOwnerId },
-      });
-      if (userCart) {
-        await prisma.cartItem.deleteMany({ where: { cartId: userCart.id } });
-      }
+      const userCart = await prisma.cart.findUnique({ where: { userId: cartOwnerId } });
+      if (userCart) await prisma.cartItem.deleteMany({ where: { cartId: userCart.id } });
     } else if (sessionId) {
-      const guestCart = await prisma.cart.findUnique({
-        where: { sessionId },
-      });
-      if (guestCart) {
-        await prisma.cartItem.deleteMany({ where: { cartId: guestCart.id } });
-      }
+      const guestCart = await prisma.cart.findUnique({ where: { sessionId } });
+      if (guestCart) await prisma.cartItem.deleteMany({ where: { cartId: guestCart.id } });
     }
 
     await recordConsents({
@@ -183,12 +276,19 @@ export async function POST(req: Request) {
       grants: data.consents,
     });
 
+    const view = order.paymentMethod === "BANK_TRANSFER"
+      ? transferView({ config: paymentConfig, amount: order.total, orderNumber: order.orderNumber, dueAt: order.paymentDueAt })
+      : null;
+    const qrPng = view ? await QRCode.toBuffer(view.qrPayload) : undefined;
     void sendOrderConfirmationEmail({
       orderNumber: order.orderNumber,
       customerEmail: order.customerEmail,
       customerName: order.customerName,
       total: order.total,
       status: order.status,
+      transferText: view ? transferEmailText(view) : undefined,
+      transferLogText: view ? transferEmailLogText(view) : undefined,
+      qrPng,
     });
 
     const jar = await cookies();

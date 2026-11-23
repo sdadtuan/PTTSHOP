@@ -30,9 +30,21 @@ export class BankTransferProvider implements PaymentProvider {
 
   async createPayment(order: Pick<Order, "orderNumber">): Promise<PaymentResult> {
     return {
-      paymentStatus: "PENDING",
+      paymentStatus: "UNPAID",
       paymentProvider: this.name,
       paymentRef: `BT-${order.orderNumber}`,
+    };
+  }
+}
+
+export class PayosProvider implements PaymentProvider {
+  readonly name = "payos";
+
+  async createPayment(): Promise<PaymentResult> {
+    return {
+      paymentStatus: "UNPAID",
+      paymentProvider: this.name,
+      paymentRef: null,
     };
   }
 }
@@ -56,6 +68,8 @@ export function getPaymentProvider(method: PaymentMethod): PaymentProvider {
   switch (method) {
     case "BANK_TRANSFER":
       return new BankTransferProvider();
+    case "PAYOS":
+      return new PayosProvider();
     case "COD":
     default:
       return new CodProvider();
