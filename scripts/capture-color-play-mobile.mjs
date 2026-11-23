@@ -2,7 +2,7 @@ import { chromium } from "@playwright/test";
 import path from "path";
 import fs from "fs";
 
-const outDir = "C:/Users/ADMIN/AppData/Local/Temp/vizfas-mobile-images";
+const outDir = "C:/Users/ADMIN/AppData/Local/Temp/pttshop-mobile-images";
 fs.mkdirSync(outDir, { recursive: true });
 
 const viewports = [

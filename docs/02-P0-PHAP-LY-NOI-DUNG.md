@@ -3,7 +3,7 @@
 > Dán sau prompt 00. Làm song song được với 01, sau khi xong P0-1 (sao lưu). Căn cứ: Đặc tả chức năng v1.1 M20 (FR-2001…2004), FR-1503, FR-1403, mục "Yêu cầu nội dung các trang pháp lý"; Kế hoạch triển khai W06–W08.
 
 ## Mục tiêu
-Website có đủ thông tin doanh nghiệp và bộ chính sách để nộp hồ sơ thông báo website TMĐT bán hàng theo NĐ 248/2026 (W08). Phải có ghi nhận đồng ý xử lý dữ liệu cá nhân và đồng ý cookie. Không còn nội dung mẫu (VIZFAS, đánh giá gán sẵn).
+Website có đủ thông tin doanh nghiệp và bộ chính sách để nộp hồ sơ thông báo website TMĐT bán hàng theo NĐ 248/2026 (W08). Phải có ghi nhận đồng ý xử lý dữ liệu cá nhân và đồng ý cookie. Không còn nội dung mẫu (thương hiệu PTT, đánh giá gán sẵn).
 
 ## Bối cảnh
 - Doanh nghiệp: CÔNG TY TNHH GIẢI PHÁP QUẢNG CÁO PTT.
@@ -39,7 +39,7 @@ Website có đủ thông tin doanh nghiệp và bộ chính sách để nộp h�
    - Trang / form yêu cầu xem, sửa, xoá, rút đồng ý; quản trị xử lý và ghi thời điểm.
    - Schema mới thì tạo migration không phá dữ liệu.
 4. **Cookie (FR-1905).** Banner đồng ý. Khi khách từ chối thì không tải thẻ đo lường không thiết yếu (TC-12).
-5. **Gỡ nội dung mẫu ở mức mã nguồn.** Xoá nội dung VIZFAS, ảnh Unsplash, khối đánh giá gán sẵn (FR-1503) khỏi mã, hằng số, tệp seed. **Dữ liệu trong `prod.db` chỉ gỡ theo danh sách anh đã duyệt ở P0-7.**
+5. **Gỡ nội dung mẫu ở mức mã nguồn.** Xoá nội dung thương hiệu mẫu, ảnh Unsplash, khối đánh giá gán sẵn (FR-1503) khỏi mã, hằng số, tệp seed. **Dữ liệu trong `prod.db` chỉ gỡ theo danh sách anh đã duyệt ở P0-7.**
 6. **Bộ hồ sơ W07, W08.** Soạn `docs/ho-so-thong-bao-website.md`:
    - danh sách thông tin cần khai cho hồ sơ thông báo website (Mẫu 01) theo NĐ 248/2026;
    - đường dẫn từng chính sách, ảnh chụp màn hình cần có;
@@ -53,7 +53,7 @@ Website có đủ thông tin doanh nghiệp và bộ chính sách để nộp h�
 - 7 trang chính sách truy cập được và có trong sitemap.
 - Đặt hàng thử ghi được `Consent`.
 - Từ chối cookie thì không có request tới GA4 / Meta (TC-12).
-- `grep` repo không còn "VIZFAS".
+- `grep` mã nguồn không còn tên thương hiệu mẫu, trừ mặc định trong `prisma/schema.prisma` và migration `0_init` (không sửa migration đã chạy). `brandName` trên production đổi trong cài đặt, không bằng migration.
 - Build thành công; có commit cho từng mục; báo cáo theo mẫu.
 
 ## Dừng lại và hỏi

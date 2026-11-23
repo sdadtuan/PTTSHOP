@@ -23,7 +23,7 @@ describe("rotateAdminAccount", () => {
   it("sets a new admin, disables demo accounts, and keeps orders", async () => {
     const demoAdmin = await prisma.user.create({
       data: {
-        email: "admin@vizfas.vn",
+        email: "admin@pttshop.vn",
         name: "Demo admin",
         password: await bcrypt.hash("old-admin-pass", 10),
         role: "ADMIN",
@@ -31,7 +31,7 @@ describe("rotateAdminAccount", () => {
     });
     const demoCustomer = await prisma.user.create({
       data: {
-        email: "khach@vizfas.vn",
+        email: "khach@pttshop.vn",
         name: "Demo customer",
         password: await bcrypt.hash("old-customer-pass", 10),
         role: "CUSTOMER",
@@ -62,10 +62,10 @@ describe("rotateAdminAccount", () => {
     });
 
     const disabledAdmin = await prisma.user.findUniqueOrThrow({
-      where: { email: "admin@vizfas.vn" },
+      where: { email: "admin@pttshop.vn" },
     });
     const disabledCustomer = await prisma.user.findUniqueOrThrow({
-      where: { email: "khach@vizfas.vn" },
+      where: { email: "khach@pttshop.vn" },
     });
     const created = await prisma.user.findUniqueOrThrow({
       where: { email: "owner@shop.vn" },
@@ -89,7 +89,7 @@ describe("rotateAdminAccount", () => {
   it("rejects a weak password before changing accounts", async () => {
     await prisma.user.create({
       data: {
-        email: "admin@vizfas.vn",
+        email: "admin@pttshop.vn",
         password: await bcrypt.hash("Old-admin-pass1", 10),
         role: "ADMIN",
       },
@@ -99,7 +99,7 @@ describe("rotateAdminAccount", () => {
       rotateAdminAccount(prisma, { email: "owner@shop.vn", password: "alllowercase1" }),
     ).rejects.toBeInstanceOf(AdminCredentialsError);
 
-    const unchanged = await prisma.user.findUniqueOrThrow({ where: { email: "admin@vizfas.vn" } });
+    const unchanged = await prisma.user.findUniqueOrThrow({ where: { email: "admin@pttshop.vn" } });
     expect(unchanged.role).toBe("ADMIN");
     expect(unchanged.password).not.toBeNull();
     expect(await prisma.user.findUnique({ where: { email: "owner@shop.vn" } })).toBeNull();

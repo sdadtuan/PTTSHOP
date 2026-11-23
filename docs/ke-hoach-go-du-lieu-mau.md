@@ -6,8 +6,8 @@
 
 | Bảng | Id | Tên / tiêu đề | Lý do | Cách xử lý đề xuất |
 |---|---|---|---|---|
-| User | cmwpxkjeu0000h28s71d3bk0s | admin@vizfas.vn | Tài khoản demo seed, đã hạ CUSTOMER và khóa mật khẩu | Giữ khóa, không xóa |
-| User | cmwpxkjio0001h28s0u23vf8j | khach@vizfas.vn | Tài khoản demo seed, đã hạ CUSTOMER và khóa mật khẩu | Giữ khóa, không xóa |
+| User | cmwpxkjeu0000h28s71d3bk0s | admin@pttshop.vn | Tài khoản demo seed, đã hạ CUSTOMER và khóa mật khẩu. Email trên prod.db chưa UPDATE trong W13b | Giữ khóa, không xóa |
+| User | cmwpxkjio0001h28s0u23vf8j | khach@pttshop.vn | Tài khoản demo seed, đã hạ CUSTOMER và khóa mật khẩu. Email trên prod.db chưa UPDATE trong W13b | Giữ khóa, không xóa |
 | Product | cmwpxkjl0000bh28sv33h87mo | Áo Thun Oversize | Seed 11:51 21/11/2026, ảnh Unsplash | Ẩn |
 | Product | cmwpxkjoj001ch28sb0dz5cwc | Áo Thun Nam Basic | Seed 11:51 21/11/2026, ảnh Unsplash | Ẩn |
 | Product | cmwpxkjqi0024h28s5sqt4pg0 | Áo Thun Nữ Basic | Seed 11:51 21/11/2026, ảnh Unsplash | Ẩn |
@@ -26,12 +26,12 @@
 | Category | cmwpxkjjw0005h28sq7rsvpl8 | Phụ kiện | Seed cùng mốc | Ẩn sau khi sản phẩm đã ẩn |
 | Category | cmwpxkjk10006h28sy38jb4yo | Hoodie | Seed cùng mốc | Ẩn sau khi sản phẩm đã ẩn |
 | Collection | cmwpxkjk60007h28syg84sor7 | Essentials Collection | Seed cùng mốc | Ẩn |
-| Coupon | cmwpxkjku0009h28szfs24bak | VIZFAS10 | Mã giảm giá mẫu | Đã tắt `isActive` ngày 22/11/2026, không xóa |
+| Coupon | cmwpxkjku0009h28szfs24bak | PTTSHOP10 | Mã giảm giá mẫu. Mã đang lưu trên prod.db chưa UPDATE trong W13b | Đã tắt `isActive` ngày 22/11/2026, không xóa |
 | ProductImage | 19 dòng | Ảnh Unsplash | Toàn bộ ảnh sản phẩm đang trỏ `images.unsplash.com` | Ẩn theo sản phẩm, không xóa riêng |
-| SiteSettings | default | VIZFAS | Tên thương hiệu mẫu | Đổi nội dung, không xóa dòng |
-| StorefrontPage | 15 trang | Đánh giá, tin tức, về VIZFAS, hỗ trợ, chính sách | Nội dung mẫu VIZFAS | Viết lại, không xóa |
+| SiteSettings | default | PTT | Tên thương hiệu trong mã nguồn. Giá trị brandName trên production đổi trong cài đặt, không bằng migration | Đổi nội dung, không xóa dòng |
+| StorefrontPage | 15 trang | Đánh giá, tin tức, về PTT, hỗ trợ, chính sách | Nội dung mẫu | Viết lại, không xóa |
 
-Quyết định 22/11/2026: hai user demo giữ khóa, không xóa. Mã VIZFAS10 đã tắt. 12 sản phẩm, 5 danh mục và 1 bộ sưu tập chưa đụng, sẽ ẩn khi nhập sản phẩm thật ở prompt 03.
+Quyết định 22/11/2026: hai user demo giữ khóa, không xóa. Mã giảm giá mẫu đã tắt. 12 sản phẩm, 5 danh mục và 1 bộ sưu tập chưa đụng, sẽ ẩn khi nhập sản phẩm thật ở prompt 03. W13b không UPDATE các dòng này trên production.
 
 ## Giữ lại
 

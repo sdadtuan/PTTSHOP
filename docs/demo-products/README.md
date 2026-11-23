@@ -116,4 +116,4 @@ Cột `status` đang để `active` để nhập vào hệ thống là test đư
 
 - Không đăng bán công khai như hàng thật.
 - Không trộn vào báo cáo doanh thu / tồn kho thật mà không lọc tiền tố DEMO.
-- Không xóa các sản phẩm demo *cũ* đang có trên production (VIZFAS) bằng bộ này — bộ này là bộ *mới*, tách biệt, chỉ để test luồng nhập hàng.
+- Không xóa các sản phẩm demo *cũ* đang có trên production bằng bộ này — bộ này là bộ *mới*, tách biệt, chỉ để test luồng nhập hàng.

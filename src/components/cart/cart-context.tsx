@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { useSession } from "next-auth/react";
+import { migrateStorageValue } from "@/lib/legacy-storage";
 
 export type CartLine = {
   variantId: string;
@@ -38,7 +39,18 @@ type CartContextValue = {
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
-const WISHLIST_GUEST_KEY = "vizfas-wishlist";
+
+export const WISHLIST_GUEST_KEY = "ptt-wishlist";
+const LEGACY_WISHLIST_KEY = "vizfas-wishlist";
+
+export function readGuestWishlistRaw() {
+  if (typeof window === "undefined") return null;
+  return migrateStorageValue(localStorage, WISHLIST_GUEST_KEY, LEGACY_WISHLIST_KEY);
+}
+
+export function writeGuestWishlistRaw(value: string) {
+  localStorage.setItem(WISHLIST_GUEST_KEY, value);
+}
 
 type ApiCart = {
   items: CartLine[];
@@ -78,7 +90,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       });
       // Merge guest wishlist (localStorage) into server
       try {
-        const raw = localStorage.getItem(WISHLIST_GUEST_KEY);
+        const raw = readGuestWishlistRaw();
         if (raw) {
           const guest = JSON.parse(raw) as { variantId: string }[];
           for (const g of guest) {
@@ -172,5 +184,3 @@ export function useCart() {
   if (!ctx) throw new Error("useCart must be used within CartProvider");
   return ctx;
 }
-
-export { WISHLIST_GUEST_KEY };

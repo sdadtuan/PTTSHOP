@@ -281,6 +281,7 @@ model Order {
   shippingFee     Int            @default(0)
   discount        Int            @default(0)
   total           Int
+  receiptTokenHash String?
   items           OrderItem[]
   reviews         Review[]
   createdAt       DateTime       @default(now())

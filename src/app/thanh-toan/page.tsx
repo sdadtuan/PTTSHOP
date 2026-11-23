@@ -82,7 +82,8 @@ export default function CheckoutPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Không tạo được đơn");
       clear();
-      router.push(`/dat-hang-thanh-cong?order=${data.orderNumber}`);
+      const token = data.receiptToken ? `&token=${encodeURIComponent(data.receiptToken)}` : "";
+      router.push(`/dat-hang-thanh-cong?order=${encodeURIComponent(data.orderNumber)}${token}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Có lỗi xảy ra");
     } finally {
@@ -203,7 +204,7 @@ export default function CheckoutPage() {
             <p className="mt-3 text-sm text-red-600">{error}</p>
           ) : null}
           <div className="mt-4">
-            <ConsentFields showInvoice={false} />
+            <ConsentFields />
           </div>
           <button
             type="submit"

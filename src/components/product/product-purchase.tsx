@@ -12,7 +12,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { useCart, WISHLIST_GUEST_KEY } from "@/components/cart/cart-context";
+import { useCart, readGuestWishlistRaw, writeGuestWishlistRaw } from "@/components/cart/cart-context";
 import { discountPercent, formatVnd } from "@/lib/format";
 import { resolveSwatch, swatchBackground } from "@/lib/color-names";
 import { primaryImage } from "@/lib/product-media";
@@ -146,11 +146,11 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
       });
     } else {
       try {
-        const raw = localStorage.getItem(WISHLIST_GUEST_KEY);
+        const raw = readGuestWishlistRaw();
         const list = raw ? (JSON.parse(raw) as typeof payload[]) : [];
         if (!list.some((i) => i.variantId === selected.id)) {
           list.push(payload);
-          localStorage.setItem(WISHLIST_GUEST_KEY, JSON.stringify(list));
+          writeGuestWishlistRaw(JSON.stringify(list));
         }
       } catch {
         /* ignore */

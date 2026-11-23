@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { checkoutConsentPlan } from "@/lib/consent";
 import { nextOrderNumber } from "@/lib/order-number";
+import { orderBuyerId } from "@/lib/order-buyer";
 import { orderReceipt } from "@/lib/order-receipt";
+import { canShowReceipt, hashReceiptToken } from "@/lib/order-receipt-token";
+import { migrateStorageValue } from "@/lib/legacy-storage";
 
 describe("checkoutConsentPlan", () => {
   it("ghi giao hàng và khuyến mãi, không tạo dòng xuất chứng từ", () => {
@@ -49,5 +52,42 @@ describe("orderReceipt", () => {
     expect(view.subtotal).toBe(249000);
     expect(view.shippingFee).toBe(30000);
     expect(view.total).toBe(279000);
+  });
+});
+
+describe("canShowReceipt", () => {
+  it("hiện biên nhận khi token đúng và giấu khi token sai", () => {
+    const token = "a".repeat(32);
+    const hash = hashReceiptToken(token);
+    expect(canShowReceipt(hash, [token, null])).toBe(true);
+    expect(canShowReceipt(hash, ["b".repeat(32), null])).toBe(false);
+    expect(canShowReceipt(hash, [null, null])).toBe(false);
+    expect(canShowReceipt(null, [token])).toBe(false);
+  });
+});
+
+describe("orderBuyerId", () => {
+  it("đơn của admin không gắn tài khoản", () => {
+    expect(orderBuyerId({ id: "admin-1", role: "ADMIN" })).toBeNull();
+    expect(orderBuyerId({ id: "khach-1", role: "CUSTOMER" })).toBe("khach-1");
+    expect(orderBuyerId(null)).toBeNull();
+  });
+});
+
+describe("migrateStorageValue", () => {
+  it("chuyển giá trị khóa cũ sang khóa mới một lần", () => {
+    const store = new Map<string, string>([["vizfas-wishlist", "[1]"]]);
+    const storage = {
+      getItem: (key: string) => store.get(key) ?? null,
+      setItem: (key: string, value: string) => {
+        store.set(key, value);
+      },
+      removeItem: (key: string) => {
+        store.delete(key);
+      },
+    };
+    expect(migrateStorageValue(storage, "ptt-wishlist", "vizfas-wishlist")).toBe("[1]");
+    expect(store.get("ptt-wishlist")).toBe("[1]");
+    expect(store.has("vizfas-wishlist")).toBe(false);
   });
 });

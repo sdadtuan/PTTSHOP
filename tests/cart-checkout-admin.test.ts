@@ -113,7 +113,7 @@ describe("cart, checkout, admin status", () => {
 
       const created = await tx.order.create({
         data: {
-          orderNumber: `VFTEST${Date.now()}`,
+          orderNumber: `PTTTEST${Date.now()}`,
           userId: customer.id,
           status: "PENDING",
           paymentMethod: "COD",
@@ -167,7 +167,7 @@ describe("cart, checkout, admin status", () => {
 
     const order = await prisma.order.create({
       data: {
-        orderNumber: `VFADM${Date.now()}`,
+        orderNumber: `PTTADM${Date.now()}`,
         userId: customer.id,
         status: "PENDING",
         paymentMethod: "COD",

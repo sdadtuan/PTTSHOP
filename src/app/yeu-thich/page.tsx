@@ -5,7 +5,7 @@ import { StorefrontImage } from "@/components/product/storefront-image";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { formatVnd } from "@/lib/format";
-import { WISHLIST_GUEST_KEY } from "@/components/cart/cart-context";
+import { readGuestWishlistRaw, writeGuestWishlistRaw } from "@/components/cart/cart-context";
 import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
 
 type WishItem = {
@@ -37,7 +37,7 @@ export default function WishlistPage() {
         }
       } else {
         try {
-          const raw = localStorage.getItem(WISHLIST_GUEST_KEY);
+          const raw = readGuestWishlistRaw();
           setItems(raw ? (JSON.parse(raw) as WishItem[]) : []);
         } catch {
           setItems([]);
@@ -57,7 +57,7 @@ export default function WishlistPage() {
       });
     } else {
       const next = items.filter((i) => i.variantId !== variantId);
-      localStorage.setItem(WISHLIST_GUEST_KEY, JSON.stringify(next));
+      writeGuestWishlistRaw(JSON.stringify(next));
     }
   }
 

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Heart, ShoppingBag } from "lucide-react";
 import { useState } from "react";
 import { useSession } from "next-auth/react";
-import { useCart, WISHLIST_GUEST_KEY } from "@/components/cart/cart-context";
+import { useCart, readGuestWishlistRaw, writeGuestWishlistRaw } from "@/components/cart/cart-context";
 import { formatVnd } from "@/lib/format";
 import { resolveSwatch, swatchBackground } from "@/lib/color-names";
 import { primaryImage } from "@/lib/product-media";
@@ -86,11 +86,11 @@ export function DemoProductCard({
       });
     } else {
       try {
-        const raw = localStorage.getItem(WISHLIST_GUEST_KEY);
+        const raw = readGuestWishlistRaw();
         const list = raw ? (JSON.parse(raw) as { variantId: string }[]) : [];
         if (!list.some((x) => x.variantId === variantId)) {
           list.push({ variantId });
-          localStorage.setItem(WISHLIST_GUEST_KEY, JSON.stringify(list));
+          writeGuestWishlistRaw(JSON.stringify(list));
         }
       } catch {
         /* ignore */

@@ -1,25 +1,37 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { formatVnd } from "@/lib/format";
 import { orderReceipt } from "@/lib/order-receipt";
+import { canShowReceipt, RECEIPT_COOKIE } from "@/lib/order-receipt-token";
 import { prisma } from "@/lib/prisma";
 import { getStorefrontUi } from "@/lib/storefront/ui-copy";
 
 export const dynamic = "force-dynamic";
 
 type Props = {
-  searchParams: Promise<{ order?: string }>;
+  searchParams: Promise<{ order?: string; token?: string }>;
 };
 
 export default async function OrderSuccessPage({ searchParams }: Props) {
-  const { order } = await searchParams;
+  const { order, token } = await searchParams;
   const ui = (await getStorefrontUi()).orderSuccess;
+  const jar = await cookies();
+  const cookieToken = jar.get(RECEIPT_COOKIE)?.value?.split(".").slice(1).join(".") || null;
+  const cookieOrder = jar.get(RECEIPT_COOKIE)?.value?.split(".")[0];
   const row = order
     ? await prisma.order.findUnique({
         where: { orderNumber: order },
         include: { items: true },
       })
     : null;
-  const receipt = row
+  const allowed = Boolean(
+    row &&
+      canShowReceipt(row.receiptTokenHash, [
+        token,
+        cookieOrder === row.orderNumber ? cookieToken : null,
+      ]),
+  );
+  const receipt = row && allowed
     ? orderReceipt({
         orderNumber: row.orderNumber,
         paymentMethod: row.paymentMethod,

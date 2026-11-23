@@ -2,7 +2,7 @@ import type { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { assertStrongAdminPassword, readAdminCredentials } from "@/lib/admin-credentials";
 
-export const DEMO_ACCOUNT_EMAILS = ["admin@vizfas.vn", "khach@vizfas.vn"] as const;
+export const DEMO_ACCOUNT_EMAILS = ["admin@pttshop.vn", "khach@pttshop.vn"] as const;
 
 export async function rotateAdminAccount(
   db: PrismaClient,

@@ -530,7 +530,7 @@ async function main() {
     const variant = demoProduct.variants[0];
     const order = await prisma.order.create({
       data: {
-        orderNumber: "VFSEED0001",
+        orderNumber: "PTTSEED0001",
         status: "COMPLETED",
         paymentMethod: "COD",
         paymentStatus: "PAID",

@@ -1,3 +1,5 @@
+import { cookies } from "next/headers";
+import { randomBytes } from "crypto";
 import { z } from "zod";
 import { ApiError, handleApiError, jsonOk } from "@/lib/api";
 import { getOptionalSession } from "@/lib/auth-guards";
@@ -11,7 +13,9 @@ import { sendOrderConfirmationEmail } from "@/lib/mail";
 import { getPaymentProvider } from "@/lib/payments";
 import { prisma } from "@/lib/prisma";
 import { clientIp, recordConsents } from "@/lib/consent";
+import { orderBuyerId } from "@/lib/order-buyer";
 import { nextOrderNumber } from "@/lib/order-number";
+import { hashReceiptToken, RECEIPT_COOKIE } from "@/lib/order-receipt-token";
 import { emailSchema, phoneSchema } from "@/lib/validation";
 
 const bodySchema = z.object({
@@ -89,6 +93,8 @@ export async function POST(req: Request) {
 
     const total = Math.max(0, subtotal + shippingFee - discount);
     const provider = getPaymentProvider(data.paymentMethod);
+    const receiptToken = randomBytes(16).toString("hex");
+    const buyerId = orderBuyerId(session?.user);
 
     const order = await prisma.$transaction(async (tx) => {
       for (const { item, variant } of lines) {
@@ -114,7 +120,7 @@ export async function POST(req: Request) {
       const created = await tx.order.create({
         data: {
           orderNumber: orderNumber(),
-          userId: session?.user?.id,
+          userId: buyerId,
           status: "PENDING",
           paymentMethod: data.paymentMethod,
           customerName: data.customerName,
@@ -127,6 +133,7 @@ export async function POST(req: Request) {
           shippingFee,
           discount,
           total,
+          receiptTokenHash: hashReceiptToken(receiptToken),
           items: {
             create: lines.map(({ item, variant }) => ({
               variantId: variant.id,
@@ -152,9 +159,10 @@ export async function POST(req: Request) {
     });
 
     // Clear server cart after successful order
-    if (session?.user?.id) {
+    const cartOwnerId = session?.user?.id ?? null;
+    if (cartOwnerId) {
       const userCart = await prisma.cart.findUnique({
-        where: { userId: session.user.id },
+        where: { userId: cartOwnerId },
       });
       if (userCart) {
         await prisma.cartItem.deleteMany({ where: { cartId: userCart.id } });
@@ -170,10 +178,9 @@ export async function POST(req: Request) {
 
     await recordConsents({
       subject: order.customerEmail || order.customerPhone,
-      userId: session?.user?.id,
+      userId: buyerId,
       ip: clientIp(req),
       grants: data.consents,
-      checkout: true,
     });
 
     void sendOrderConfirmationEmail({
@@ -184,8 +191,18 @@ export async function POST(req: Request) {
       status: order.status,
     });
 
+    const jar = await cookies();
+    jar.set(RECEIPT_COOKIE, `${order.orderNumber}.${receiptToken}`, {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 30,
+      secure: process.env.NODE_ENV === "production",
+    });
+
     return jsonOk({
       orderNumber: order.orderNumber,
+      receiptToken,
       total: order.total,
       discount: order.discount,
       paymentStatus: order.paymentStatus,
