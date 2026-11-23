@@ -175,15 +175,16 @@ describe("sqlite busy retry and concurrent webhook", () => {
         items: { create: { variantId: variant.id, name: "Pay Tee", color: "Den", size: "M", price: 100000, quantity: 1 } },
       },
     });
+    const eventId = `tx-concurrent-${Date.now()}`;
     const [first, second] = await Promise.all([
-      applyPayosPayment(db, order, "tx-concurrent"),
-      applyPayosPayment(db, order, "tx-concurrent"),
+      applyPayosPayment(db, order, eventId),
+      applyPayosPayment(db, order, eventId),
     ]);
     const flags = [first.duplicate, second.duplicate].sort();
     expect(flags).toEqual([false, true]);
     const saved = await db.order.findUniqueOrThrow({ where: { id: order.id } });
     expect(saved.paymentStatus).toBe("PAID");
-    const events = await db.webhookEvent.count({ where: { eventId: "tx-concurrent" } });
+    const events = await db.webhookEvent.count({ where: { eventId } });
     expect(events).toBe(1);
     await db.$disconnect();
   });
