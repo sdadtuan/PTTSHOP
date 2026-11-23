@@ -5,10 +5,10 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Heart, Menu, Search, ShoppingBag, User, X } from "lucide-react";
 import { useCart } from "@/components/cart/cart-context";
-import { BrandLogoImg } from "@/components/cms/brand-logo-img";
 import { useSiteBrand } from "@/components/cms/site-brand-context";
 import { useStorefrontLayout } from "@/components/cms/storefront-layout-context";
 import { cn } from "@/lib/utils";
+import { displayBrandName } from "@/lib/public-brand";
 
 export function Header() {
   const pathname = usePathname();
@@ -21,7 +21,7 @@ export function Header() {
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [q, setQ] = useState("");
-  const brandName = brand.brandName || "PTT Shop";
+  const brandName = displayBrandName(brand.brandName);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -34,7 +34,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-black/5 bg-[var(--background)]/95 backdrop-blur-md">
-      {/* Row 1: logo centered + utilities */}
+      {/* Row 1: logo centered on the viewport + utilities */}
       <div className="relative mx-auto flex h-14 max-w-7xl items-center px-4 max-md:grid max-md:grid-cols-[2.75rem_minmax(0,1fr)_auto] max-md:items-center max-md:gap-x-2 max-md:px-3 md:h-16 md:px-6">
         <button
           type="button"
@@ -48,15 +48,19 @@ export function Header() {
 
         <Link
           href="/"
-          className="max-md:relative max-md:left-auto max-md:flex max-md:min-w-0 max-md:max-w-full max-md:translate-x-0 max-md:justify-center max-md:overflow-hidden max-md:[&_img]:mx-auto md:absolute md:left-1/2 md:-translate-x-1/2"
+          data-testid="header-logo"
+          className="absolute top-1/2 left-1/2 z-10 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center"
           onClick={() => setOpen(false)}
         >
           {brand.logoUrl ? (
-            <BrandLogoImg
+            // Fixed box so the header does not shift when the file loads.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
               src={brand.logoUrl}
               alt={brandName}
-              slot="header"
-              layout={brand.logoLayout}
+              width={109}
+              height={40}
+              className="block h-[30px] w-16 max-w-none object-contain md:h-10 md:w-[109px]"
             />
           ) : (
             <span className="font-[family-name:var(--font-display)] text-2xl font-extrabold tracking-[0.22em] text-neutral-900 md:text-[1.75rem]">

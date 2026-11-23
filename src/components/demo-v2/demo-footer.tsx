@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { FooterLinksContent, SiteSettingsData } from "@/lib/cms/types";
+import { displayBrandName, visibleEmail, visibleHref, visiblePhone } from "@/lib/public-brand";
 
 export function DemoFooter({
   settings,
@@ -8,13 +9,16 @@ export function DemoFooter({
   settings: SiteSettingsData;
   footerLinks: FooterLinksContent;
 }) {
-  const brand = settings.brandName || "PTT Shop";
+  const brand = displayBrandName(settings.brandName);
   const social = [
-    { href: settings.socialInstagram || "https://instagram.com", label: "Instagram" },
-    { href: settings.socialFacebook || "https://facebook.com", label: "Facebook" },
-    { href: settings.socialTiktok || "https://tiktok.com", label: "TikTok" },
-    { href: settings.socialYoutube || "https://youtube.com", label: "YouTube" },
-  ];
+    { href: visibleHref(settings.socialInstagram), label: "Instagram" },
+    { href: visibleHref(settings.socialFacebook), label: "Facebook" },
+    { href: visibleHref(settings.socialTiktok), label: "TikTok" },
+    { href: visibleHref(settings.socialYoutube), label: "YouTube" },
+    { href: visibleHref(settings.messengerUrl), label: "Messenger" },
+  ].filter((item) => item.href);
+  const email = visibleEmail(settings.contactEmail);
+  const phone = visiblePhone(settings.hotline || settings.contactPhone);
 
   const columns = footerLinks.columns;
   const contactTitle = footerLinks.contactColumnTitle || "Liên hệ";
@@ -59,14 +63,16 @@ export function DemoFooter({
             <h4>{contactTitle}</h4>
             <ul>
               <li>{settings.contactAddress}</li>
-              <li>
-                <a href={`mailto:${settings.contactEmail}`}>{settings.contactEmail}</a>
-              </li>
-              <li>
-                <a href={`tel:${settings.contactPhone.replace(/\s/g, "")}`}>
-                  {settings.contactPhone}
-                </a>
-              </li>
+              {email ? (
+                <li>
+                  <a href={`mailto:${email}`}>{email}</a>
+                </li>
+              ) : null}
+              {phone ? (
+                <li>
+                  <a href={`tel:${phone.replace(/\s/g, "")}`}>{phone}</a>
+                </li>
+              ) : null}
               <li>{settings.contactHours}</li>
               {footerLinks.showHomepageSwitcher ? (
                 <>

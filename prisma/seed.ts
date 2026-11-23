@@ -91,10 +91,10 @@ async function main() {
     },
   });
 
-  const essentials = await prisma.collection.create({
+  const basics = await prisma.collection.create({
     data: {
-      name: "Essentials Collection",
-      slug: "essentials",
+      name: "Bộ sưu tập PTT Shop",
+      slug: "bo-suu-tap-co-ban",
       description: "Phong cách tối giản, dễ phối mỗi ngày",
       image: img("photo-1483985988355-763728e1935b"),
     },
@@ -493,7 +493,7 @@ async function main() {
           })(),
         },
         collections: {
-          create: [{ collectionId: essentials.id }],
+          create: [{ collectionId: basics.id }],
         },
       },
     });

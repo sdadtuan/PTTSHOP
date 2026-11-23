@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
+import { displayBrandName } from "@/lib/public-brand";
 import { ConsentFields, consentsFromForm } from "@/components/legal/consent-fields";
 
 export default function RegisterPage() {
@@ -56,7 +57,7 @@ export default function RegisterPage() {
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-4 py-16">
       <h1 className="type-title text-3xl font-bold">{a.registerTitle}</h1>
-      <p className="mt-2 text-sm text-neutral-500">{a.registerSubtitle}</p>
+      <p className="mt-2 text-sm text-neutral-500">{displayBrandName(a.registerSubtitle)}</p>
 
       <form onSubmit={onSubmit} className="mt-8 space-y-4">
         <Field label="Họ tên" name="name" required />

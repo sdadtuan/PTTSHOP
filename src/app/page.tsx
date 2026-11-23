@@ -17,6 +17,7 @@ import { FRAME_ASPECT, GAPS, OBJECT_POSITION } from "@/config/home-frame-specs";
 import { homeImages } from "@/config/home-images";
 import { TYPE_SCALE } from "@/config/home-type-scale";
 import { getHomeSectionsForRequest } from "@/lib/cms/published";
+import { displayBrandName } from "@/lib/public-brand";
 import type {
   ColorPlayContent,
   CollectionsContent,
@@ -664,13 +665,13 @@ export default async function HomePage() {
                   } as CSSProperties
                 }
               >
-                {colorPlay.headline}
+                {displayBrandName(colorPlay.headline)}
               </h2>
               <p className="text-xs leading-relaxed text-neutral-600 max-md:mt-0 md:mt-4 md:text-[15px] max-md:text-[11px] max-md:leading-[1.45]">
-                {colorPlay.paragraph1}
+                {displayBrandName(colorPlay.paragraph1)}
               </p>
               <p className="text-xs leading-relaxed text-neutral-600 max-md:mt-0 md:mt-3 md:text-[15px] max-md:text-[11px] max-md:leading-[1.45]">
-                {colorPlay.paragraph2}
+                {displayBrandName(colorPlay.paragraph2)}
               </p>
             </div>
             {/* Two CMS intro frames fill the empty copy column under the paragraphs */}

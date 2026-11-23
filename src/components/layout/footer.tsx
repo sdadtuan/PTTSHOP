@@ -8,6 +8,7 @@ import { useSiteBrand } from "@/components/cms/site-brand-context";
 import { useStorefrontLayout } from "@/components/cms/storefront-layout-context";
 import { TYPE_SCALE } from "@/config/home-type-scale";
 import { company, companyPolicyLinks, isUnset } from "@/content/company";
+import { displayBrandName, visibleEmail, visibleHref, visiblePhone } from "@/lib/public-brand";
 
 function InstagramIcon({ className }: { className?: string }) {
   return (
@@ -70,13 +71,16 @@ export function Footer() {
   if (pathname?.startsWith("/admin") || pathname?.startsWith("/demo-v2")) return null;
 
   const social = [
-    { href: brand.socialInstagram || "https://instagram.com", label: "Instagram", Icon: InstagramIcon },
-    { href: brand.socialFacebook || "https://facebook.com", label: "Facebook", Icon: FacebookIcon },
-    { href: brand.socialTiktok || "https://tiktok.com", label: "TikTok", Icon: TikTokIcon },
-    { href: brand.socialYoutube || "https://youtube.com", label: "YouTube", Icon: YoutubeIcon },
-  ] as const;
+    { href: visibleHref(brand.socialInstagram), label: "Instagram", Icon: InstagramIcon },
+    { href: visibleHref(brand.socialFacebook), label: "Facebook", Icon: FacebookIcon },
+    { href: visibleHref(brand.socialTiktok), label: "TikTok", Icon: TikTokIcon },
+    { href: visibleHref(brand.socialYoutube), label: "YouTube", Icon: YoutubeIcon },
+    { href: visibleHref(brand.messengerUrl), label: "Messenger", Icon: FacebookIcon },
+  ].filter((item) => item.href);
 
-  const brandName = brand.brandName || "PTT Shop";
+  const brandName = displayBrandName(brand.brandName);
+  const email = visibleEmail(brand.contactEmail);
+  const phone = visiblePhone(brand.hotline || brand.contactPhone);
   const showFooterBrandText = Boolean(brand.logoUrl && brand.logoLayout.footerShowBrandName);
 
   return (
@@ -194,26 +198,28 @@ export function Footer() {
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" />
                 <span>{brand.contactAddress}</span>
               </li>
-              {isUnset(brand.contactEmail) ? null : (
+              {email ? (
               <li className="flex items-center gap-2.5">
                 <Mail className="h-4 w-4 shrink-0 text-[var(--accent)]" />
                 <a
-                  href={`mailto:${brand.contactEmail}`}
+                  href={`mailto:${email}`}
                   className="hover:text-[var(--accent)]"
                 >
-                  {brand.contactEmail}
+                  {email}
                 </a>
               </li>
-              )}
+              ) : null}
+              {phone ? (
               <li className="flex items-center gap-2.5">
                 <Phone className="h-4 w-4 shrink-0 text-[var(--accent)]" />
                 <a
-                  href={`tel:${brand.contactPhone.replace(/\s/g, "")}`}
+                  href={`tel:${phone.replace(/\s/g, "")}`}
                   className="hover:text-[var(--accent)]"
                 >
-                  {brand.contactPhone}
+                  {phone}
                 </a>
               </li>
+              ) : null}
               <li className="flex items-start gap-2.5">
                 <Clock className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" />
                 <span>{brand.contactHours}</span>

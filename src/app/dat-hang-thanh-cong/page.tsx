@@ -4,6 +4,7 @@ import { formatVnd } from "@/lib/format";
 import { orderReceipt } from "@/lib/order-receipt";
 import { canShowReceipt, RECEIPT_COOKIE } from "@/lib/order-receipt-token";
 import { prisma } from "@/lib/prisma";
+import { displayBrandName } from "@/lib/public-brand";
 import { getStorefrontUi } from "@/lib/storefront/ui-copy";
 
 export const dynamic = "force-dynamic";
@@ -45,7 +46,7 @@ export default async function OrderSuccessPage({ searchParams }: Props) {
 
   return (
     <div className="mx-auto max-w-xl px-4 py-16">
-      <p className="text-center text-sm tracking-[0.25em] text-[var(--accent)] uppercase">{ui.eyebrow}</p>
+      <p className="text-center text-sm tracking-[0.25em] text-[var(--accent)] uppercase">{displayBrandName(ui.eyebrow)}</p>
       <h1 className="mt-3 text-center type-title text-3xl font-bold">{ui.title}</h1>
       {order ? (
         <p className="mt-3 text-center text-neutral-600">

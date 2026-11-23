@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Star } from "lucide-react";
+import { displayBrandName } from "@/lib/public-brand";
 
 export type DemoReview = {
   id: string;
@@ -49,9 +50,9 @@ export function DemoReviews({
         <div className="dv2-section__head">
           <h2 id="dv2-reviews-title" className="dv2-section__title">
             <span className="dv2-slashes" aria-hidden>
-              ///
+              {"///"}
             </span>
-            {title}
+            {displayBrandName(title)}
           </h2>
         </div>
 

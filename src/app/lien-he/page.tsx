@@ -2,13 +2,14 @@
 
 import { useSiteBrand } from "@/components/cms/site-brand-context";
 import { isUnset } from "@/content/company";
+import { visibleEmail, visiblePhone } from "@/lib/public-brand";
 import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
 
 export default function ContactPage() {
   const ui = useStorefrontUi().contact;
   const brand = useSiteBrand();
-  const email = ui.useSiteContactFields ? brand.contactEmail : ui.email;
-  const phone = ui.useSiteContactFields ? brand.contactPhone : ui.phone;
+  const email = visibleEmail(ui.useSiteContactFields ? brand.contactEmail : ui.email);
+  const phone = visiblePhone(ui.useSiteContactFields ? brand.hotline || brand.contactPhone : ui.phone);
   const hours = ui.useSiteContactFields ? brand.contactHours : ui.hours;
 
   return (
@@ -27,12 +28,14 @@ export default function ContactPage() {
           </a>
         </p>
         )}
+        {phone ? (
         <p>
           <strong>{ui.phoneLabel}</strong>{" "}
           <a href={`tel:${phone.replace(/\s/g, "")}`} className="text-[var(--accent)]">
             {phone}
           </a>
         </p>
+        ) : null}
         <p>
           <strong>{ui.hoursLabel}</strong> {hours}
         </p>

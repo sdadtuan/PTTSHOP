@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { homeImages } from "@/config/home-images";
 import type { ColorPlayContent } from "@/lib/cms/types";
+import { displayBrandName } from "@/lib/public-brand";
 
 /** Single editorial lookbook — A color_play content, no empty mosaic gaps. */
 export function DemoPhoiMau({ content }: { content: ColorPlayContent }) {
@@ -25,9 +26,9 @@ export function DemoPhoiMau({ content }: { content: ColorPlayContent }) {
             <p className="dv2-lookbook__brand">
               {content.brandLine1 || "PHỐI MÀU"} <em>{content.brandEmphasis || "TẠO CHẤT"}</em>
             </p>
-            <h2 id="dv2-color-play-title">{content.headline}</h2>
-            <p className="dv2-lookbook__lead">{content.paragraph1}</p>
-            <p className="dv2-lookbook__lead">{content.paragraph2}</p>
+            <h2 id="dv2-color-play-title">{displayBrandName(content.headline)}</h2>
+            <p className="dv2-lookbook__lead">{displayBrandName(content.paragraph1)}</p>
+            <p className="dv2-lookbook__lead">{displayBrandName(content.paragraph2)}</p>
           </div>
           <Link
             href={content.ctaHref || "/bo-suu-tap"}

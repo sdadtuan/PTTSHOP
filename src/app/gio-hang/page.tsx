@@ -6,6 +6,7 @@ import { Minus, Plus, Trash2 } from "lucide-react";
 import { useCart } from "@/components/cart/cart-context";
 import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
 import { formatVnd } from "@/lib/format";
+import { displayBrandName } from "@/lib/public-brand";
 
 export default function CartPage() {
   const { items, subtotal, updateQuantity, removeItem, loading } = useCart();
@@ -28,7 +29,7 @@ export default function CartPage() {
         <h1 className="type-title text-3xl font-bold">
           {c.emptyTitle}
         </h1>
-        <p className="mt-3 text-neutral-500">{c.emptyBody}</p>
+        <p className="mt-3 text-neutral-500">{displayBrandName(c.emptyBody)}</p>
         <Link
           href="/san-pham"
           className="mt-8 inline-flex rounded-full bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-white"

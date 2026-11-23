@@ -75,6 +75,16 @@ export const siteSettingsSchema = z.object({
       message: "Số điện thoại không hợp lệ",
     }),
   ),
+  hotline: plain.pipe(
+    z.string().max(50).refine((v) => !v || /^[0-9+().\s-]{6,20}$/.test(v), {
+      message: "Hotline không hợp lệ",
+    }),
+  ).optional().default(""),
+  messengerUrl: z
+    .string()
+    .refine((v) => !v || isSafeHref(v), { message: "URL Messenger không hợp lệ" })
+    .optional()
+    .default(""),
   contactHours: plain.pipe(z.string().max(120)),
   socialInstagram: z.string().refine((v) => !v || isSafeHref(v), { message: "URL MXH không hợp lệ" }),
   socialFacebook: z.string().refine((v) => !v || isSafeHref(v), { message: "URL MXH không hợp lệ" }),

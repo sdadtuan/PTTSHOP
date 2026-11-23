@@ -191,9 +191,9 @@ async function remoteOrPlate(url, plateOpts, dest, w, h) {
 }
 
 const COLORS = [
-  { key: "kem", name: "Kem", hex: "#E8DCC8", brand: "ESSENTIALS" },
-  { key: "den", name: "Đen", hex: "#1A1A1A", brand: "ESSENTIALS" },
-  { key: "nau", name: "Nâu", hex: "#6B4423", brand: "ESSENTIALS" },
+  { key: "kem", name: "Kem", hex: "#E8DCC8", brand: "PTT SHOP" },
+  { key: "den", name: "Đen", hex: "#1A1A1A", brand: "PTT SHOP" },
+  { key: "nau", name: "Nâu", hex: "#6B4423", brand: "PTT SHOP" },
   { key: "xam", name: "Xám", hex: "#B8B8B8", brand: "PTT Shop" },
   { key: "hong", name: "Hồng", hex: "#E8A0BF", brand: "PTT Shop" },
 ];

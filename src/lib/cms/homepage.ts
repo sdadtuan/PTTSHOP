@@ -27,6 +27,8 @@ type SettingsRow = {
   contactAddress: string | null;
   contactEmail: string | null;
   contactPhone: string | null;
+  hotline: string | null;
+  messengerUrl: string | null;
   contactHours: string | null;
   socialInstagram: string | null;
   socialFacebook: string | null;
@@ -83,6 +85,8 @@ export function settingsFromRow(row: SettingsRow): {
     contactAddress: row.contactAddress ?? d.contactAddress,
     contactEmail: row.contactEmail ?? d.contactEmail,
     contactPhone: row.contactPhone ?? d.contactPhone,
+    hotline: row.hotline ?? d.hotline,
+    messengerUrl: row.messengerUrl ?? d.messengerUrl,
     contactHours: row.contactHours ?? d.contactHours,
     socialInstagram: row.socialInstagram ?? d.socialInstagram,
     socialFacebook: row.socialFacebook ?? d.socialFacebook,
@@ -106,6 +110,8 @@ function settingsColumns(s: SiteSettingsData) {
     contactAddress: s.contactAddress,
     contactEmail: s.contactEmail,
     contactPhone: s.contactPhone,
+    hotline: s.hotline,
+    messengerUrl: s.messengerUrl,
     contactHours: s.contactHours,
     socialInstagram: s.socialInstagram,
     socialFacebook: s.socialFacebook,

@@ -50,6 +50,8 @@ export type SiteSettingsData = {
   contactAddress: string;
   contactEmail: string;
   contactPhone: string;
+  hotline: string;
+  messengerUrl: string;
   contactHours: string;
   socialInstagram: string;
   socialFacebook: string;
@@ -272,12 +274,14 @@ export const DEFAULT_SITE_SETTINGS: SiteSettingsData = {
     "Thời trang hiện đại, tối giản và khác biệt cho thế hệ trẻ tự tin thể hiện phong cách mỗi ngày.",
   contactAddress: "TP. Hồ Chí Minh, Việt Nam",
   contactEmail: "",
-  contactPhone: "0321 456 789",
+  contactPhone: "",
+  hotline: "",
+  messengerUrl: "",
   contactHours: "Thứ 2 – Chủ Nhật 8:00 – 22:00",
-  socialInstagram: "https://instagram.com",
-  socialFacebook: "https://facebook.com",
-  socialTiktok: "https://tiktok.com",
-  socialYoutube: "https://youtube.com",
+  socialInstagram: "",
+  socialFacebook: "",
+  socialTiktok: "",
+  socialYoutube: "",
   seoTitle: "PTT Shop — Thời trang mỗi ngày đều chất",
   seoDescription:
     "Cửa hàng thời trang & phụ kiện Nam · Nữ. Chất liệu bền, form hiện đại, dễ phối mỗi ngày.",
@@ -329,12 +333,7 @@ export function defaultSectionContent(
       } satisfies FooterLinksContent;
     case "floating_contact":
       return {
-        items: [
-          { href: "https://facebook.com", label: "Facebook", preset: "facebook" },
-          { href: "https://pttshop.vn", label: "Messenger", preset: "messenger" },
-          { href: "https://zalo.me/0901234567", label: "Zalo", preset: "zalo" },
-          { href: "tel:0901234567", label: "Gọi điện", preset: "phone" },
-        ],
+        items: [],
       } satisfies FloatingContactContent;
     case "reviews":
       return {
@@ -431,7 +430,7 @@ export function defaultSectionContent(
         paragraph1:
           "Từ kem trung tính đến đen tối giản hay cam nổi bật — PTT Shop giúp bạn phối màu tạo chất mà vẫn mặc được mỗi ngày.",
         paragraph2:
-          "Chọn một item Essential, thêm phụ kiện, và hoàn thiện look trong vài phút — giữ form sạch, điểm nhấn rõ.",
+          "Chọn một sản phẩm, thêm phụ kiện, và hoàn thiện look trong vài phút — giữ form sạch, điểm nhấn rõ.",
         introImage1: homeImages.colorPlay.intro[0],
         introImage2: homeImages.colorPlay.intro[1],
         introImage1Alt: "Look phối màu — khung 1",

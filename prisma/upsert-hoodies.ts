@@ -350,7 +350,7 @@ async function main() {
     slug: "ao-hoodie-essential",
     gender: "MALE",
     description:
-      "Áo Hoodie Essential form rộng cho nam — chất nỉ mềm, dày dặn, in ESSENTIALS. Gallery ảnh thật theo màu Kem / Đen / Nâu (front / back / fabric).",
+      "Áo Hoodie Essential form rộng cho nam — chất nỉ mềm, dày dặn, in PTT Shop. Gallery ảnh thật theo màu Kem / Đen / Nâu (front / back / fabric).",
     categoryId: hoodie.id,
     price: 599000,
     compareAt: 899000,

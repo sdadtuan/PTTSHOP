@@ -456,6 +456,27 @@ export default function AdminGiaoDienPage() {
                   <span className="block text-xs text-[var(--admin-text-muted)]">Áp dụng cho nút, điểm nhấn và chữ màu trên toàn site.</span>
                 </div>
                 <AdminInput
+                  label="Email liên hệ"
+                  data-testid="cms-contact-email"
+                  value={settings.contactEmail}
+                  onChange={(e) => patchSettings({ contactEmail: e.target.value })}
+                  placeholder="Để trống nếu chưa có"
+                />
+                <AdminInput
+                  label="Hotline"
+                  data-testid="cms-hotline"
+                  value={settings.hotline}
+                  onChange={(e) => patchSettings({ hotline: e.target.value })}
+                  placeholder="Để trống nếu chưa có"
+                />
+                <AdminInput
+                  label="Messenger"
+                  data-testid="cms-messenger-url"
+                  value={settings.messengerUrl}
+                  onChange={(e) => patchSettings({ messengerUrl: e.target.value })}
+                  placeholder="https://m.me/… — để trống nếu chưa có"
+                />
+                <AdminInput
                   label="Tiêu đề SEO mặc định"
                   data-testid="cms-seo-title"
                   value={settings.seoTitle}

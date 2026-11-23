@@ -11,6 +11,7 @@ import { Header } from "@/components/layout/header";
 import { Providers } from "@/components/providers";
 import { getSiteSettingsForRequest, getStorefrontLayoutForRequest } from "@/lib/cms/published";
 import { DEFAULT_SITE_SETTINGS } from "@/lib/cms/types";
+import { displayBrandName } from "@/lib/public-brand";
 import "./globals.css";
 
 /**
@@ -27,13 +28,13 @@ const sans = Be_Vietnam_Pro({
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettingsForRequest();
-  const brand = settings.brandName || DEFAULT_SITE_SETTINGS.brandName;
+  const brand = displayBrandName(settings.brandName || DEFAULT_SITE_SETTINGS.brandName);
   return {
     title: {
-      default: settings.seoTitle || DEFAULT_SITE_SETTINGS.seoTitle,
+      default: displayBrandName(settings.seoTitle || DEFAULT_SITE_SETTINGS.seoTitle),
       template: `%s | ${brand}`,
     },
-    description: settings.seoDescription || DEFAULT_SITE_SETTINGS.seoDescription,
+    description: displayBrandName(settings.seoDescription || DEFAULT_SITE_SETTINGS.seoDescription),
     icons: {
       icon: [
         { url: "/favicon.ico" },

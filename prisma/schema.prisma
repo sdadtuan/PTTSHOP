@@ -354,7 +354,11 @@ model Newsletter {
 /// Global brand / footer settings — published fields are live; draftJson is WIP.
 model SiteSettings {
   id              String    @id @default("default")
-  brandName       String    @default("VIZFAS")
+  brandName       String    @default("PTT Shop")
+  /// Số hotline hiển thị. Null hoặc rỗng thì giao diện không render.
+  hotline         String?
+  /// Link Messenger. Null hoặc rỗng thì không render.
+  messengerUrl    String?
   brandColor      String    @default("#f97316")
   logoUrl         String?
   /// JSON LogoLayoutSettings (header/footer sizes). Null = storefront defaults (32/40px header).

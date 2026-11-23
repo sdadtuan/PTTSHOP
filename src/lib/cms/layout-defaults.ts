@@ -94,7 +94,7 @@ export const DEFAULT_DEMO_TRUST_PAIRS: TrustPair[] = [
 export function defaultDemoHeroSlides(ctaLabel: string): DemoHeroSlide[] {
   return [
     {
-      eyebrow: "ESSENTIALS",
+      eyebrow: "PTT SHOP",
       title: "PTT Shop",
       subtitle: "Form rộng, chất dày — dễ mặc mỗi ngày.",
       ctaHref: "/san-pham?category=hoodie",
@@ -104,7 +104,7 @@ export function defaultDemoHeroSlides(ctaLabel: string): DemoHeroSlide[] {
       sideBImage: homeImages.colorPlay.main,
     },
     {
-      eyebrow: "COLOR PLAY",
+      eyebrow: "PTT SHOP",
       title: "PTT Shop",
       subtitle: "Phối màu tạo chất — nổi bật mà vẫn tối giản.",
       ctaHref: "/bo-suu-tap",

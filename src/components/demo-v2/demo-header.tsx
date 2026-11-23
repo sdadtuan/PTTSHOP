@@ -7,10 +7,12 @@ import { Heart, Menu, Search, ShoppingBag, User, X } from "lucide-react";
 import { useCart } from "@/components/cart/cart-context";
 import { useStorefrontLayout } from "@/components/cms/storefront-layout-context";
 import type { NavLink } from "@/lib/cms/types";
+import { displayBrandName } from "@/lib/public-brand";
 
 type NavItem = NavLink;
 
 export function DemoHeader({ brandName = "PTT Shop" }: { brandName?: string }) {
+  const name = displayBrandName(brandName);
   const pathname = usePathname();
   const router = useRouter();
   const { count } = useCart();
@@ -82,7 +84,7 @@ export function DemoHeader({ brandName = "PTT Shop" }: { brandName?: string }) {
             setHash("");
           }}
         >
-          {brandName}
+          {name}
           <span>®</span>
         </Link>
 

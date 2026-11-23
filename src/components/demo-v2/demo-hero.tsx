@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { homeImages } from "@/config/home-images";
 import type { DemoHeroSlide, HeroContent } from "@/lib/cms/types";
+import { displayBrandName } from "@/lib/public-brand";
 
 type Slide = DemoHeroSlide & { key: string };
 
@@ -60,9 +61,9 @@ export function DemoHero({
       <div className="dv2-hero__grain" aria-hidden />
       <div className="dv2-wrap dv2-hero__inner">
         <div className="dv2-hero__copy">
-          <p className="dv2-kicker">{slide.eyebrow}</p>
+          <p className="dv2-kicker">{displayBrandName(slide.eyebrow)}</p>
           <h1 className="dv2-hero__title">
-            {slide.title}
+            {displayBrandName(slide.title)}
             <span>®</span>
           </h1>
           <p className="dv2-hero__sub">{slide.subtitle}</p>

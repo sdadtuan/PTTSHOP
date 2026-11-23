@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useStorefrontLayout } from "@/components/cms/storefront-layout-context";
 import { defaultSectionContent, type FloatingContactContent } from "@/lib/cms/types";
 import { cn } from "@/lib/utils";
+import { visibleHref } from "@/lib/public-brand";
 
 const defaults = (defaultSectionContent("floating_contact") as FloatingContactContent).items;
 
@@ -42,7 +43,10 @@ export function FloatingSocial() {
   if (pathname?.startsWith("/admin")) return null;
 
   const isDemoV2 = pathname?.startsWith("/demo-v2");
-  const items = floatingContact.items.length ? floatingContact.items : defaults;
+  const items = (floatingContact.items.length ? floatingContact.items : defaults).filter(
+    (item) => visibleHref(item.href),
+  );
+  if (items.length === 0) return null;
 
   return (
     <div
