@@ -20,6 +20,7 @@ export const POLICY_PAGES: PolicyPage[] = [
     body: [
       draft,
       `${company.name}, MST ${company.taxId}, địa chỉ ${company.address}, người đại diện ${company.representative}, thu thập dữ liệu để giao hàng và xuất chứng từ.`,
+      "Xuất hóa đơn và chứng từ kế toán là nghĩa vụ pháp luật, không phải mục đồng ý tùy chọn của khách.",
       "Phạm vi: họ tên, số điện thoại, email nếu khách cung cấp, địa chỉ giao, nội dung đơn, và nhật ký đồng ý.",
       "Thời gian lưu đơn hàng và dữ liệu giao hàng: [cần chốt].",
       "Bên nhận: hãng vận chuyển [cần chốt], nhà cung cấp hàng [cần chốt], cổng thanh toán [cần chốt], đơn vị hóa đơn [cần chốt]. Chỉ chuyển phần dữ liệu cần cho việc đó.",

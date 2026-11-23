@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { ConsentGrant } from "@/lib/consent";
 
-export function ConsentFields() {
+export function ConsentFields({ showInvoice = true }: { showInvoice?: boolean }) {
   return (
     <fieldset className="space-y-2 text-sm text-neutral-700">
       <label className="flex items-start gap-2">
@@ -15,10 +15,12 @@ export function ConsentFields() {
           </Link>
         </span>
       </label>
+      {showInvoice ? (
       <label className="flex items-start gap-2">
         <input className="mt-1" type="checkbox" name="consentInvoice" required />
         <span>Tôi đồng ý dùng dữ liệu trên để xuất chứng từ.</span>
       </label>
+      ) : null}
       <label className="flex items-start gap-2">
         <input className="mt-1" type="checkbox" name="consentMarketing" />
         <span>Tôi muốn nhận tin khuyến mãi. Mục này không bắt buộc.</span>

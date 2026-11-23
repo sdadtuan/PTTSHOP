@@ -203,7 +203,7 @@ export default function CheckoutPage() {
             <p className="mt-3 text-sm text-red-600">{error}</p>
           ) : null}
           <div className="mt-4">
-            <ConsentFields />
+            <ConsentFields showInvoice={false} />
           </div>
           <button
             type="submit"
@@ -212,6 +212,12 @@ export default function CheckoutPage() {
           >
             {loading ? ck.submitLoading : ck.submitLabel}
           </button>
+          <p className="mt-2 text-xs leading-relaxed text-neutral-500">
+            Dữ liệu đơn được dùng để xuất hóa đơn và chứng từ theo nghĩa vụ pháp luật.{" "}
+            <Link href="/chinh-sach-bao-mat" className="underline">
+              Chính sách bảo mật
+            </Link>
+          </p>
         </aside>
       </form>
     </div>

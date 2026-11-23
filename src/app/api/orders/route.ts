@@ -11,6 +11,7 @@ import { sendOrderConfirmationEmail } from "@/lib/mail";
 import { getPaymentProvider } from "@/lib/payments";
 import { prisma } from "@/lib/prisma";
 import { clientIp, recordConsents } from "@/lib/consent";
+import { nextOrderNumber } from "@/lib/order-number";
 import { emailSchema, phoneSchema } from "@/lib/validation";
 
 const bodySchema = z.object({
@@ -40,9 +41,7 @@ const bodySchema = z.object({
 });
 
 function orderNumber() {
-  const stamp = Date.now().toString().slice(-8);
-  const rand = Math.floor(Math.random() * 900 + 100);
-  return `VF${stamp}${rand}`;
+  return nextOrderNumber();
 }
 
 export async function POST(req: Request) {
@@ -174,6 +173,7 @@ export async function POST(req: Request) {
       userId: session?.user?.id,
       ip: clientIp(req),
       grants: data.consents,
+      checkout: true,
     });
 
     void sendOrderConfirmationEmail({
