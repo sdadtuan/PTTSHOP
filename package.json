@@ -13,6 +13,8 @@
     "db:seed": "tsx prisma/seed.ts",
     "admin:rotate": "tsx scripts/rotate-admin.ts",
     "rotate-admin": "tsx scripts/rotate-admin.ts",
+    "import-from-sqlite": "tsx scripts/import-from-sqlite.ts",
+    "verify-migration": "tsx scripts/verify-migration.ts",
     "db:upsert-hoodies": "tsx prisma/upsert-hoodies.ts",
     "db:setup": "prisma migrate deploy && tsx prisma/seed.ts",
     "test": "vitest run",
