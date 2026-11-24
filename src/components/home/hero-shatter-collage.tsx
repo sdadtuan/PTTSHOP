@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore, type CSSProperties } from "react";
 import { FRAME_ASPECT, GAPS, HERO_GRID } from "@/config/home-frame-specs";
+import { optimizedPublicImageUrl } from "@/lib/catalog-image";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -11,28 +12,16 @@ type Props = {
   cycleMs?: number;
 };
 
-function usePrefersReducedMotion() {
-  const [reduced, setReduced] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduced(mq.matches);
-    const onChange = () => setReduced(mq.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
-  return reduced;
-}
-
-function useIsMobile() {
-  const [mobile, setMobile] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 767px)");
-    setMobile(mq.matches);
-    const onChange = () => setMobile(mq.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
-  return mobile;
+function useMediaQuery(query: string) {
+  return useSyncExternalStore(
+    (onChange) => {
+      const mq = window.matchMedia(query);
+      mq.addEventListener("change", onChange);
+      return () => mq.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia(query).matches,
+    () => false,
+  );
 }
 
 /**
@@ -44,8 +33,8 @@ export function HeroShatterCollage({
   className,
   cycleMs = 7000,
 }: Props) {
-  const reduced = usePrefersReducedMotion();
-  const mobile = useIsMobile();
+  const reduced = useMediaQuery("(prefers-reduced-motion: reduce)");
+  const mobile = useMediaQuery("(max-width: 767px)");
   const cols: number = mobile ? HERO_GRID.mobile.cols : HERO_GRID.desktop.cols;
   const rows: number = mobile ? HERO_GRID.mobile.rows : HERO_GRID.desktop.rows;
   const count = cols * rows;
@@ -77,7 +66,7 @@ export function HeroShatterCollage({
       className={cn("hero-shatter max-md:max-h-[min(50vh,380px)] max-md:w-full", className)}
       style={
         {
-          ["--hero-src"]: `url(${src})`,
+          ["--hero-src"]: `url("${optimizedPublicImageUrl(src)}")`,
           ["--hero-cols"]: cols,
           ["--hero-rows"]: rows,
           ["--hero-cycle"]: `${cycleMs}ms`,

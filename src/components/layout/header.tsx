@@ -69,7 +69,7 @@ export function Header() {
           )}
         </Link>
 
-        <div className="ml-auto flex items-center gap-0 max-md:justify-self-end max-md:gap-0 sm:gap-1 md:ml-auto">
+        <div className="relative z-20 ml-auto flex items-center gap-0 max-md:justify-self-end max-md:gap-0 sm:gap-1 md:ml-auto">
           <button
             type="button"
             className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full p-2 text-neutral-700 transition hover:bg-black/5 md:min-h-0 md:min-w-0"
@@ -95,7 +95,7 @@ export function Header() {
           <Link
             href="/gio-hang"
             className="relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-full p-2 text-neutral-700 transition hover:bg-black/5 md:min-h-0 md:min-w-0"
-            aria-label="Giỏ hàng"
+            aria-label={`Giỏ hàng, ${count} sản phẩm`}
           >
             <ShoppingBag className="h-5 w-5" />
             <span

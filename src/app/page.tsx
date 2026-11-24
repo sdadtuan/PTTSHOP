@@ -1,4 +1,5 @@
 import { Fragment, type CSSProperties, type ReactNode } from "react";
+import { preload } from "react-dom";
 import { StorefrontImage } from "@/components/product/storefront-image";
 import Link from "next/link";
 import {
@@ -16,6 +17,7 @@ import { ProductCard } from "@/components/product/product-card";
 import { FRAME_ASPECT, GAPS, OBJECT_POSITION } from "@/config/home-frame-specs";
 import { homeImages } from "@/config/home-images";
 import { TYPE_SCALE } from "@/config/home-type-scale";
+import { optimizedPublicImageUrl } from "@/lib/catalog-image";
 import { getHomeSectionsForRequest } from "@/lib/cms/published";
 import { displayBrandName } from "@/lib/public-brand";
 import type {
@@ -97,6 +99,7 @@ export default async function HomePage() {
   const promo = promoSec.content as PromoBannerContent;
 
   const heroSrc = hero.imageUrl || homeImages.hero.main;
+  preload(optimizedPublicImageUrl(heroSrc), { as: "image", fetchPriority: "high" });
   const heroTitle = hero.title || "Mặc Đơn Giản";
   const heroSubtitle = hero.subtitle || "Vẫn Nổi Bật";
   const heroCtaHref = hero.ctaHref || "/san-pham";
@@ -220,14 +223,6 @@ export default async function HomePage() {
             >
               <ArrowUpRight className="h-6 w-6" />
             </Link>
-            <StorefrontImage
-              src={heroSrc}
-              alt=""
-              width={864}
-              height={1152}
-              priority
-              className="sr-only"
-            />
           </div>
         </div>
       </section>
@@ -571,7 +566,6 @@ export default async function HomePage() {
                 frame="featuredLarge"
                 mobileFrame="featuredSmall"
                 imageOverride={largeImages[i]}
-                priority
               />
             ))}
           </div>
@@ -597,7 +591,6 @@ export default async function HomePage() {
                   product={p}
                   frame="featuredSmall"
                   imageOverride={src}
-                  priority
                 />
               );
             })}
@@ -647,7 +640,7 @@ export default async function HomePage() {
               fill
               sizes="(max-width:768px) 48vw, (max-width:1024px) 100vw, 26vw"
               className="object-cover object-top max-md:[object-position:50%_12%]"
-              priority
+              loading="lazy"
             />
           </div>
 
@@ -703,7 +696,7 @@ export default async function HomePage() {
                     sizes="(max-width:1024px) 45vw, 18vw"
                     className="object-cover"
                     style={{ objectPosition: OBJECT_POSITION.phoiGrid }}
-                    loading="eager"
+                    loading="lazy"
                   />
                 </div>
               ))}
@@ -728,8 +721,7 @@ export default async function HomePage() {
                     sizes="(max-width:768px) 30vw, 18vw"
                     className="object-cover"
                     style={{ objectPosition: OBJECT_POSITION.phoiGrid }}
-                    // eager on purpose (9f0df55): lazy left grey frames in this grid
-                    loading="eager"
+                    loading="lazy"
                   />
                 </div>
               ))}
@@ -765,8 +757,10 @@ export default async function HomePage() {
     .sort((a, b) => a.sortOrder - b.sortOrder)
     .map((s) => s.key);
 
+  const heroPreload = optimizedPublicImageUrl(heroSrc);
   return (
     <div className="overflow-x-hidden">
+      <link rel="preload" as="image" href={heroPreload} fetchPriority="high" />
       {orderedKeys.map((k) => (
         <Fragment key={k}>{blocks[k] ?? null}</Fragment>
       ))}

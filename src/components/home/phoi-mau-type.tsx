@@ -1,15 +1,16 @@
 import type { CSSProperties } from "react";
 import { TYPE_SCALE } from "@/config/home-type-scale";
 import { homeImages } from "@/config/home-images";
+import { optimizedPublicImageUrl } from "@/lib/catalog-image";
 
 /**
  * Giant stacked PHỐI / MÀU / TẠO / CHẤT — PHỐI đen, còn lại cam + texture.
  */
 export function PhoiMauType({ fillImage }: { fillImage?: string } = {}) {
   // fillImage is CMS-validated (isSafeMediaUrl: no quotes/parentheses/whitespace).
-  const fill = fillImage || homeImages.colorPlay.typeFill;
+  const fill = optimizedPublicImageUrl(fillImage || homeImages.colorPlay.typeFill, 640);
   const textured: CSSProperties = {
-    backgroundImage: `linear-gradient(rgba(249,115,22,0.78), rgba(249,115,22,0.78)), url(${fill})`,
+    backgroundImage: `linear-gradient(rgba(249,115,22,0.78), rgba(249,115,22,0.78)), url("${fill}")`,
     backgroundSize: "cover",
     backgroundPosition: "50% 28%",
     WebkitBackgroundClip: "text",

@@ -4,6 +4,8 @@
   --background: #fdfcf8;
   --foreground: #171717;
   --accent: #f97316;
+  /* Chữ cam trên nền kem. Nút giữ --accent; chữ cần tối hơn để đạt tương phản AA. */
+  --accent-ink: #c2410c;
   --accent-soft: #fff7ed;
   --surface: #ffffff;
   --muted: #737373;
@@ -26,6 +28,10 @@
 
 html {
   overflow-x: hidden;
+}
+
+.text-\[var\(--accent\)\] {
+  color: var(--accent-ink);
 }
 
 body {

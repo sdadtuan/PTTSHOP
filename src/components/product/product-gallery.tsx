@@ -134,6 +134,7 @@ export function ProductGallery({ images, name, selectedColor, colorPickNonce = 0
               alt={img.alt || name}
               fill
               sizes="80px"
+              loading="lazy"
               className="object-cover"
             />
           )}
@@ -209,6 +210,7 @@ export function ProductGallery({ images, name, selectedColor, colorPickNonce = 0
                 alt={current.alt || name}
                 fill
                 priority
+                fetchPriority="high"
                 sizes="(max-width:768px) 100vw, 50vw"
                 className={cn(
                   "object-cover transition duration-300",

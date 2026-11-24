@@ -99,9 +99,7 @@ export function ProductCard({
               className="object-cover transition duration-500 group-hover:scale-105"
               style={{ objectPosition }}
               priority={priority}
-              loading={
-                priority ? undefined : imageOverride ? "eager" : undefined
-              }
+              loading={priority ? undefined : "lazy"}
             />
           ) : (
             <div className="flex h-full items-center justify-center text-sm text-neutral-400">
