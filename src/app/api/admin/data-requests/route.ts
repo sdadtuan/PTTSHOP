@@ -1,11 +1,11 @@
 import { z } from "zod";
 import { handleApiError, jsonOk } from "@/lib/api";
-import { requireAdmin } from "@/lib/auth-guards";
+import { enforceAdmin } from "@/lib/rbac-access";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+export async function GET(req?: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const rows = await prisma.consent.findMany({
       where: { kind: "request" },
       orderBy: { createdAt: "desc" },
@@ -21,7 +21,7 @@ const schema = z.object({ id: z.string().min(1) });
 
 export async function POST(req: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const body = schema.parse(await req.json());
     const row = await prisma.consent.update({
       where: { id: body.id },

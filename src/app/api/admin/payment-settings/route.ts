@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { handleApiError, jsonError, jsonOk } from "@/lib/api";
-import { requireAdmin } from "@/lib/auth-guards";
+import { recordAudit } from "@/lib/admin-audit";
+import { enforceAdmin } from "@/lib/rbac-access";
 import { bankByBin } from "@/lib/payments/banks";
 import { maskAccount } from "@/lib/payments/mask";
 import { bankReady, napasAccountName } from "@/lib/payments/policy";
@@ -19,9 +20,9 @@ const putSchema = z.object({
   bankBranch: z.string().trim().max(80),
 });
 
-export async function GET() {
+export async function GET(req?: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const config = await getPaymentConfig();
     return jsonOk({
       ...config,
@@ -35,7 +36,7 @@ export async function GET() {
 
 export async function PUT(req: Request) {
   try {
-    await requireAdmin();
+    const session = await enforceAdmin(req);
     const body = putSchema.parse(await req.json());
     if (body.bankBin && !/^\d{6}$/.test(body.bankBin)) return jsonError("Mã ngân hàng phải gồm 6 chữ số.", 400);
     if (body.bankAccountNumber && !/^\d{6,19}$/.test(body.bankAccountNumber)) {
@@ -71,6 +72,7 @@ export async function PUT(req: Request) {
         bankBranch: body.bankBranch || null,
       },
     });
+    await recordAudit({ access: session.access, actorId: session.user.id, actorEmail: session.user.email, action: "PAYMENT_SETTINGS", entityType: "PaymentSettings", entityId: "default", after: { codEnabled: body.codEnabled, codMaxAmount: body.codMaxAmount }, req });
     return jsonOk({ ok: true, bankAccountMasked: body.bankAccountNumber ? maskAccount(body.bankAccountNumber) : "" });
   } catch (err) {
     return handleApiError(err);

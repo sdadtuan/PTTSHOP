@@ -1,5 +1,5 @@
 import { handleApiError, jsonOk } from "@/lib/api";
-import { requireAdmin } from "@/lib/auth-guards";
+import { enforceAdmin } from "@/lib/rbac-access";
 import { parseSpreadsheet, validateCatalogSheet } from "@/lib/catalog-import";
 import { filesFromZip, planCatalogImport } from "@/lib/catalog-import-commit";
 import { prisma } from "@/lib/prisma";
@@ -31,7 +31,7 @@ export async function readCatalogForm(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const parsed = await readCatalogForm(req);
     if ("error" in parsed) {
       return jsonOk({ ok: false, issues: [{ row: 1, field: "file", message: parsed.error }], summary: null, products: [] });

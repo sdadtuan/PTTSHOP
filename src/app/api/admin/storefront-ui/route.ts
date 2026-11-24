@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/auth-guards";
+import { enforceAdmin } from "@/lib/rbac-access";
 import { handleApiError } from "@/lib/api";
 import {
   discardStorefrontUiDraft,
@@ -8,9 +8,9 @@ import {
   saveStorefrontUiDraft,
 } from "@/lib/storefront/ui-copy";
 
-export async function GET() {
+export async function GET(req?: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     return NextResponse.json(await getAdminStorefrontUiState());
   } catch (err) {
     return handleApiError(err);
@@ -19,7 +19,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const body = await req.json();
     const action = body.action as string;
     if (action === "save_draft") {

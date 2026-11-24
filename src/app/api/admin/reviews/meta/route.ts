@@ -1,10 +1,10 @@
 import { handleApiError, jsonOk } from "@/lib/api";
-import { requireAdmin } from "@/lib/auth-guards";
+import { enforceAdmin } from "@/lib/rbac-access";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+export async function GET(req?: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const [categories, products, reviewerRows] = await Promise.all([
       prisma.category.findMany({
         orderBy: { sortOrder: "asc" },

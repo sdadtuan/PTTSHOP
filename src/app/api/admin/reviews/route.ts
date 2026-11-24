@@ -1,7 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { handleApiError, jsonError, jsonOk } from "@/lib/api";
-import { requireAdmin } from "@/lib/auth-guards";
+import { enforceAdmin } from "@/lib/rbac-access";
 import { prisma } from "@/lib/prisma";
 import { recomputeProductRating, reviewDisplayName } from "@/lib/reviews";
 
@@ -34,7 +34,7 @@ function serializeReview(r: {
 
 export async function GET(req: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const url = new URL(req.url);
     const q = url.searchParams.get("q")?.trim().toLowerCase();
     const rating = url.searchParams.get("rating");
@@ -88,7 +88,7 @@ const adminCreateSchema = z.object({
 
 export async function POST(req: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const body = adminCreateSchema.parse(await req.json());
     const product = await prisma.product.findUnique({ where: { id: body.productId } });
     if (!product) return jsonError("Không tìm thấy sản phẩm", 404);
@@ -136,7 +136,7 @@ const patchSchema = z.object({
 
 export async function PATCH(req: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const body = patchSchema.parse(await req.json());
     const { id, createdAt, ...rest } = body;
     const existing = await prisma.review.findUnique({
@@ -173,7 +173,7 @@ const deleteSchema = z.object({ id: z.string().min(1) });
 
 export async function DELETE(req: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const { id } = deleteSchema.parse(await req.json());
     const review = await prisma.review.findUnique({
       where: { id },

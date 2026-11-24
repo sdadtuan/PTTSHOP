@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { handleApiError, jsonOk } from "@/lib/api";
-import { requireAdmin } from "@/lib/auth-guards";
+import { enforceAdmin } from "@/lib/rbac-access";
 import { prisma } from "@/lib/prisma";
 import { parseCodCsv, reconcileCod, summarizeCodSession } from "@/lib/shipping/reconcile";
 
@@ -20,9 +20,9 @@ const bodySchema = z.object({
     .optional(),
 });
 
-export async function GET() {
+export async function GET(req?: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const sessions = await prisma.codReconcileSession.findMany({
       orderBy: { createdAt: "desc" },
       take: 20,
@@ -43,7 +43,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const body = bodySchema.parse(await req.json());
     const payments = body.rows?.length ? body.rows : parseCodCsv(body.csv || "");
     const shipments = await prisma.shipment.findMany({

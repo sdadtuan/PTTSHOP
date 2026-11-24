@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { handleApiError, jsonOk } from "@/lib/api";
-import { requireAdmin } from "@/lib/auth-guards";
+import { enforceAdmin } from "@/lib/rbac-access";
 import { ensureHomepageCmsSeeded } from "@/lib/cms/homepage";
 import { prisma } from "@/lib/prisma";
 import { DEFAULT_SHIPPING_BULLETS, normalizeBulletsForSave, parseBulletList } from "@/lib/pdp-tabs";
@@ -13,9 +13,9 @@ function present(raw: string | null | undefined) {
   };
 }
 
-export async function GET() {
+export async function GET(req?: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const row = await prisma.siteSettings.findUnique({
       where: { id: "default" },
       select: { shippingPolicyJson: true },
@@ -32,7 +32,7 @@ const bodySchema = z.object({
 
 export async function PUT(req: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const body = bodySchema.parse(await req.json());
     const normalized = body.bullets ? normalizeBulletsForSave(body.bullets) : null;
     const stored = normalized && normalized.length ? JSON.stringify(normalized) : null;

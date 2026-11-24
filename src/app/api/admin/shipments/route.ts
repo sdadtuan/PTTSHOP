@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { handleApiError, jsonError, jsonOk } from "@/lib/api";
-import { requireAdmin } from "@/lib/auth-guards";
+import { enforceAdmin } from "@/lib/rbac-access";
 import { prisma } from "@/lib/prisma";
 import { buildSlips, reviewPrintAccess } from "@/lib/shipping/print";
 import { cancelShipmentRecord, createOrderShipment } from "@/lib/shipping/service";
@@ -18,7 +18,7 @@ const patchSchema = z.object({
 
 export async function GET(req: Request) {
   try {
-    const session = await requireAdmin();
+    const session = await enforceAdmin(req);
     const url = new URL(req.url);
     const orderId = url.searchParams.get("orderId") || "";
     const order = await prisma.order.findUnique({
@@ -57,7 +57,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const body = createSchema.parse(await req.json());
     const result = await createOrderShipment(prisma, body);
     return jsonOk(result);
@@ -68,7 +68,7 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const body = patchSchema.parse(await req.json());
     if (body.cancel) {
       const result = await cancelShipmentRecord(prisma, body.id);

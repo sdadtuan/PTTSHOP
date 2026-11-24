@@ -1,13 +1,13 @@
 import { z } from "zod";
 import { handleApiError, jsonError, jsonOk } from "@/lib/api";
-import { requireAdmin } from "@/lib/auth-guards";
+import { enforceAdmin } from "@/lib/rbac-access";
 import { prisma } from "@/lib/prisma";
 import { deleteCategoryIfEmpty, uniqueCategorySlug } from "@/lib/category-admin";
 import { isValidSlug, slugify } from "@/lib/slug";
 
-export async function GET() {
+export async function GET(req?: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const categories = await prisma.category.findMany({
       orderBy: { sortOrder: "asc" },
       include: { _count: { select: { products: true } } },
@@ -29,7 +29,7 @@ const createSchema = z.object({
 
 export async function POST(req: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const body = createSchema.parse(await req.json());
     const slug = await uniqueCategorySlug(body.name, body.slug);
     const category = await prisma.category.create({
@@ -59,7 +59,7 @@ const patchSchema = z.object({
 
 export async function PATCH(req: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const body = patchSchema.parse(await req.json());
     const { id, slug: slugRaw, ...rest } = body;
     const data: Record<string, unknown> = { ...rest };
@@ -83,7 +83,7 @@ const deleteSchema = z.object({ id: z.string().min(1) });
 
 export async function DELETE(req: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const { id } = deleteSchema.parse(await req.json());
     const result = await deleteCategoryIfEmpty(id);
     if (!result.ok) return jsonError(result.error, result.status);

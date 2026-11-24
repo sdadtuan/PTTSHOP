@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { handleApiError, jsonOk } from "@/lib/api";
-import { requireAdmin } from "@/lib/auth-guards";
+import { enforceAdmin } from "@/lib/rbac-access";
 import { completeReturn, loadReturnSettings, openReturn } from "@/lib/ops/return-service";
 import { prisma } from "@/lib/prisma";
 
@@ -19,9 +19,9 @@ const bodySchema = z.object({
   dualApprovalThreshold: z.number().int().min(0).optional(),
 });
 
-export async function GET() {
+export async function GET(req?: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const [requests, settings] = await Promise.all([
       prisma.returnRequest.findMany({ include: { items: true, order: { select: { orderNumber: true, total: true } } }, orderBy: { createdAt: "desc" }, take: 100 }),
       loadReturnSettings(prisma),
@@ -44,7 +44,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const body = bodySchema.parse(await req.json());
     if (body.action === "settings") {
       await prisma.returnSettings.upsert({

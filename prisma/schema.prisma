@@ -55,6 +55,8 @@ model User {
   wishlist      WishlistItem[]
   reviews       Review[]
   addresses     Address[]
+  roleAssignments UserRoleAssignment[]
+  twoFactor     AdminTwoFactor?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 }
@@ -760,6 +762,50 @@ model EmailTemplate {
   body      String
   audience  String
   updatedAt DateTime @updatedAt
+}
+
+model UserRoleAssignment {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, role])
+}
+
+model AdminTwoFactor {
+  userId            String    @id
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  secretEncrypted   String
+  enabled           Boolean   @default(false)
+  recoveryCodesHash String?
+  enabledAt         DateTime?
+  verifiedAt        DateTime?
+}
+
+model AdminAuditLog {
+  id          String   @id @default(cuid())
+  actorId     String?
+  actorEmail  String?
+  actorRoles  String?
+  action      String
+  entityType  String
+  entityId    String?
+  beforeJson  String?
+  afterJson   String?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+}
+
+model PricingRule {
+  id         String   @id @default(cuid())
+  name       String
+  floorPrice Int?
+  note       String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model EmailOutbox {

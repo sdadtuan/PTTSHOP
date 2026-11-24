@@ -1,12 +1,12 @@
 import { z } from "zod";
 import { handleApiError, jsonError, jsonOk } from "@/lib/api";
-import { requireAdmin } from "@/lib/auth-guards";
+import { enforceAdmin } from "@/lib/rbac-access";
 import { prisma } from "@/lib/prisma";
 import { resolveProductSlug, saveProductFull } from "@/lib/product-save";
 
 export async function GET(req: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const params = new URL(req.url).searchParams;
     const id = params.get("id");
     if (params.get("fields") === "slug") {
@@ -78,7 +78,7 @@ const createSchema = z.object({
 
 export async function POST(req: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const body = createSchema.parse(await req.json());
     const slug = await resolveProductSlug(prisma, { slug: body.slug, name: body.name });
 
@@ -137,7 +137,7 @@ const patchSchema = z.object({
 
 export async function PATCH(req: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const body = patchSchema.parse(await req.json());
     const { id, ...data } = body;
     const product = await prisma.product.update({
@@ -154,7 +154,7 @@ const deleteSchema = z.object({ id: z.string().min(1) });
 
 export async function DELETE(req: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const { id } = deleteSchema.parse(await req.json());
     await prisma.product.delete({ where: { id } });
     return jsonOk({ ok: true });
@@ -171,7 +171,7 @@ export async function DELETE(req: Request) {
  */
 export async function PUT(req: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const result = await saveProductFull(prisma, await req.json());
     const product = await prisma.product.findUnique({
       where: { id: result.productId },

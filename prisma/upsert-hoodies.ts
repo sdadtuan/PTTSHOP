@@ -7,6 +7,11 @@
  */
 import { PrismaClient } from "@prisma/client";
 
+if (process.env.NODE_ENV === "production") {
+  console.error("Từ chối seed khi NODE_ENV=production.");
+  process.exit(1);
+}
+
 const prisma = new PrismaClient();
 
 type ColorPack = {

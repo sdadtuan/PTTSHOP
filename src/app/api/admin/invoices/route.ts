@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { handleApiError, jsonError, jsonOk } from "@/lib/api";
-import { requireAdmin } from "@/lib/auth-guards";
+import { enforceAdmin } from "@/lib/rbac-access";
 import {
   attemptIssue,
   createLinkedInvoice,
@@ -22,7 +22,7 @@ const bodySchema = z.object({
 
 export async function GET(req: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const url = new URL(req.url);
     const status = url.searchParams.get("status") || "";
     const q = (url.searchParams.get("q") || "").trim();
@@ -63,7 +63,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const session = await requireAdmin();
+    const session = await enforceAdmin(req);
     const body = bodySchema.parse(await req.json());
     const config = await loadInvoiceConfig(prisma);
     const provider = providerFor(config, process.env);

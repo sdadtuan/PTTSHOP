@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { requireAdmin } from "@/lib/auth-guards";
+import { enforceAdmin } from "@/lib/rbac-access";
 import { handleApiError } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
 
@@ -17,9 +17,9 @@ const bannerSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
-export async function GET() {
+export async function GET(req?: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const banners = await prisma.heroBanner.findMany({
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
     });
@@ -31,7 +31,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const body = bannerSchema.parse(await req.json());
     const max = await prisma.heroBanner.aggregate({ _max: { sortOrder: true } });
     const banner = await prisma.heroBanner.create({
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const raw = await req.json();
     const id = z.string().min(1).parse(raw.id);
     const body = bannerSchema.partial().parse(raw);
@@ -83,7 +83,7 @@ export async function PATCH(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const { searchParams } = new URL(req.url);
     const id = z.string().min(1).parse(searchParams.get("id"));
     await prisma.heroBanner.delete({ where: { id } });

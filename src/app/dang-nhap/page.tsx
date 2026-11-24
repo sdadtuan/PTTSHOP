@@ -7,11 +7,12 @@ import { getCsrfToken, signIn } from "next-auth/react";
 import { safeCallbackUrl } from "@/lib/safe-callback-url";
 import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
 
-async function signInCredentials(email: string, password: string) {
+async function signInCredentials(email: string, password: string, otp: string) {
   await getCsrfToken();
   let res = await signIn("credentials", {
     email,
     password,
+    otp,
     redirect: false,
   });
   // Rare race on first paint: CSRF cookie not yet readable — retry once.
@@ -20,6 +21,7 @@ async function signInCredentials(email: string, password: string) {
     res = await signIn("credentials", {
       email,
       password,
+      otp,
       redirect: false,
     });
   }
@@ -61,13 +63,19 @@ function LoginForm() {
     const form = new FormData(e.currentTarget);
     const email = String(form.get("email"));
     const password = String(form.get("password"));
-    const res = await signInCredentials(email, password);
+    const otp = String(form.get("otp") || "");
+    const res = await signInCredentials(email, password, otp);
     if (res?.error) {
       setLoading(false);
+      const code = (res as { code?: string }).code;
       setError(
-        res.error === "CredentialsSignin"
-          ? "Email hoặc mật khẩu không đúng"
-          : res.error,
+        code === "two_factor_required"
+          ? "Nhập mã 6 số từ ứng dụng xác thực."
+          : code === "two_factor_invalid"
+            ? "Mã xác thực không đúng."
+            : res.error === "CredentialsSignin"
+              ? "Email hoặc mật khẩu không đúng"
+              : res.error,
       );
       return;
     }
@@ -104,6 +112,15 @@ function LoginForm() {
           type="password"
           required
           autoComplete="current-password"
+          className="w-full rounded border border-neutral-200 px-3 py-2.5 outline-none focus:border-neutral-900"
+        />
+      </label>
+      <label className="block text-sm">
+        <span className="mb-1.5 block">Mã xác thực 6 số, nếu đã bật</span>
+        <input
+          name="otp"
+          inputMode="numeric"
+          autoComplete="one-time-code"
           className="w-full rounded border border-neutral-200 px-3 py-2.5 outline-none focus:border-neutral-900"
         />
       </label>

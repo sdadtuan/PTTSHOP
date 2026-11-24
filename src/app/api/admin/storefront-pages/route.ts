@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/auth-guards";
+import { enforceAdmin } from "@/lib/rbac-access";
 import { handleApiError } from "@/lib/api";
 import {
   listAdminStorefrontPages,
@@ -7,9 +7,9 @@ import {
   saveStorefrontPage,
 } from "@/lib/storefront/pages";
 
-export async function GET() {
+export async function GET(req?: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     return NextResponse.json({ pages: await listAdminStorefrontPages() });
   } catch (err) {
     return handleApiError(err);
@@ -18,7 +18,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
   } catch (err) {
     return handleApiError(err);
   }

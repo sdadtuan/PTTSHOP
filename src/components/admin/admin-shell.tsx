@@ -25,8 +25,12 @@ import {
   Receipt,
   RotateCcw,
   Bell,
+  BadgeDollarSign,
+  ScrollText,
+  Plug,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
+import { adminPermissionDenied } from "@/lib/rbac";
 import { cn } from "@/lib/utils";
 import { AdminButton } from "./ui/button";
 import { AdminToastProvider } from "./ui/toast";
@@ -39,6 +43,10 @@ const nav = [
   { href: "/admin/hoa-don", label: "Hoá đơn", icon: Receipt },
   { href: "/admin/doi-tra", label: "Đổi trả & Hoàn tiền", icon: RotateCcw },
   { href: "/admin/thong-bao", label: "CRM & Thông báo", icon: Bell },
+  { href: "/admin/quy-tac-gia", label: "Quy tắc giá", icon: BadgeDollarSign },
+  { href: "/admin/phan-quyen", label: "Phân quyền", icon: ShieldCheck },
+  { href: "/admin/tich-hop", label: "Tích hợp", icon: Plug },
+  { href: "/admin/nhat-ky", label: "Nhật ký", icon: ScrollText },
   { href: "/admin/products", label: "Sản phẩm", icon: Package },
   { href: "/admin/nhap-san-pham", label: "Nhập sản phẩm", icon: Package },
   {
@@ -63,6 +71,9 @@ function isActive(pathname: string, href: string, exact?: boolean) {
 export function AdminShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const visibleNav = session?.user
+    ? nav.filter((item) => !adminPermissionDenied(item.href, session.user))
+    : nav;
   const [menuPath, setMenuPath] = useState<string | null>(null);
   const mobileOpen = menuPath === pathname;
   const [query, setQuery] = useState("");
@@ -119,7 +130,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
         </span>
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto p-3" aria-label="Menu quản trị">
-        {nav.map((item) => {
+        {visibleNav.map((item) => {
           const Icon = item.icon;
           const active = isActive(pathname, item.href, item.exact);
           return (

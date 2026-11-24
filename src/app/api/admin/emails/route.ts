@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { handleApiError, jsonOk } from "@/lib/api";
-import { requireAdmin } from "@/lib/auth-guards";
+import { recordAudit } from "@/lib/admin-audit";
+import { enforceAdmin } from "@/lib/rbac-access";
 import { emailBlockReason, ensureEmailTemplates, queueEmail } from "@/lib/ops/email-queue";
 import { prisma } from "@/lib/prisma";
 
@@ -16,9 +17,9 @@ const bodySchema = z.object({
   outboxId: z.string().optional(),
 });
 
-export async function GET() {
+export async function GET(req?: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     await ensureEmailTemplates(prisma);
     const [settings, templates, outbox] = await Promise.all([
       prisma.emailSettings.findUnique({ where: { id: "default" } }),
@@ -34,7 +35,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    await requireAdmin();
+    const session = await enforceAdmin(req);
     const body = bodySchema.parse(await req.json());
     if (body.action === "settings" && body.provider) {
       await prisma.emailSettings.upsert({
@@ -42,6 +43,7 @@ export async function POST(req: Request) {
         create: { id: "default", provider: body.provider, internalAlertEmails: body.internalAlertEmails || null },
         update: { provider: body.provider, internalAlertEmails: body.internalAlertEmails || null },
       });
+      await recordAudit({ access: session.access, actorId: session.user.id, actorEmail: session.user.email, action: "EMAIL_SETTINGS", entityType: "EmailSettings", entityId: "default", after: { provider: body.provider }, req });
       return jsonOk({ provider: body.provider, blockReason: emailBlockReason(body.provider, process.env) });
     }
     if (body.action === "template" && body.templateKey && body.subject && body.body) {

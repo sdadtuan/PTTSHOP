@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { requireAdmin } from "@/lib/auth-guards";
+import { enforceAdmin } from "@/lib/rbac-access";
 import { handleApiError, ApiError } from "@/lib/api";
 import {
   discardDraft,
@@ -15,9 +15,9 @@ import { sectionKeySchema } from "@/lib/cms/validate";
 export const dynamic = "force-dynamic";
 
 /** Admin only: full CMS state (draft + published + version list). */
-export async function GET() {
+export async function GET(req?: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     return NextResponse.json(await getAdminCmsState());
   } catch (err) {
     return handleApiError(err);
@@ -49,7 +49,7 @@ const bodySchema = z.discriminatedUnion("action", [
 
 export async function POST(req: Request) {
   try {
-    const session = await requireAdmin();
+    const session = await enforceAdmin(req);
     const raw = await req.json().catch(() => {
       throw new ApiError("Body JSON không hợp lệ", 400);
     });

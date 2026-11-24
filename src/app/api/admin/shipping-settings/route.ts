@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { handleApiError, jsonOk } from "@/lib/api";
-import { requireAdmin } from "@/lib/auth-guards";
+import { recordAudit } from "@/lib/admin-audit";
+import { enforceAdmin } from "@/lib/rbac-access";
 import { prisma } from "@/lib/prisma";
 import { ghnEnv } from "@/lib/shipping/ghn";
 import { getShippingConfig } from "@/lib/shipping/service";
@@ -19,9 +20,9 @@ const putSchema = z.object({
   defaultProvider: z.enum(["MANUAL", "GHN", "GHTK"]),
 });
 
-export async function GET() {
+export async function GET(req?: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const config = await getShippingConfig(prisma);
     const ghn = ghnEnv();
     return jsonOk({
@@ -37,7 +38,7 @@ export async function GET() {
 
 export async function PUT(req: Request) {
   try {
-    await requireAdmin();
+    const session = await enforceAdmin(req);
     const body = putSchema.parse(await req.json());
     await prisma.shippingSettings.upsert({
       where: { id: "default" },
@@ -59,6 +60,7 @@ export async function PUT(req: Request) {
         senderPhone: body.senderPhone || null,
       },
     });
+    await recordAudit({ access: session.access, actorId: session.user.id, actorEmail: session.user.email, action: "SHIPPING_SETTINGS", entityType: "ShippingSettings", entityId: "default", after: { defaultProvider: body.defaultProvider, freeShipThreshold: body.freeShipThreshold }, req });
     return jsonOk({ config: await getShippingConfig(prisma) });
   } catch (err) {
     return handleApiError(err);

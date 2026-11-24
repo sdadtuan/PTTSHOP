@@ -1,7 +1,9 @@
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { ApiError, handleApiError, jsonError, jsonOk } from "@/lib/api";
-import { requireAdmin } from "@/lib/auth-guards";
+import { recordAudit } from "@/lib/admin-audit";
+import { can, maskCustomerPhone } from "@/lib/rbac";
+import { assertScope, enforceAdmin } from "@/lib/rbac-access";
 import { sendOrderStatusEmail } from "@/lib/mail";
 import { canTransitionOrder, ORDER_STATUS_LABELS } from "@/lib/order-status";
 import { adminOrderDetailInclude } from "@/lib/admin-orders";
@@ -13,7 +15,10 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(req: Request) {
   try {
-    await requireAdmin();
+    const session = await enforceAdmin(req);
+    const hidePhone = !can(session.access, "orders.phone");
+    const mask = <T extends { customerPhone?: string | null }>(order: T) =>
+      hidePhone ? { ...order, customerPhone: maskCustomerPhone(order.customerPhone || "") } : order;
     await releaseExpiredUnpaid(prisma, new Date(), holdEnforceFrom());
     const url = new URL(req.url);
     const id = url.searchParams.get("id");
@@ -28,7 +33,7 @@ export async function GET(req: Request) {
         ? await prisma.user.findMany({ where: { id: { in: actorIds } }, select: { id: true, name: true, email: true } })
         : [];
       return jsonOk({
-        order: { ...order, paymentAudits: paymentAuditEntries(order.paymentAudits, actors) },
+        order: mask({ ...order, paymentAudits: paymentAuditEntries(order.paymentAudits, actors) }),
       });
     }
     const status = url.searchParams.get("status") || undefined;
@@ -38,7 +43,7 @@ export async function GET(req: Request) {
       orderBy: { createdAt: "desc" },
       take: 100,
     });
-    return jsonOk({ orders });
+    return jsonOk({ orders: orders.map((order) => mask(order)) });
   } catch (err) {
     return handleApiError(err);
   }
@@ -60,10 +65,12 @@ const patchSchema = z
 
 export async function PATCH(req: Request) {
   try {
-    const session = await requireAdmin();
+    const session = await enforceAdmin(req);
     const body = patchSchema.parse(await req.json());
     const current = await prisma.order.findUnique({ where: { id: body.id } });
     if (!current) return jsonError("Không tìm thấy đơn hàng", 404);
+    if (body.paymentStatus === "PAID") assertScope(session.access, ["orders.service", "invoices.write"]);
+    if (body.status) assertScope(session.access, body.status === "CONFIRMED" ? "orders.service" : ["orders.pack", "orders.service"]);
 
     if (body.paymentStatus === "PAID" && body.confirmPaid !== true) {
       return jsonError(
@@ -103,6 +110,7 @@ export async function PATCH(req: Request) {
           return tx.order.findUniqueOrThrow({ where: { id: current.id } });
         });
         await autoIssueIfReady(prisma, paid.id, "PAID");
+        await recordAudit({ access: session.access, actorId: session.user.id, actorEmail: session.user.email, action: "CONFIRM_PAID", entityType: "Order", entityId: paid.id, before: { paymentStatus: current.paymentStatus }, after: { paymentStatus: "PAID" }, req });
         return jsonOk({ order: paid });
       } catch (err) {
         if (err instanceof Prisma.PrismaClientKnownRequestError) throw err;
@@ -132,6 +140,7 @@ export async function PATCH(req: Request) {
     if (order.paymentStatus === "PAID") await autoIssueIfReady(prisma, order.id, "PAID");
 
     if (body.status) {
+      await recordAudit({ access: session.access, actorId: session.user.id, actorEmail: session.user.email, action: "ORDER_STATUS", entityType: "Order", entityId: order.id, before: { status: current.status }, after: { status: order.status }, req });
       void sendOrderStatusEmail({
         orderNumber: order.orderNumber,
         customerEmail: order.customerEmail,

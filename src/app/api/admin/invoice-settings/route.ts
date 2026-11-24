@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { handleApiError, jsonOk } from "@/lib/api";
-import { requireAdmin } from "@/lib/auth-guards";
+import { recordAudit } from "@/lib/admin-audit";
+import { enforceAdmin } from "@/lib/rbac-access";
 import { loadInvoiceConfig } from "@/lib/invoices/service";
 import { invoiceBlockReason } from "@/lib/invoices/settings";
 import { prisma } from "@/lib/prisma";
@@ -19,9 +20,9 @@ const bodySchema = z.object({
   retryBaseMinutes: z.number().int().min(1).max(1440),
 });
 
-export async function GET() {
+export async function GET(req?: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const settings = await loadInvoiceConfig(prisma);
     return jsonOk({ settings, blockReason: invoiceBlockReason(settings, process.env) });
   } catch (err) {
@@ -31,7 +32,7 @@ export async function GET() {
 
 export async function PUT(req: Request) {
   try {
-    await requireAdmin();
+    const session = await enforceAdmin(req);
     const body = bodySchema.parse(await req.json());
     await prisma.invoiceSettings.upsert({
       where: { id: "default" },
@@ -39,6 +40,7 @@ export async function PUT(req: Request) {
       update: { ...body, templateCode: body.templateCode || null, invoiceSeries: body.invoiceSeries || null },
     });
     const settings = await loadInvoiceConfig(prisma);
+    await recordAudit({ access: session.access, actorId: session.user.id, actorEmail: session.user.email, action: "INVOICE_SETTINGS", entityType: "InvoiceSettings", entityId: "default", after: { provider: settings.provider, autoIssueEnabled: settings.autoIssueEnabled }, req });
     return jsonOk({ settings, blockReason: invoiceBlockReason(settings, process.env) });
   } catch (err) {
     return handleApiError(err);

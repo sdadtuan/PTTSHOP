@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { handleApiError, jsonError, jsonOk } from "@/lib/api";
-import { requireAdmin } from "@/lib/auth-guards";
+import { enforceAdmin } from "@/lib/rbac-access";
 import { prisma } from "@/lib/prisma";
 
 const createSchema = z.object({
@@ -15,7 +15,7 @@ const createSchema = z.object({
 
 export async function POST(req: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const body = createSchema.parse(await req.json());
     const product = await prisma.product.findUnique({
       where: { id: body.productId },
@@ -82,7 +82,7 @@ const patchSchema = z.object({
 
 export async function PATCH(req: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const body = patchSchema.parse(await req.json());
     const { id, ...data } = body;
     const image = await prisma.productImage.update({
@@ -99,7 +99,7 @@ const deleteSchema = z.object({ id: z.string().min(1) });
 
 export async function DELETE(req: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const { id } = deleteSchema.parse(await req.json());
     await prisma.productImage.delete({ where: { id } });
     return jsonOk({ ok: true });

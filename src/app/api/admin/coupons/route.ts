@@ -1,11 +1,11 @@
 import { z } from "zod";
 import { handleApiError, jsonError, jsonOk } from "@/lib/api";
-import { requireAdmin } from "@/lib/auth-guards";
+import { enforceAdmin } from "@/lib/rbac-access";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+export async function GET(req?: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const coupons = await prisma.coupon.findMany({
       orderBy: { code: "asc" },
     });
@@ -29,7 +29,7 @@ const createSchema = z.object({
 
 export async function POST(req: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const body = createSchema.parse(await req.json());
     const code = body.code.toUpperCase();
     const existing = await prisma.coupon.findUnique({ where: { code } });
@@ -64,7 +64,7 @@ const patchSchema = z.object({
 
 export async function PATCH(req: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const body = patchSchema.parse(await req.json());
     const { id, ...data } = body;
     const coupon = await prisma.coupon.update({ where: { id }, data });
@@ -78,7 +78,7 @@ const deleteSchema = z.object({ id: z.string().min(1) });
 
 export async function DELETE(req: Request) {
   try {
-    await requireAdmin();
+    await enforceAdmin(req);
     const { id } = deleteSchema.parse(await req.json());
     await prisma.coupon.delete({ where: { id } });
     return jsonOk({ ok: true });
