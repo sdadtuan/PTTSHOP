@@ -101,11 +101,10 @@ describe("demo-v2 isolation", () => {
     const styleTabs = read("src/components/demo-v2/demo-style-tabs.tsx");
 
     expect(css).toMatch(/\.dv2-kicker\s*\{[^}]*color:\s*var\(--dv2-orange\)/);
-    expect(css).toMatch(/\.dv2-hero__title\s*\{[^}]*line-height:\s*1\.12/);
-    expect(css).toContain("padding-top: 0.22em");
-    expect(css).toContain("gap: 0.34em");
+    expect(css).toMatch(/\.dv2-hero__title\s*\{[^}]*line-height:\s*0\.86/);
+    expect(css).toContain("padding-top: 0.1em");
     expect(css).toContain(".dv2-hero__word");
-    expect(css).not.toMatch(/\.dv2-hero__title\s*\{[^}]*line-height:\s*0\.9/);
+    expect(css).toMatch(/\.dv2-hero__title\s*\{[^}]*gap:\s*0/);
     expect(hero).toContain("dv2-hero__word");
     expect(hero).toContain("dv2-hero__reg");
 

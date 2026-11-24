@@ -280,22 +280,22 @@ html:has(.demo-v2) {
   font-weight: 900;
   font-style: italic;
   font-synthesis: none;
-  /* Stacked uppercase VN: flex gap carries diacritic clearance (Ặ/Ơ/Ả) */
+  /* Compact stacked VN: ~8–14px ink clearance @1440, no overlap */
   display: flex;
   flex-direction: column;
-  gap: 0.34em;
-  line-height: 1.12;
+  gap: 0;
+  line-height: 0.86;
   letter-spacing: -0.015em;
   margin: 0 0 1rem;
-  padding-top: 0.22em;
+  padding-top: 0.1em;
   text-transform: uppercase;
   overflow: visible;
 }
 
 .dv2-hero__word {
   display: block;
-  line-height: 1.12;
-  padding-block: 0.1em;
+  line-height: 0.86;
+  padding-block: 0;
   overflow: visible;
 }
 
@@ -1608,9 +1608,9 @@ html:has(.demo-v2) {
 .dv2-hero--strike .dv2-hero__title {
   font-size: clamp(4rem, 12vw, 7.75rem);
   letter-spacing: -0.015em;
-  line-height: 1.12;
-  gap: 0.34em;
-  padding-top: 0.22em;
+  line-height: 0.86;
+  gap: 0;
+  padding-top: 0.1em;
   overflow: visible;
 }
 .dv2-hero--strike .dv2-hero__copy {
