@@ -1,3 +1,5 @@
+import { formatVnd } from "@/lib/format";
+
 export const DEFAULT_COD_MAX_AMOUNT = 5_000_000;
 export const DEFAULT_HOLD_HOURS = 24;
 export const DEFAULT_COD_CONFIRM_HOURS = 48;
@@ -65,6 +67,15 @@ export function checkoutMethodError(
   }
   if (!bankReady(config)) return "Chưa cấu hình tài khoản nhận tiền.";
   return null;
+}
+
+/** Giải thích khi COD đang bật nhưng đơn vượt trần. Số tiền lấy từ cấu hình. */
+export function codCeilingNotice(
+  total: number,
+  options: { codEnabled: boolean; codMaxAmount: number },
+) {
+  if (!options.codEnabled || total <= options.codMaxAmount) return null;
+  return `Đơn hàng trên ${formatVnd(options.codMaxAmount)} chỉ hỗ trợ chuyển khoản ngân hàng.`;
 }
 
 export function isTransferHold(method: string) {

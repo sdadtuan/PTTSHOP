@@ -8,6 +8,7 @@ import { useSiteBrand } from "@/components/cms/site-brand-context";
 import { useStorefrontLayout } from "@/components/cms/storefront-layout-context";
 import { TYPE_SCALE } from "@/config/home-type-scale";
 import { company, companyPolicyLinks, isUnset } from "@/content/company";
+import { withOrderLookupLink } from "@/lib/cms/order-lookup-link";
 import { displayBrandName, visibleEmail, visibleHref, visiblePhone } from "@/lib/public-brand";
 
 function InstagramIcon({ className }: { className?: string }) {
@@ -64,7 +65,7 @@ export function Footer() {
   const pathname = usePathname();
   const brand = useSiteBrand();
   const { footerLinks } = useStorefrontLayout();
-  const columns = footerLinks.columns;
+  const columns = withOrderLookupLink(footerLinks.columns);
   const legalLinks = footerLinks.legalLinks;
   const contactTitle = footerLinks.contactColumnTitle || "Liên hệ";
   const copyrightNote = footerLinks.copyrightNote || "Tất cả quyền được bảo lưu.";

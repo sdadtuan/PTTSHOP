@@ -60,6 +60,23 @@ export default async function OrderSuccessPage({ searchParams }: Props) {
       })
     : null;
 
+  if (!allowed) {
+    return (
+      <div className="mx-auto max-w-xl px-4 py-16 text-center">
+        <h1 className="type-title text-3xl font-bold">Không xem được biên nhận</h1>
+        <p className="mt-4 text-sm text-neutral-600">
+          Liên kết biên nhận đã hết hạn hoặc thiếu mã xác thực. Vui lòng tra cứu đơn hàng bằng mã đơn và số điện thoại đặt hàng.
+        </p>
+        <Link
+          href="/tra-cuu-don"
+          className="mt-8 inline-block rounded-full bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-white"
+        >
+          Tra cứu đơn hàng
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-xl px-4 py-16">
       <p className="text-center text-sm tracking-[0.25em] text-[var(--accent)] uppercase">{displayBrandName(ui.eyebrow)}</p>
