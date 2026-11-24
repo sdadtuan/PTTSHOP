@@ -1,0 +1,25 @@
+# Thay location /media/uploads/ trong site pttshop.vn.
+# Chỉ áp dụng sau câu "OK deploy": nginx -t rồi reload. Không thêm alias /uploads/.
+# Ảnh jpg/png/... giữ nguyên. Thêm mp4 và webm. alias tĩnh của Nginx gửi Accept-Ranges.
+
+    location ~* "^/media/uploads/([A-Za-z0-9][A-Za-z0-9._-]{0,180}\.(jpe?g|png|webp|avif|gif|mp4|webm))$" {
+        alias /var/www/pttshop/data/media/uploads/$1;
+        autoindex off;
+        types {
+            image/jpeg jpg jpeg;
+            image/png png;
+            image/webp webp;
+            image/avif avif;
+            image/gif gif;
+            video/mp4 mp4;
+            video/webm webm;
+        }
+        default_type application/octet-stream;
+        add_header Strict-Transport-Security "max-age=86400" always;
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+        add_header Content-Security-Policy-Report-Only "default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' https:; frame-ancestors 'self'" always;
+        add_header Content-Disposition "inline" always;
+    }
