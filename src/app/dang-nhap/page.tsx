@@ -121,6 +121,8 @@ function LoginForm() {
           name="otp"
           inputMode="numeric"
           autoComplete="one-time-code"
+          maxLength={6}
+          pattern="[0-9]*"
           className="w-full rounded border border-neutral-200 px-3 py-2.5 outline-none focus:border-neutral-900"
         />
       </label>

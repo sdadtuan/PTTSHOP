@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { AdminButton, AdminCard, AdminPageHeader } from "@/components/admin/ui";
+import { ROLE_LABELS } from "@/lib/rbac";
 
 const ROLES = ["ADMIN", "DIRECTOR", "WAREHOUSE", "CSKH", "ACCOUNTANT", "MARKETING"] as const;
 type StaffUser = { id: string; email: string; name: string | null; roles: string[]; legacy: boolean };
@@ -28,7 +29,12 @@ export default function RolesPage() {
 
   async function saveRoles(e: FormEvent<HTMLFormElement>, userId: string) {
     e.preventDefault();
+    const user = users.find((row) => row.id === userId);
     const roles = [...new FormData(e.currentTarget).getAll("role").map(String)];
+    if (user?.legacy && !roles.includes("ADMIN")) {
+      const accepted = window.confirm("Tài khoản này đang toàn quyền. Danh sách mới không có Quản trị. Tiếp tục?");
+      if (!accepted) return;
+    }
     const res = await fetch("/api/admin/phan-quyen", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -61,6 +67,7 @@ export default function RolesPage() {
   return (
     <div>
       <AdminPageHeader title="Phân quyền" description="Sáu vai trò. Tài khoản quản trị cũ chưa được gán vai trò vẫn giữ toàn quyền và 2FA đang tắt." />
+      <p className="mt-3 text-sm">Gán vai trò sẽ thay toàn quyền cũ. Hãy gán Quản trị trước.</p>
       {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
       <AdminCard className="mt-4">
         <h2 className="text-sm font-semibold">Bảo mật 2 lớp</h2>
@@ -81,7 +88,7 @@ export default function RolesPage() {
               {ROLES.map((role) => (
                 <label key={role} className="flex items-center gap-1">
                   <input type="checkbox" name="role" value={role} defaultChecked={user.roles.includes(role)} />
-                  {role}
+                  {ROLE_LABELS[role]}
                 </label>
               ))}
               <AdminButton type="submit" size="sm">Lưu vai trò</AdminButton>
