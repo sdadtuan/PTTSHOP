@@ -167,7 +167,9 @@ export function DemoProductCard({
       </div>
       <div className="dv2-card__body">
         <Link href={`/san-pham/${product.slug}`}>
-          <h3 className="dv2-card__name">{product.name}</h3>
+          <h3 className="dv2-card__name" title={product.name}>
+            {product.name}
+          </h3>
         </Link>
         <div className="dv2-style-card__prices">
           <p className="dv2-card__price">{formatVnd(minPrice)}</p>

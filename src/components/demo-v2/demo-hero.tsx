@@ -82,8 +82,18 @@ export function DemoHero({
         <div className="dv2-hero__copy">
           <p className="dv2-kicker">{slide.eyebrow}</p>
           <h1 className="dv2-hero__title">
-            {slide.title}
-            <span>®</span>
+            {slide.title
+              .trim()
+              .split(/\s+/)
+              .filter(Boolean)
+              .map((word, i, words) => (
+                <span key={`${word}-${i}`} className="dv2-hero__word">
+                  {word}
+                  {i === words.length - 1 ? (
+                    <span className="dv2-hero__reg">®</span>
+                  ) : null}
+                </span>
+              ))}
           </h1>
           <p className="dv2-hero__sub">{slide.subtitle}</p>
           <Link href={slide.ctaHref} className="dv2-cta" data-testid="demo-v2-hero-cta">

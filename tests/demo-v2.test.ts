@@ -93,4 +93,27 @@ describe("demo-v2 isolation", () => {
     expect(read("src/app/demo-v2/page.tsx")).toContain("prisma.review.findMany");
     expect(read("src/app/page.tsx")).not.toContain("ĐÁNH GIÁ");
   });
+
+  it("keeps hero VN diacritics readable and product cards equal-height", () => {
+    const css = read("src/components/demo-v2/demo-v2.css");
+    const hero = read("src/components/demo-v2/demo-hero.tsx");
+    const card = read("src/components/demo-v2/demo-product-card.tsx");
+    const styleTabs = read("src/components/demo-v2/demo-style-tabs.tsx");
+
+    expect(css).toMatch(/\.dv2-kicker\s*\{[^}]*color:\s*var\(--dv2-orange\)/);
+    expect(css).toMatch(/\.dv2-hero__title\s*\{[^}]*line-height:\s*1\.1/);
+    expect(css).toContain("padding-top: 0.16em");
+    expect(css).toContain("gap: 0.12em");
+    expect(css).toContain(".dv2-hero__word");
+    expect(css).not.toMatch(/\.dv2-hero__title\s*\{[^}]*line-height:\s*0\.9/);
+    expect(hero).toContain("dv2-hero__word");
+    expect(hero).toContain("dv2-hero__reg");
+
+    expect(css).toMatch(/\.dv2-card__name\s*\{[^}]*-webkit-line-clamp:\s*2/);
+    expect(css).toContain("min-height: calc(1.3em * 2)");
+    expect(css).toContain(".dv2-card__body .dv2-style-card__prices");
+    expect(css).toContain("align-items: stretch");
+    expect(card).toContain("title={product.name}");
+    expect(styleTabs).toContain("title={p.name}");
+  });
 });

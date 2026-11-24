@@ -157,7 +157,9 @@ export function DemoStyleTabs({ products }: { products: StyleTabProduct[] }) {
                 </div>
               ) : null}
               <Link href={`/san-pham/${p.slug}`}>
-                <h3 className="dv2-card__name">{p.name}</h3>
+                <h3 className="dv2-card__name" title={p.name}>
+                  {p.name}
+                </h3>
               </Link>
               <div className="dv2-style-card__prices">
                 <span className="dv2-card__price">{formatVnd(minPrice)}</span>
