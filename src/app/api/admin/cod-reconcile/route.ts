@@ -2,7 +2,7 @@ import { z } from "zod";
 import { handleApiError, jsonOk } from "@/lib/api";
 import { requireAdmin } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
-import { parseCodCsv, reconcileCod } from "@/lib/shipping/reconcile";
+import { parseCodCsv, reconcileCod, summarizeCodSession } from "@/lib/shipping/reconcile";
 
 const bodySchema = z.object({
   provider: z.string().trim().max(20).optional(),
@@ -19,6 +19,27 @@ const bodySchema = z.object({
     .max(500)
     .optional(),
 });
+
+export async function GET() {
+  try {
+    await requireAdmin();
+    const sessions = await prisma.codReconcileSession.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 20,
+      include: { lines: { select: { result: true } } },
+    });
+    return jsonOk({
+      sessions: sessions.map((session) => ({
+        id: session.id,
+        createdAt: session.createdAt,
+        provider: session.provider,
+        ...summarizeCodSession(session.lines),
+      })),
+    });
+  } catch (err) {
+    return handleApiError(err);
+  }
+}
 
 export async function POST(req: Request) {
   try {

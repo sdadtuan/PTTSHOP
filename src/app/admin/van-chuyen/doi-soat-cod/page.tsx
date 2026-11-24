@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { AdminButton, AdminCard, AdminPageHeader } from "@/components/admin/ui";
 import { formatVnd } from "@/lib/format";
 
@@ -12,11 +12,39 @@ type Line = {
   result: "MATCH" | "MISMATCH" | "UNMATCHED";
 };
 
+type SessionRow = {
+  id: string;
+  createdAt: string;
+  provider: string | null;
+  lineCount: number;
+  matchCount: number;
+  mismatchCount: number;
+};
+
 export default function CodReconcilePage() {
   const [csv, setCsv] = useState("trackingCode,orderNumber,amount\n");
   const [lines, setLines] = useState<Line[]>([]);
   const [openCount, setOpenCount] = useState<number | null>(null);
   const [error, setError] = useState("");
+  const [history, setHistory] = useState<SessionRow[]>([]);
+  const [historyReady, setHistoryReady] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetch("/api/admin/cod-reconcile")
+      .then((res) => res.json())
+      .then((data) => {
+        if (cancelled) return;
+        setHistory(Array.isArray(data.sessions) ? data.sessions : []);
+        setHistoryReady(true);
+      })
+      .catch(() => {
+        if (!cancelled) setHistoryReady(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [lines]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -54,6 +82,26 @@ export default function CodReconcilePage() {
             </li>
           ))}
         </ul>
+      </AdminCard>
+      <AdminCard className="mt-4">
+        <h2 className="text-sm font-semibold">Lịch sử đối soát</h2>
+        {historyReady && history.length === 0 ? (
+          <p className="mt-3 text-sm text-[var(--admin-text-muted)]">Chưa có phiên đối soát COD.</p>
+        ) : (
+          <ul className="mt-3 space-y-2 text-sm">
+            {history.map((session) => (
+              <li key={session.id} className="rounded border p-3">
+                <p>
+                  {new Date(session.createdAt).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}
+                  {session.provider ? ` · ${session.provider}` : ""}
+                </p>
+                <p>
+                  {session.lineCount} dòng · khớp {session.matchCount} · lệch {session.mismatchCount}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
       </AdminCard>
     </form>
   );

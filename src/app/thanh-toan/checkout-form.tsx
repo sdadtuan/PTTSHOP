@@ -9,6 +9,7 @@ import { ConsentFields, consentsFromForm } from "@/components/legal/consent-fiel
 import { formatVnd } from "@/lib/format";
 import { codCeilingNotice } from "@/lib/payments/policy";
 import { DEFAULT_FALLBACK_FEE, DEFAULT_FREE_SHIP_THRESHOLD } from "@/lib/shipping/policy";
+import { shouldQuoteShipping } from "@/lib/shipping/quote-client";
 
 type PaymentOptions = {
   codEnabled: boolean;
@@ -18,7 +19,7 @@ type PaymentOptions = {
 };
 
 export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOptions }) {
-  const { items, subtotal, clear } = useCart();
+  const { items, subtotal, clear, loading: cartLoading } = useCart();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -62,17 +63,30 @@ export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOption
   }, [provinceCode]);
 
   useEffect(() => {
-    const params = new URLSearchParams({ subtotal: String(subtotal) });
+    if (!shouldQuoteShipping({ loading: cartLoading, itemCount: items.length })) return;
+    const controller = new AbortController();
+    let cancelled = false;
+    const requestedSubtotal = subtotal;
+    const params = new URLSearchParams({ subtotal: String(requestedSubtotal) });
     if (provinceCode) params.set("provinceCode", provinceCode);
     if (wardCode) params.set("wardCode", wardCode);
-    void fetch(`/api/shipping/quote?${params}`)
+    void fetch(`/api/shipping/quote?${params}`, { signal: controller.signal })
       .then((res) => res.json())
       .then((data) => {
+        if (cancelled || requestedSubtotal !== subtotal) return;
         if (typeof data.fee === "number") setShipping(data.fee);
         if (typeof data.freeShipThreshold === "number") setFreeFrom(data.freeShipThreshold);
       })
-      .catch(() => setShipping(subtotal >= DEFAULT_FREE_SHIP_THRESHOLD ? 0 : DEFAULT_FALLBACK_FEE));
-  }, [subtotal, provinceCode, wardCode]);
+      .catch((err: unknown) => {
+        if (cancelled || (err instanceof DOMException && err.name === "AbortError")) return;
+        if (requestedSubtotal !== subtotal) return;
+        setShipping(requestedSubtotal >= DEFAULT_FREE_SHIP_THRESHOLD ? 0 : DEFAULT_FALLBACK_FEE);
+      });
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [cartLoading, items.length, subtotal, provinceCode, wardCode]);
 
   if (items.length === 0) {
     return (

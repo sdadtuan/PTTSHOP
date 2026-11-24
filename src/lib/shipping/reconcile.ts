@@ -48,6 +48,14 @@ export function reconcileCod(payments: CodPaymentRow[], shipments: CodShipmentRo
   return { lines, open };
 }
 
+export function summarizeCodSession(lines: Array<{ result: string | null }>) {
+  return {
+    lineCount: lines.length,
+    matchCount: lines.filter((line) => line.result === "MATCH").length,
+    mismatchCount: lines.filter((line) => line.result === "MISMATCH").length,
+  };
+}
+
 export function parseCodCsv(text: string): CodPaymentRow[] {
   const rows = text
     .split(/\r?\n/)

@@ -9,6 +9,7 @@ import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
 import { formatVnd } from "@/lib/format";
 import { displayBrandName } from "@/lib/public-brand";
 import { DEFAULT_FALLBACK_FEE, DEFAULT_FREE_SHIP_THRESHOLD } from "@/lib/shipping/policy";
+import { shouldQuoteShipping } from "@/lib/shipping/quote-client";
 
 export default function CartPage() {
   const { items, subtotal, updateQuantity, removeItem, loading } = useCart();
@@ -19,16 +20,27 @@ export default function CartPage() {
   const [freeFrom, setFreeFrom] = useState(DEFAULT_FREE_SHIP_THRESHOLD);
 
   useEffect(() => {
-    void fetch(`/api/shipping/quote?subtotal=${subtotal}`)
+    if (!shouldQuoteShipping({ loading, itemCount: items.length })) return;
+    const controller = new AbortController();
+    let cancelled = false;
+    const requestedSubtotal = subtotal;
+    void fetch(`/api/shipping/quote?subtotal=${requestedSubtotal}`, { signal: controller.signal })
       .then((res) => res.json())
       .then((data) => {
+        if (cancelled || requestedSubtotal !== subtotal) return;
         if (typeof data.fee === "number") setShipping(data.fee);
         if (typeof data.freeShipThreshold === "number") setFreeFrom(data.freeShipThreshold);
       })
-      .catch(() => {
-        setShipping(subtotal >= DEFAULT_FREE_SHIP_THRESHOLD ? 0 : DEFAULT_FALLBACK_FEE);
+      .catch((err: unknown) => {
+        if (cancelled || (err instanceof DOMException && err.name === "AbortError")) return;
+        if (requestedSubtotal !== subtotal) return;
+        setShipping(requestedSubtotal >= DEFAULT_FREE_SHIP_THRESHOLD ? 0 : DEFAULT_FALLBACK_FEE);
       });
-  }, [subtotal]);
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [loading, items.length, subtotal]);
 
   if (loading) {
     return (
