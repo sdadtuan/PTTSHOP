@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { mkdir, writeFile } from "fs/promises";
+import { mkdir, rename, rm, writeFile } from "fs/promises";
 import path from "path";
 import { ensurePublicMediaLink, mediaRoot } from "@/lib/catalog-import-commit";
 import {
@@ -9,18 +9,65 @@ import {
   validateUploadFile,
 } from "@/lib/upload-validate";
 import { ADMIN_UPLOAD_PATH } from "@/lib/admin-upload-path";
+import { codecError, faststartMp4, posterAtOneSecond, videoCodecName } from "@/lib/video-ffmpeg";
+import { inspectMp4 } from "@/lib/video-file";
 
 export { ADMIN_UPLOAD_PATH };
 
 export type StoredAdminUpload =
-  | { ok: true; url: string; kind: "image" | "video" }
+  | { ok: true; url: string; kind: "image" | "video"; posterUrl: string | null }
   | { ok: false; status: number; error: string };
 
 function storedName(ext: string) {
   return `${Date.now()}-${randomUUID().slice(0, 8)}.${ext}`;
 }
 
-/** Images go to data/media/uploads. Videos stay on public/uploads (Nginx only serves images). */
+async function storeVideo(buf: Buffer, ext: string): Promise<StoredAdminUpload> {
+  let faststart = false;
+  if (ext === "mp4") {
+    const inspected = inspectMp4(buf);
+    if (!inspected.ok) return { ok: false, status: 400, error: inspected.error };
+    faststart = inspected.faststart;
+  }
+  await ensurePublicMediaLink();
+  const dir = path.join(mediaRoot(), "uploads");
+  await mkdir(dir, { recursive: true });
+  const name = storedName(ext);
+  const dest = path.join(dir, name);
+  const posterFile = path.join(dir, name.replace(/\.[^.]+$/, ".jpg"));
+  await writeFile(dest, buf);
+  const codec = codecError(await videoCodecName(dest));
+  if (codec) {
+    await rm(dest, { force: true });
+    return { ok: false, status: 400, error: codec };
+  }
+  if (faststart) {
+    const tmp = `${dest}.faststart.mp4`;
+    try {
+      await faststartMp4(dest, tmp);
+      await rename(tmp, dest);
+    } catch {
+      await rm(tmp, { force: true });
+      await rm(dest, { force: true });
+      return { ok: false, status: 500, error: "Không chuyển được video sang faststart" };
+    }
+  }
+  try {
+    await posterAtOneSecond(dest, posterFile);
+  } catch {
+    await rm(dest, { force: true });
+    await rm(posterFile, { force: true });
+    return { ok: false, status: 500, error: "Không tạo được ảnh poster" };
+  }
+  return {
+    ok: true,
+    url: `/media/uploads/${name}`,
+    posterUrl: `/media/uploads/${path.basename(posterFile)}`,
+    kind: "video",
+  };
+}
+
+/** Ảnh và video đều ghi data/media/uploads, URL /media/uploads/. */
 export async function storeAdminUpload(file: File): Promise<StoredAdminUpload> {
   if (file.size > VIDEO_MAX_BYTES) {
     return { ok: false, status: 400, error: "File quá lớn" };
@@ -36,11 +83,7 @@ export async function storeAdminUpload(file: File): Promise<StoredAdminUpload> {
       buffer: buf,
     });
     if (!result.ok) return { ok: false, status: result.status, error: result.error };
-    const name = storedName(result.ext);
-    const dir = path.join(process.cwd(), "public", "uploads");
-    await mkdir(dir, { recursive: true });
-    await writeFile(path.join(dir, name), buf);
-    return { ok: true, url: `/uploads/${name}`, kind: "video" };
+    return storeVideo(buf, result.ext);
   }
 
   const image = validateCatalogImage({
@@ -54,5 +97,5 @@ export async function storeAdminUpload(file: File): Promise<StoredAdminUpload> {
   const dir = path.join(mediaRoot(), "uploads");
   await mkdir(dir, { recursive: true });
   await writeFile(path.join(dir, name), buf);
-  return { ok: true, url: `/media/uploads/${name}`, kind: "image" };
+  return { ok: true, url: `/media/uploads/${name}`, kind: "image", posterUrl: null };
 }

@@ -159,7 +159,7 @@ export default function AdminProductsPage() {
               url: up.url,
               type: "video",
               color: opts.color || null,
-              posterUrl: opts.posterUrl || null,
+              posterUrl: up.posterUrl || opts?.posterUrl || null,
               alt: "Video sản phẩm",
             }),
           });

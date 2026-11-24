@@ -17,7 +17,11 @@ export async function POST(req: Request) {
     if (!stored.ok) {
       return NextResponse.json({ error: stored.error }, { status: stored.status });
     }
-    return NextResponse.json({ url: stored.url, kind: stored.kind });
+    return NextResponse.json({
+      url: stored.url,
+      kind: stored.kind,
+      posterUrl: stored.posterUrl,
+    });
   } catch (err) {
     return handleApiError(err);
   }

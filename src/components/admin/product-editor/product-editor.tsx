@@ -228,7 +228,7 @@ export function ProductEditor({ productId }: { productId?: string }) {
           alt: info.name || "",
           color,
           type: isVideo ? "video" : "image",
-          posterUrl: "",
+          posterUrl: up.posterUrl || "",
           isHidden: false,
         });
       }
