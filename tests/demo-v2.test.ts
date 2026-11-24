@@ -101,19 +101,21 @@ describe("demo-v2 isolation", () => {
     const styleTabs = read("src/components/demo-v2/demo-style-tabs.tsx");
 
     expect(css).toMatch(/\.dv2-kicker\s*\{[^}]*color:\s*var\(--dv2-orange\)/);
-    expect(css).toMatch(/\.dv2-hero__title\s*\{[^}]*line-height:\s*1\.1/);
-    expect(css).toContain("padding-top: 0.16em");
-    expect(css).toContain("gap: 0.12em");
+    expect(css).toMatch(/\.dv2-hero__title\s*\{[^}]*line-height:\s*1\.12/);
+    expect(css).toContain("padding-top: 0.22em");
+    expect(css).toContain("gap: 0.34em");
     expect(css).toContain(".dv2-hero__word");
     expect(css).not.toMatch(/\.dv2-hero__title\s*\{[^}]*line-height:\s*0\.9/);
     expect(hero).toContain("dv2-hero__word");
     expect(hero).toContain("dv2-hero__reg");
 
     expect(css).toMatch(/\.dv2-card__name\s*\{[^}]*-webkit-line-clamp:\s*2/);
-    expect(css).toContain("min-height: calc(1.3em * 2)");
-    expect(css).toContain(".dv2-card__body .dv2-style-card__prices");
+    expect(css).toContain("height: calc(1.35em * 2)");
+    expect(css).toContain(".dv2-card__meta");
     expect(css).toContain("align-items: stretch");
     expect(card).toContain("title={product.name}");
+    expect(card).toContain("dv2-card__meta");
     expect(styleTabs).toContain("title={p.name}");
+    expect(styleTabs).toContain("dv2-card__meta");
   });
 });

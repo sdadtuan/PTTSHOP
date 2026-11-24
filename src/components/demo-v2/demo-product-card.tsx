@@ -166,24 +166,28 @@ export function DemoProductCard({
         {added ? <span className="dv2-style-card__toast">Đã thêm</span> : null}
       </div>
       <div className="dv2-card__body">
-        <Link href={`/san-pham/${product.slug}`}>
+        <Link href={`/san-pham/${product.slug}`} className="dv2-card__name-link">
           <h3 className="dv2-card__name" title={product.name}>
             {product.name}
           </h3>
         </Link>
-        <div className="dv2-style-card__prices">
-          <p className="dv2-card__price">{formatVnd(minPrice)}</p>
-          {onSale ? (
-            <span className="dv2-style-card__compare">{formatVnd(compareAt!)}</span>
-          ) : null}
-        </div>
-        {colors.length > 0 ? (
-          <div className="dv2-dots" aria-label="Màu sắc">
-            {colors.map((bg) => (
-              <span key={bg} className="dv2-dot" style={{ background: bg }} />
-            ))}
+        <div className="dv2-card__meta">
+          <div className="dv2-style-card__prices">
+            <p className="dv2-card__price">{formatVnd(minPrice)}</p>
+            {onSale ? (
+              <span className="dv2-style-card__compare">{formatVnd(compareAt!)}</span>
+            ) : null}
           </div>
-        ) : null}
+          {colors.length > 0 ? (
+            <div className="dv2-dots" aria-label="Màu sắc">
+              {colors.map((bg) => (
+                <span key={bg} className="dv2-dot" style={{ background: bg }} />
+              ))}
+            </div>
+          ) : (
+            <div className="dv2-dots dv2-dots--spacer" aria-hidden />
+          )}
+        </div>
       </div>
     </article>
   );
