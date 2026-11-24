@@ -15,6 +15,7 @@ export default function LookupOrderPage() {
     total: number;
     transfer: TransferView | null;
     qrPng: string;
+    shipments?: { shipmentNumber: string | null; provider: string | null; trackingCode: string | null; status: string | null }[];
   } | null>(null);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -53,6 +54,17 @@ export default function LookupOrderPage() {
           <p className="font-semibold">{result.orderNumber}</p>
           <p className="text-neutral-600">{result.status} · {result.paymentStatus} · {formatVnd(result.total)}</p>
           {result.transfer ? <PaymentInstructions view={result.transfer} qrPng={result.qrPng} /> : null}
+          {result.shipments?.length ? (
+            <ul className="mt-4 space-y-2">
+              {result.shipments.map((shipment) => (
+                <li key={shipment.shipmentNumber || shipment.trackingCode || ""} className="rounded border border-neutral-200 p-3">
+                  <p>Kiện {shipment.shipmentNumber}</p>
+                  <p>Mã vận đơn: {shipment.trackingCode || "Chưa có"}</p>
+                  <p>Trạng thái: {shipment.status}</p>
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </div>
       ) : null}
     </div>

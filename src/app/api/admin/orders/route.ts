@@ -8,6 +8,7 @@ import { adminOrderDetailInclude } from "@/lib/admin-orders";
 import { reviewPaymentConfirm } from "@/lib/payments/confirm";
 import { holdEnforceFrom, releaseExpiredUnpaid } from "@/lib/payments/hold";
 import { prisma } from "@/lib/prisma";
+import { cancelOpenShipments } from "@/lib/shipping/service";
 
 export async function GET(req: Request) {
   try {
@@ -116,6 +117,7 @@ export async function PATCH(req: Request) {
       where: { id: body.id },
       data,
     });
+    const shipmentCancel = body.status === "CANCELLED" ? await cancelOpenShipments(prisma, order.id) : null;
 
     if (body.status) {
       void sendOrderStatusEmail({
@@ -126,7 +128,7 @@ export async function PATCH(req: Request) {
       });
     }
 
-    return jsonOk({ order });
+    return jsonOk({ order, shipmentCancel });
   } catch (err) {
     return handleApiError(err);
   }

@@ -2,15 +2,33 @@
 
 import { StorefrontImage } from "@/components/product/storefront-image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useCart } from "@/components/cart/cart-context";
 import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
 import { formatVnd } from "@/lib/format";
 import { displayBrandName } from "@/lib/public-brand";
+import { DEFAULT_FALLBACK_FEE, DEFAULT_FREE_SHIP_THRESHOLD } from "@/lib/shipping/policy";
 
 export default function CartPage() {
   const { items, subtotal, updateQuantity, removeItem, loading } = useCart();
   const c = useStorefrontUi().cart;
+  const [shipping, setShipping] = useState(
+    subtotal >= DEFAULT_FREE_SHIP_THRESHOLD ? 0 : DEFAULT_FALLBACK_FEE,
+  );
+  const [freeFrom, setFreeFrom] = useState(DEFAULT_FREE_SHIP_THRESHOLD);
+
+  useEffect(() => {
+    void fetch(`/api/shipping/quote?subtotal=${subtotal}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (typeof data.fee === "number") setShipping(data.fee);
+        if (typeof data.freeShipThreshold === "number") setFreeFrom(data.freeShipThreshold);
+      })
+      .catch(() => {
+        setShipping(subtotal >= DEFAULT_FREE_SHIP_THRESHOLD ? 0 : DEFAULT_FALLBACK_FEE);
+      });
+  }, [subtotal]);
 
   if (loading) {
     return (
@@ -40,7 +58,6 @@ export default function CartPage() {
     );
   }
 
-  const shipping = subtotal >= 500000 ? 0 : 30000;
   const total = subtotal + shipping;
 
   return (
@@ -138,7 +155,7 @@ export default function CartPage() {
             </div>
           </dl>
           <p className="mt-3 text-xs text-neutral-500">
-            {c.shippingNote}
+            Miễn phí vận chuyển từ {formatVnd(freeFrom)}.
           </p>
           <Link
             href="/thanh-toan"

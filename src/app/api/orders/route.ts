@@ -22,6 +22,7 @@ import { prisma } from "@/lib/prisma";
 import { clientIp, recordConsents } from "@/lib/consent";
 import { orderBuyerId } from "@/lib/order-buyer";
 import { nextOrderNumber } from "@/lib/order-number";
+import { quoteCheckout } from "@/lib/shipping/service";
 import { hashReceiptToken, RECEIPT_COOKIE } from "@/lib/order-receipt-token";
 import { emailSchema, phoneSchema } from "@/lib/validation";
 
@@ -111,7 +112,15 @@ export async function POST(req: Request) {
       quantity: line.item.quantity,
     }));
     const subtotalPreview = catalogLines.reduce((sum, line) => sum + line.price * line.quantity, 0);
-    const shippingFee = subtotalPreview >= 500000 ? 0 : 30000;
+    const place = resolveAddress(data.provinceCode, data.wardCode);
+    if (!place) throw new ApiError("Tỉnh hoặc phường/xã không hợp lệ.", 400);
+    const shippingQuote = await quoteCheckout({
+      db: prisma,
+      subtotal: subtotalPreview,
+      provinceCode: data.provinceCode,
+      wardCode: data.wardCode,
+    });
+    const shippingFee = shippingQuote.fee;
 
     let discount = 0;
     let couponCode: string | null = null;
@@ -131,8 +140,6 @@ export async function POST(req: Request) {
     const payos = payosEnv();
     const methodError = checkoutMethodError(data.paymentMethod, total, paymentConfig, payos.enabled);
     if (methodError) throw new ApiError(methodError, 400);
-    const place = resolveAddress(data.provinceCode, data.wardCode);
-    if (!place) throw new ApiError("Tỉnh hoặc phường/xã không hợp lệ.", 400);
     const invoice = invoiceFields(data);
     const provider = getPaymentProvider(data.paymentMethod);
     const receiptToken = randomBytes(16).toString("hex");

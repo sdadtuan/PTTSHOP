@@ -21,6 +21,7 @@ import {
   FileText,
   ShieldCheck,
   Wallet,
+  Truck,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,7 @@ const nav = [
   { href: "/admin", label: "Tổng quan", icon: LayoutDashboard, exact: true },
   { href: "/admin/orders", label: "Đơn hàng", icon: ShoppingBag },
   { href: "/admin/thanh-toan", label: "Thanh toán", icon: Wallet },
+  { href: "/admin/van-chuyen", label: "Vận chuyển", icon: Truck },
   { href: "/admin/products", label: "Sản phẩm", icon: Package },
   { href: "/admin/nhap-san-pham", label: "Nhập sản phẩm", icon: Package },
   {

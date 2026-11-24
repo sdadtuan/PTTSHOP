@@ -35,6 +35,7 @@ export const adminOrderDetailInclude = {
     },
   },
   user: { select: { id: true, name: true, email: true } },
+  shipments: { orderBy: { createdAt: "asc" as const }, include: { items: true } },
 } as const;
 
 export function orderItemImageUrl(item: {

@@ -51,6 +51,15 @@ type OrderDetail = {
   createdAt: string;
   updatedAt: string;
   user: { id: string; name: string | null; email: string } | null;
+  shipments?: Array<{
+    id: string;
+    shipmentNumber: string | null;
+    provider: string | null;
+    trackingCode: string | null;
+    status: string | null;
+    shippingFee: number | null;
+    codAmount: number | null;
+  }>;
   items: Array<{
     id: string;
     name: string;
@@ -148,6 +157,51 @@ export function OrderDetailClient({ orderId }: { orderId: string }) {
     await load();
   }
 
+  async function createShipment(current: OrderDetail) {
+    const res = await fetch("/api/admin/shipments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId: current.id, idempotencyKey: `${current.orderNumber}-K1` }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      toast(data.error || "Không tạo được kiện", "error");
+      return;
+    }
+    toast(data.created ? "Đã tạo kiện" : "Kiện này đã có");
+    await load();
+  }
+
+  async function saveTracking(id: string, trackingCode: string) {
+    const res = await fetch("/api/admin/shipments", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, trackingCode }),
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      toast(data.error || "Không lưu mã vận đơn", "error");
+      return;
+    }
+    toast("Đã lưu mã vận đơn");
+    await load();
+  }
+
+  async function cancelShipment(id: string) {
+    const res = await fetch("/api/admin/shipments", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, cancel: true }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      toast(data.error || "Không huỷ được kiện", "error");
+      return;
+    }
+    toast("Đã huỷ kiện");
+    await load();
+  }
+
   if (loading) {
     return <AdminTableSkeleton rows={8} />;
   }
@@ -188,6 +242,12 @@ export function OrderDetailClient({ orderId }: { orderId: string }) {
         ]}
         actions={
           <div className="flex flex-wrap gap-2 print:hidden">
+            <Link href={`/admin/van-chuyen/in/${order.id}`}>
+              <AdminButton type="button" variant="secondary" size="sm">
+                <Printer className="mr-1.5 h-4 w-4" />
+                Phiếu kho
+              </AdminButton>
+            </Link>
             <AdminButton type="button" variant="secondary" size="sm" onClick={() => window.print()}>
               <Printer className="mr-1.5 h-4 w-4" />
               In đơn
@@ -308,6 +368,48 @@ export function OrderDetailClient({ orderId }: { orderId: string }) {
           </dl>
         </AdminCard>
       </div>
+
+      <AdminCard className="mt-4">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 className="text-sm font-semibold">Kiện hàng</h2>
+          <AdminButton
+            type="button"
+            size="sm"
+            onClick={() => void createShipment(order)}
+          >
+            Tạo vận đơn
+          </AdminButton>
+        </div>
+        {order.shipments?.length ? (
+          <ul className="space-y-3 text-sm">
+            {order.shipments.map((shipment) => (
+              <li key={shipment.id} className="rounded border border-[var(--admin-border)] p-3">
+                <p className="font-medium">{shipment.shipmentNumber} · {shipment.provider} · {shipment.status}</p>
+                <p>Mã vận đơn: {shipment.trackingCode || "Chưa có"} · Phí {formatVnd(shipment.shippingFee || 0)} · COD {formatVnd(shipment.codAmount || 0)}</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <input
+                    defaultValue={shipment.trackingCode || ""}
+                    placeholder="Nhập mã vận đơn"
+                    className="h-9 rounded border border-[var(--admin-border)] px-2"
+                    onBlur={(e) => {
+                      if (e.target.value.trim() !== (shipment.trackingCode || "")) {
+                        void saveTracking(shipment.id, e.target.value);
+                      }
+                    }}
+                  />
+                  {shipment.status === "CREATED" ? (
+                    <AdminButton type="button" size="sm" variant="secondary" onClick={() => void cancelShipment(shipment.id)}>
+                      Huỷ kiện
+                    </AdminButton>
+                  ) : null}
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-[var(--admin-text-muted)]">Chưa có kiện. Bấm tạo vận đơn để mở một kiện cho cả đơn.</p>
+        )}
+      </AdminCard>
 
       <AdminCard className="mt-4 print:border print:shadow-none">
         <h2 className="mb-3 text-sm font-semibold">Sản phẩm trong đơn</h2>

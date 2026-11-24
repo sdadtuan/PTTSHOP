@@ -7,6 +7,7 @@ import { useCart } from "@/components/cart/cart-context";
 import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
 import { ConsentFields, consentsFromForm } from "@/components/legal/consent-fields";
 import { formatVnd } from "@/lib/format";
+import { DEFAULT_FALLBACK_FEE, DEFAULT_FREE_SHIP_THRESHOLD } from "@/lib/shipping/policy";
 
 export default function CheckoutPage() {
   const { items, subtotal, clear } = useCart();
@@ -26,6 +27,9 @@ export default function CheckoutPage() {
   const [couponCode, setCouponCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [couponMsg, setCouponMsg] = useState("");
+  const [shipping, setShipping] = useState(subtotal >= DEFAULT_FREE_SHIP_THRESHOLD ? 0 : DEFAULT_FALLBACK_FEE);
+  const [freeFrom, setFreeFrom] = useState(DEFAULT_FREE_SHIP_THRESHOLD);
+  const [wardCode, setWardCode] = useState("");
   const ck = useStorefrontUi().checkout;
 
   useEffect(() => {
@@ -54,6 +58,19 @@ export default function CheckoutPage() {
       .catch(() => setWards([]));
   }, [provinceCode]);
 
+  useEffect(() => {
+    const params = new URLSearchParams({ subtotal: String(subtotal) });
+    if (provinceCode) params.set("provinceCode", provinceCode);
+    if (wardCode) params.set("wardCode", wardCode);
+    void fetch(`/api/shipping/quote?${params}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (typeof data.fee === "number") setShipping(data.fee);
+        if (typeof data.freeShipThreshold === "number") setFreeFrom(data.freeShipThreshold);
+      })
+      .catch(() => setShipping(subtotal >= DEFAULT_FREE_SHIP_THRESHOLD ? 0 : DEFAULT_FALLBACK_FEE));
+  }, [subtotal, provinceCode, wardCode]);
+
   if (items.length === 0) {
     return (
       <div className="mx-auto max-w-xl px-4 py-24 text-center">
@@ -65,7 +82,6 @@ export default function CheckoutPage() {
     );
   }
 
-  const shipping = subtotal >= 500000 ? 0 : 30000;
   const total = Math.max(0, subtotal + shipping - discount);
   const codAllowed = Boolean(options?.codEnabled && total <= (options?.codMaxAmount ?? 0));
   const payosAllowed = Boolean(options?.payosEnabled);
@@ -167,7 +183,10 @@ export default function CheckoutPage() {
                 name="provinceCode"
                 required
                 value={provinceCode}
-                onChange={(e) => setProvinceCode(e.target.value)}
+                onChange={(e) => {
+                  setProvinceCode(e.target.value);
+                  setWardCode("");
+                }}
                 className="w-full rounded border border-neutral-200 px-3 py-2.5 outline-none focus:border-neutral-900"
               >
                 <option value="">Chọn tỉnh</option>
@@ -181,6 +200,8 @@ export default function CheckoutPage() {
               <select
                 name="wardCode"
                 required
+                value={wardCode}
+                onChange={(e) => setWardCode(e.target.value)}
                 className="w-full rounded border border-neutral-200 px-3 py-2.5 outline-none focus:border-neutral-900"
               >
                 <option value="">Chọn phường/xã</option>
@@ -285,6 +306,7 @@ export default function CheckoutPage() {
               <span className="text-neutral-500">Ship</span>
               <span>{shipping === 0 ? "Miễn phí" : formatVnd(shipping)}</span>
             </div>
+            <p className="text-xs text-neutral-500">Miễn phí vận chuyển từ {formatVnd(freeFrom)}.</p>
             {discount > 0 ? (
               <div className="flex justify-between text-emerald-700">
                 <span>Giảm giá</span>

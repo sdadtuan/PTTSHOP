@@ -299,6 +299,7 @@ model Order {
   items           OrderItem[]
   reviews         Review[]
   paymentAudits   PaymentAuditLog[]
+  shipments       Shipment[]
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 }
@@ -504,4 +505,73 @@ model WebhookEvent {
   orderNumber String?
   amount    Int?
   createdAt DateTime @default(now())
+}
+
+/// Một nguồn phí ship. Null = mặc định trong code. Kho để trống cho tới khi admin nhập.
+model ShippingSettings {
+  id                    String  @id @default("default")
+  freeShipThreshold     Int?
+  fallbackFee           Int?
+  intraProvinceFee      Int?
+  interProvinceFee      Int?
+  parcelWeightGrams     Int?
+  warehouseProvinceCode String?
+  warehouseWardCode     String?
+  warehouseAddress      String?
+  senderName            String?
+  senderPhone           String?
+  defaultProvider       String?
+}
+
+model Shipment {
+  id             String         @id @default(cuid())
+  orderId        String?
+  order          Order?         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  shipmentNumber String?        @unique
+  idempotencyKey String?        @unique
+  provider       String?
+  trackingCode   String?
+  status         String?
+  shippingFee    Int?
+  codAmount      Int?
+  items          ShipmentItem[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model ShipmentItem {
+  id          String    @id @default(cuid())
+  shipmentId  String?
+  shipment    Shipment? @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  orderItemId String?
+  quantity    Int?
+  createdAt   DateTime  @default(now())
+}
+
+model ShippingWebhookEvent {
+  id         String   @id @default(cuid())
+  eventId    String?  @unique
+  provider   String?
+  shipmentId String?
+  createdAt  DateTime @default(now())
+}
+
+model CodReconcileSession {
+  id        String             @id @default(cuid())
+  provider  String?
+  note      String?
+  createdAt DateTime           @default(now())
+  lines     CodReconcileLine[]
+}
+
+model CodReconcileLine {
+  id             String               @id @default(cuid())
+  sessionId      String?
+  session        CodReconcileSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  trackingCode   String?
+  orderNumber    String?
+  expectedAmount Int?
+  actualAmount   Int?
+  result         String?
+  createdAt      DateTime             @default(now())
 }
