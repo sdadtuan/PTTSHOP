@@ -275,6 +275,14 @@ html:has(.demo-v2) {
   margin-bottom: 0.85rem;
 }
 
+/* Mobile: tight tracking so full "…2026" stays on light ground left of orange V
+   (orange-on-orange made trailing digits look clipped as "…202"). */
+@media (max-width: 899px) {
+  .dv2-kicker {
+    letter-spacing: 0.02em;
+  }
+}
+
 .dv2-hero__title {
   font-size: clamp(3.6rem, 11vw, 7rem);
   font-weight: 900;
