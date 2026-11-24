@@ -5,7 +5,8 @@ import { describe, expect, it } from "vitest";
 import { PrismaClient } from "@prisma/client";
 import { crc16CcittFalse } from "@/lib/payments/crc16";
 import { buildVietQrPayload, readVietQrFields } from "@/lib/payments/vietqr";
-import { checkoutMethodError, paymentOptions, quoteFromServerPrices } from "@/lib/payments/policy";
+import { paymentAuditEntries, PAYMENT_AUDIT_EMPTY } from "@/lib/payments/audit-view";
+import { checkoutMethodError, codCeilingNotice, paymentOptions, quoteFromServerPrices } from "@/lib/payments/policy";
 import { reviewPaymentConfirm } from "@/lib/payments/confirm";
 import { payosDataString, payosSign, reviewPayosWebhook } from "@/lib/payments/payos";
 import { releaseExpiredUnpaid, shouldReleaseHold } from "@/lib/payments/hold";
@@ -57,8 +58,33 @@ describe("COD ceiling and bank visibility", () => {
     expect(JSON.stringify(hidden)).not.toContain("0000000000");
   });
 
+  it("explains the COD ceiling with the configured amount", () => {
+    expect(codCeilingNotice(5_000_000, { codEnabled: true, codMaxAmount: 5_000_000 })).toBeNull();
+    const note = codCeilingNotice(5_000_001, { codEnabled: true, codMaxAmount: 5_000_000 });
+    expect(note).toBe("Đơn hàng trên 5.000.000đ chỉ hỗ trợ chuyển khoản ngân hàng.");
+    expect(codCeilingNotice(3_000_000, { codEnabled: true, codMaxAmount: 2_000_000 })).toContain("2.000.000đ");
+    expect(codCeilingNotice(9_000_000, { codEnabled: false, codMaxAmount: 5_000_000 })).toBeNull();
+  });
+
   it("prices from the catalog", () => {
     expect(quoteFromServerPrices([{ price: 200000, quantity: 2 }], 30000, 0).total).toBe(430000);
+  });
+});
+
+describe("payment audit history", () => {
+  it("shows the Vietnam time, admin and amount, and stays empty without rows", () => {
+    expect(PAYMENT_AUDIT_EMPTY).toBe("Chưa có lịch sử xác nhận thanh toán.");
+    const lines = paymentAuditEntries(
+      [{ createdAt: "2026-11-23T13:34:07.000Z", action: "CONFIRMED_PAID", actorId: "admin-1", amount: 230000 }],
+      [{ id: "admin-1", name: "Quản trị", email: "admin@pttshop.vn" }],
+    );
+    expect(lines).toHaveLength(1);
+    expect(lines[0].at).toContain("20:34");
+    expect(lines[0].at).toContain("23/11/2026");
+    expect(lines[0].actor).toBe("Quản trị · admin@pttshop.vn");
+    expect(lines[0].action).toBe("Xác nhận đã nhận tiền");
+    expect(lines[0].amount).toBe(230000);
+    expect(paymentAuditEntries([], [])).toEqual([]);
   });
 });
 

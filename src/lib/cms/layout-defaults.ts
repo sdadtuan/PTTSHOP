@@ -50,6 +50,7 @@ export const DEFAULT_FOOTER_COLUMNS: FooterColumn[] = [
   {
     title: "Hỗ trợ",
     links: [
+      { href: "/tra-cuu-don", label: "Tra cứu đơn hàng" },
       { href: "/ho-tro/mua-hang", label: "Hướng dẫn mua hàng" },
       { href: "/ho-tro/doi-tra", label: "Chính sách đổi trả" },
       { href: "/ho-tro/van-chuyen", label: "Chính sách vận chuyển" },

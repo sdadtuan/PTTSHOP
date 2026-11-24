@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { StorefrontImage } from "@/components/product/storefront-image";
+import { PAYMENT_AUDIT_EMPTY } from "@/lib/payments/audit-view";
+import { formatVnd } from "@/lib/format";
 import { useCallback, useEffect, useState } from "react";
 import { Printer } from "lucide-react";
 import {
@@ -22,7 +25,6 @@ import {
   PAYMENT_STATUS_LABELS,
   orderItemImageUrl,
 } from "@/lib/admin-orders";
-import { formatVnd } from "@/lib/format";
 import { isCodConfirmOverdue, isPaymentOverdue } from "@/lib/payments/policy";
 import { ORDER_STATUS_FLOW, ORDER_STATUS_LABELS } from "@/lib/order-status";
 
@@ -51,6 +53,7 @@ type OrderDetail = {
   createdAt: string;
   updatedAt: string;
   user: { id: string; name: string | null; email: string } | null;
+  paymentAudits?: Array<{ at: string; actor: string; action: string; amount: number | null }>;
   items: Array<{
     id: string;
     name: string;
@@ -309,6 +312,23 @@ export function OrderDetailClient({ orderId }: { orderId: string }) {
         </AdminCard>
       </div>
 
+      <AdminCard className="mt-4">
+        <h2 className="mb-3 text-sm font-semibold">Lịch sử thanh toán</h2>
+        {order.paymentAudits?.length ? (
+          <ul className="space-y-2 text-sm">
+            {order.paymentAudits.map((entry, index) => (
+              <li key={`${entry.at}-${index}`} className="rounded border border-[var(--admin-border)] p-3">
+                <p className="font-medium">{entry.action}</p>
+                <p className="text-[var(--admin-text-muted)]">{entry.at} · {entry.actor}</p>
+                <p>{entry.amount == null ? "—" : formatVnd(entry.amount)}</p>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-[var(--admin-text-muted)]">{PAYMENT_AUDIT_EMPTY}</p>
+        )}
+      </AdminCard>
+
       <AdminCard className="mt-4 print:border print:shadow-none">
         <h2 className="mb-3 text-sm font-semibold">Sản phẩm trong đơn</h2>
         <AdminTable>
@@ -333,8 +353,7 @@ export function OrderDetailClient({ orderId }: { orderId: string }) {
                   <AdminTd>
                     <div className="relative h-12 w-10 overflow-hidden rounded bg-neutral-100">
                       {img ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={img} alt="" className="h-full w-full object-cover" />
+                        <StorefrontImage src={img} alt="" fill className="object-cover" sizes="40px" />
                       ) : null}
                     </div>
                   </AdminTd>

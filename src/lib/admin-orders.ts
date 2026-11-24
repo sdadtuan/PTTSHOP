@@ -35,6 +35,7 @@ export const adminOrderDetailInclude = {
     },
   },
   user: { select: { id: true, name: true, email: true } },
+  paymentAudits: { orderBy: { createdAt: "asc" as const } },
 } as const;
 
 export function orderItemImageUrl(item: {

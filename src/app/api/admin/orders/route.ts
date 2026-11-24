@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/auth-guards";
 import { sendOrderStatusEmail } from "@/lib/mail";
 import { canTransitionOrder, ORDER_STATUS_LABELS } from "@/lib/order-status";
 import { adminOrderDetailInclude } from "@/lib/admin-orders";
+import { paymentAuditEntries } from "@/lib/payments/audit-view";
 import { reviewPaymentConfirm } from "@/lib/payments/confirm";
 import { holdEnforceFrom, releaseExpiredUnpaid } from "@/lib/payments/hold";
 import { prisma } from "@/lib/prisma";
@@ -21,7 +22,13 @@ export async function GET(req: Request) {
         include: adminOrderDetailInclude,
       });
       if (!order) return jsonError("Không tìm thấy đơn hàng", 404);
-      return jsonOk({ order });
+      const actorIds = [...new Set(order.paymentAudits.map((row) => row.actorId).filter((id): id is string => Boolean(id)))];
+      const actors = actorIds.length
+        ? await prisma.user.findMany({ where: { id: { in: actorIds } }, select: { id: true, name: true, email: true } })
+        : [];
+      return jsonOk({
+        order: { ...order, paymentAudits: paymentAuditEntries(order.paymentAudits, actors) },
+      });
     }
     const status = url.searchParams.get("status") || undefined;
     const orders = await prisma.order.findMany({
