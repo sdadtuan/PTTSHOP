@@ -149,23 +149,29 @@ export function DemoStyleTabs({ products }: { products: StyleTabProduct[] }) {
                   <span className="dv2-style-card__toast">Đã thêm</span>
                 ) : null}
               </div>
-              {colors.length ? (
-                <div className="dv2-dots" aria-label="Màu sắc">
-                  {colors.map((bg) => (
-                    <span key={bg} className="dv2-dot" style={{ background: bg }} />
-                  ))}
-                </div>
-              ) : null}
-              <Link href={`/san-pham/${p.slug}`}>
-                <h3 className="dv2-card__name">{p.name}</h3>
+              <Link href={`/san-pham/${p.slug}`} className="dv2-card__name-link">
+                <h3 className="dv2-card__name" title={p.name}>
+                  {p.name}
+                </h3>
               </Link>
-              <div className="dv2-style-card__prices">
-                <span className="dv2-card__price">{formatVnd(minPrice)}</span>
-                {onSale ? (
-                  <span className="dv2-style-card__compare">
-                    {formatVnd(compareAt!)}
-                  </span>
-                ) : null}
+              <div className="dv2-card__meta">
+                <div className="dv2-style-card__prices">
+                  <span className="dv2-card__price">{formatVnd(minPrice)}</span>
+                  {onSale ? (
+                    <span className="dv2-style-card__compare">
+                      {formatVnd(compareAt!)}
+                    </span>
+                  ) : null}
+                </div>
+                {colors.length ? (
+                  <div className="dv2-dots" aria-label="Màu sắc">
+                    {colors.map((bg) => (
+                      <span key={bg} className="dv2-dot" style={{ background: bg }} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="dv2-dots dv2-dots--spacer" aria-hidden />
+                )}
               </div>
             </article>
           );

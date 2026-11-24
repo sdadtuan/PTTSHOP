@@ -271,8 +271,16 @@ html:has(.demo-v2) {
   font-weight: 600;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--dv2-ink);
+  color: var(--dv2-orange);
   margin-bottom: 0.85rem;
+}
+
+/* Mobile: tight tracking so full "…2026" stays on light ground left of orange V
+   (orange-on-orange made trailing digits look clipped as "…202"). */
+@media (max-width: 899px) {
+  .dv2-kicker {
+    letter-spacing: 0.02em;
+  }
 }
 
 .dv2-hero__title {
@@ -280,13 +288,31 @@ html:has(.demo-v2) {
   font-weight: 900;
   font-style: italic;
   font-synthesis: none;
-  line-height: 0.9;
-  letter-spacing: -0.04em;
+  /* Compact stack: ~10–16px ink clearance @1440 incl. underdot ̣ + Ả hook */
+  display: flex;
+  flex-direction: column;
+  gap: 0.11em;
+  line-height: 1.05;
+  letter-spacing: -0.015em;
   margin: 0 0 1rem;
+  padding-top: 0.12em;
   text-transform: uppercase;
+  overflow: visible;
 }
 
-.dv2-hero__title span {
+.dv2-hero__word {
+  display: block;
+  line-height: 1.05;
+  padding-block: 0;
+  overflow: visible;
+}
+
+/* Extra room under MẶC for dấu nặng (dot-below) without loosening ĐƠN→GIẢN */
+.dv2-hero__word:first-child {
+  padding-bottom: 0.04em;
+}
+
+.dv2-hero__reg {
   font-size: 0.42em;
   vertical-align: super;
   font-style: normal;
@@ -506,6 +532,8 @@ html:has(.demo-v2) {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   line-height: 1.2;
+  padding-top: 0.06em;
+  overflow: visible;
 }
 
 .dv2-slashes {
@@ -645,7 +673,9 @@ html:has(.demo-v2) {
   font-weight: 900;
   letter-spacing: -0.02em;
   text-transform: uppercase;
-  line-height: 1.05;
+  line-height: 1.1;
+  padding-top: 0.08em;
+  overflow: visible;
 }
 .dv2-phoi-one__brand em {
   font-style: normal;
@@ -799,6 +829,11 @@ html:has(.demo-v2) {
   }
 }
 
+.dv2-products .dv2-card,
+.dv2-products--compact .dv2-card {
+  height: 100%;
+}
+
 .dv2-card {
   display: flex;
   flex-direction: column;
@@ -867,19 +902,38 @@ html:has(.demo-v2) {
   padding: 0.85rem 0.9rem 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  flex: 1;
+  gap: 0.4rem;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.dv2-card__name-link {
+  display: block;
+  flex: 0 0 auto;
 }
 
 .dv2-card__name {
   margin: 0;
   font-size: 0.9rem;
   font-weight: 600;
-  line-height: 1.3;
+  line-height: 1.35;
+  /* Hard-reserve exactly 2 title lines (em relative to this font-size) */
+  height: calc(1.35em * 2);
+  min-height: calc(1.35em * 2);
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  word-break: break-word;
+}
+
+.dv2-card__meta {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 0 0 auto;
 }
 
 .dv2-card__price {
@@ -892,7 +946,14 @@ html:has(.demo-v2) {
 .dv2-dots {
   display: flex;
   gap: 0.35rem;
-  margin-top: 0.35rem;
+  margin-top: 0;
+  min-height: 0.7rem;
+  align-items: center;
+}
+
+.dv2-dots--spacer {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .dv2-dot {
@@ -1170,8 +1231,10 @@ html:has(.demo-v2) {
   margin: 0;
   font-size: clamp(1.85rem, 4.2vw, 3.1rem);
   font-weight: 900;
-  line-height: 1.05;
+  line-height: 1.1;
   letter-spacing: -0.02em;
+  padding-top: 0.08em;
+  overflow: visible;
 }
 .dv2-phong__l1 { display: block; color: var(--dv2-ink); }
 .dv2-phong__l2,
@@ -1237,8 +1300,10 @@ html:has(.demo-v2) {
   margin: 0;
   font-size: clamp(1.35rem, 2.6vw, 2rem);
   font-weight: 900;
-  line-height: 1.05;
+  line-height: 1.1;
   letter-spacing: -0.02em;
+  padding-top: 0.08em;
+  overflow: visible;
 }
 .dv2-diverse__copy h2 span { display: block; }
 .dv2-diverse__accent { color: var(--dv2-orange); }
@@ -1317,6 +1382,8 @@ html:has(.demo-v2) {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
+  height: 100%;
+  min-height: 0;
 }
 .dv2-style-card__media {
   position: relative;
@@ -1327,9 +1394,14 @@ html:has(.demo-v2) {
 }
 .dv2-style-card .dv2-card__name {
   font-size: 0.8rem;
+  height: calc(1.35em * 2);
+  min-height: calc(1.35em * 2);
 }
 .dv2-style-card .dv2-card__price {
   font-size: 0.88rem;
+}
+.dv2-style-card .dv2-card__meta {
+  margin-top: auto;
 }
 .dv2-style-card__cart,
 .dv2-card__cart {
@@ -1548,7 +1620,14 @@ html:has(.demo-v2) {
 }
 .dv2-hero--strike .dv2-hero__title {
   font-size: clamp(4rem, 12vw, 7.75rem);
-  letter-spacing: -0.05em;
+  letter-spacing: -0.015em;
+  line-height: 1.05;
+  gap: 0.11em;
+  padding-top: 0.12em;
+  overflow: visible;
+}
+.dv2-hero--strike .dv2-hero__copy {
+  overflow: visible;
 }
 .dv2-hero--strike .dv2-hero__sub {
   max-width: 20rem;
@@ -1669,8 +1748,10 @@ html:has(.demo-v2) {
   margin: 0;
   font-size: clamp(1.7rem, 3.6vw, 2.7rem);
   font-weight: 900;
-  line-height: 1.05;
+  line-height: 1.1;
   letter-spacing: -0.025em;
+  padding-top: 0.08em;
+  overflow: visible;
 }
 .dv2-phong__l1 { display: block; color: var(--dv2-ink); }
 .dv2-phong__l2,
@@ -1719,8 +1800,10 @@ html:has(.demo-v2) {
   margin: 0;
   font-size: clamp(1.45rem, 2.8vw, 2.15rem);
   font-weight: 900;
-  line-height: 1.05;
+  line-height: 1.1;
   letter-spacing: -0.02em;
+  padding-top: 0.08em;
+  overflow: visible;
 }
 .dv2-diverse--editorial h2 span { display: block; }
 .dv2-diverse__desc {
@@ -1745,16 +1828,27 @@ html:has(.demo-v2) {
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: minmax(10.5rem, 18%);
+  grid-auto-rows: 1fr;
   gap: var(--dv2-gutter);
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
   padding-bottom: 0.25rem;
+  align-items: stretch;
 }
 .dv2-carousel__track::-webkit-scrollbar { display: none; }
 .dv2-carousel__slide {
   scroll-snap-align: start;
   min-width: 0;
+  display: flex;
+  align-self: stretch;
+  height: auto;
+}
+.dv2-carousel__slide .dv2-card {
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 100%;
+  height: 100%;
 }
 .dv2-carousel__nav {
   position: absolute;
@@ -1806,7 +1900,9 @@ html:has(.demo-v2) {
   font-weight: 900;
   letter-spacing: -0.03em;
   text-transform: uppercase;
-  line-height: 1;
+  line-height: 1.1;
+  padding-top: 0.08em;
+  overflow: visible;
 }
 .dv2-lookbook__brand em {
   font-style: normal;
