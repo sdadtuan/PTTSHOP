@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { AdminButton, AdminCard, AdminPageHeader } from "@/components/admin/ui";
 import { formatVnd } from "@/lib/format";
+import { INVOICE_STATUS_LABELS } from "@/lib/ops/invoice-labels";
 
 type InvoiceRow = {
   id: string;
@@ -172,15 +173,16 @@ export default function AdminInvoicesPage() {
         <form className="flex flex-wrap gap-2" onSubmit={(e) => { e.preventDefault(); void load(); }}>
           <select value={status} onChange={(e) => setStatus(e.target.value)} className="h-10 rounded border px-2 text-sm">
             <option value="">Mọi trạng thái</option>
-            {["PENDING", "ISSUING", "ISSUED", "RETRYING", "FAILED", "ADJUSTED", "REPLACED", "CANCELED"].map((item) => (
-              <option key={item} value={item}>{item}</option>
-            ))}
+          {["PENDING", "ISSUING", "ISSUED", "RETRYING", "FAILED", "ADJUSTED", "REPLACED", "CANCELED"].map((item) => (
+            <option key={item} value={item}>{INVOICE_STATUS_LABELS[item]}</option>
+          ))}
           </select>
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Mã đơn, số hoá đơn, MST" className="h-10 min-w-56 rounded border px-3 text-sm" />
           <AdminButton type="submit">Tìm</AdminButton>
         </form>
         {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
         <ul className="mt-4 space-y-3 text-sm">
+          {rows.length === 0 ? <li className="text-sm text-[var(--admin-text-muted)]">Chưa có hoá đơn nào.</li> : null}
           {rows.map((row) => (
             <li key={row.id} className="rounded border p-3">
               <p className="font-medium">
