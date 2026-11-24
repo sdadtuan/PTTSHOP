@@ -84,7 +84,11 @@ export default function AdminReturnsPage() {
         <label className="text-sm">Lọc trạng thái đổi trả
           <select value={status} onChange={(e) => setStatus(e.target.value)} className="mt-1 block rounded border px-2 py-2">
             <option value="">Tất cả</option>
-            {["REQUESTED", "APPROVED", "RECEIVING", "COMPLETED", "REJECTED"].map((item) => <option key={item} value={item}>{item}</option>)}
+            <option value="REQUESTED">Chờ duyệt</option>
+            <option value="APPROVED">Đã duyệt</option>
+            <option value="RECEIVING">Đang nhận hàng hoàn</option>
+            <option value="COMPLETED">Hoàn tất</option>
+            <option value="REJECTED">Từ chối</option>
           </select>
         </label>
         <ul className="mt-4 space-y-2 text-sm">
@@ -99,6 +103,7 @@ export default function AdminReturnsPage() {
       <AdminCard className="mt-4">
         <h2 className="text-sm font-semibold">Hoàn tiền</h2>
         <ul className="mt-3 space-y-2 text-sm">
+          {refunds.length === 0 ? <li>Chưa có yêu cầu hoàn tiền.</li> : null}
           {refunds.map((row) => (
             <li key={row.id} className="rounded border p-3">
               <p>{row.amount.toLocaleString("vi-VN")}đ · {row.refundMethod} · {row.status}</p>

@@ -4,12 +4,13 @@ import { FormEvent, useEffect, useState } from "react";
 import { AdminButton, AdminCard, AdminPageHeader } from "@/components/admin/ui";
 
 type Job = { id: string; dedupKey: string; status: string; retryCount: number; lastError: string | null };
-type Template = { key: string; subject: string; audience: string };
+type Template = { key: string; subject: string; body: string; audience: string };
 type Message = { id: string; templateKey: string; toAddress: string; subject: string; body: string; status: string };
 
 export default function AdminNoticePage() {
   const [crmProvider, setCrmProvider] = useState("DISABLED");
   const [emailProvider, setEmailProvider] = useState("DISABLED");
+  const [internalAlertEmails, setInternalAlertEmails] = useState("");
   const [crmBlock, setCrmBlock] = useState<string | null>(null);
   const [emailBlock, setEmailBlock] = useState<string | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -27,6 +28,7 @@ export default function AdminNoticePage() {
         setCrmBlock(crm.blockReason || null);
         setJobs(crm.jobs || []);
         setEmailProvider(email.provider || "DISABLED");
+        setInternalAlertEmails(email.internalAlertEmails || "");
         setEmailBlock(email.blockReason || null);
         setTemplates(email.templates || []);
         setOutbox(email.outbox || []);
@@ -101,10 +103,65 @@ export default function AdminNoticePage() {
             {emailBlock || "Email đang tắt. Thư được ghi vào hộp thư đi với trạng thái bỏ qua, không gửi thật."}
           </p>
         ) : null}
-        <p className="mt-2 text-sm">Nhà cung cấp: {emailProvider}</p>
+        <form
+          className="mt-3 grid gap-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void fetch("/api/admin/emails", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ action: "settings", provider: emailProvider, internalAlertEmails }),
+            }).then(async (res) => {
+              const data = await res.json();
+              if (!res.ok) setError(data.error || "Không lưu được email.");
+              else setEmailBlock(data.blockReason || null);
+            });
+          }}
+        >
+          <label className="text-sm">Nhà cung cấp
+            <select value={emailProvider} onChange={(e) => setEmailProvider(e.target.value)} className="mt-1 block rounded border px-2 py-2">
+              <option value="DISABLED">Tắt</option>
+              <option value="SANDBOX_MOCK">Giả lập</option>
+              <option value="SMTP">SMTP</option>
+              <option value="RESEND">Resend</option>
+            </select>
+          </label>
+          <label className="text-sm">Email nhận cảnh báo nội bộ
+            <input value={internalAlertEmails} onChange={(e) => setInternalAlertEmails(e.target.value)} placeholder="ke-toan@example.com, kho@example.com" className="mt-1 w-full rounded border px-2 py-2" />
+          </label>
+          <AdminButton type="submit">Lưu email</AdminButton>
+        </form>
         <h3 className="mt-4 text-sm font-semibold">Mẫu</h3>
-        <ul className="mt-2 space-y-1 text-sm">
-          {templates.map((row) => <li key={row.key}>{row.audience} · {row.key} · {row.subject}</li>)}
+        <ul className="mt-2 space-y-3 text-sm">
+          {templates.map((row) => (
+            <li key={row.key} className="rounded border p-3">
+              <p>{row.audience} · {row.key}</p>
+              <form
+                className="mt-2 grid gap-2"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const form = new FormData(e.currentTarget);
+                  void fetch("/api/admin/emails", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      action: "template",
+                      templateKey: row.key,
+                      subject: String(form.get("subject") || ""),
+                      body: String(form.get("body") || ""),
+                    }),
+                  }).then(async (res) => {
+                    const data = await res.json();
+                    if (!res.ok) setError(data.error || "Không lưu được mẫu.");
+                  });
+                }}
+              >
+                <input name="subject" defaultValue={row.subject} className="rounded border px-2 py-2" />
+                <textarea name="body" defaultValue={row.body} rows={3} className="rounded border px-2 py-2" />
+                <AdminButton type="submit" size="sm" variant="secondary">Lưu mẫu</AdminButton>
+              </form>
+            </li>
+          ))}
         </ul>
         <h3 className="mt-4 text-sm font-semibold">Hộp thư đi</h3>
         <ul className="mt-2 space-y-2 text-sm">

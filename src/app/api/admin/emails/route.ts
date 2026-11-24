@@ -5,8 +5,10 @@ import { emailBlockReason, ensureEmailTemplates, queueEmail } from "@/lib/ops/em
 import { prisma } from "@/lib/prisma";
 
 const bodySchema = z.object({
-  action: z.enum(["queue", "settings", "retry"]).optional(),
+  action: z.enum(["queue", "settings", "retry", "template"]).optional(),
   templateKey: z.string().optional(),
+  subject: z.string().optional(),
+  body: z.string().optional(),
   to: z.string().optional(),
   vars: z.record(z.string(), z.union([z.string(), z.number()])).optional(),
   provider: z.enum(["DISABLED", "SANDBOX_MOCK", "SMTP", "RESEND"]).optional(),
@@ -41,6 +43,14 @@ export async function POST(req: Request) {
         update: { provider: body.provider, internalAlertEmails: body.internalAlertEmails || null },
       });
       return jsonOk({ provider: body.provider, blockReason: emailBlockReason(body.provider, process.env) });
+    }
+    if (body.action === "template" && body.templateKey && body.subject && body.body) {
+      await ensureEmailTemplates(prisma);
+      const template = await prisma.emailTemplate.update({
+        where: { key: body.templateKey },
+        data: { subject: body.subject, body: body.body },
+      });
+      return jsonOk({ template });
     }
     if (body.action === "retry" && body.outboxId) {
       const row = await prisma.emailOutbox.findUnique({ where: { id: body.outboxId } });
