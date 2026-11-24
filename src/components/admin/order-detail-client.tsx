@@ -63,6 +63,23 @@ type OrderDetail = {
     codAmount: number | null;
   }>;
   paymentAudits?: Array<{ at: string; actor: string; action: string; amount: number | null }>;
+  invoiceCompanyName?: string | null;
+  invoiceTaxCode?: string | null;
+  invoiceAddress?: string | null;
+  invoiceEmail?: string | null;
+  invoices?: Array<{
+    id: string;
+    type: string;
+    status: string;
+    totalAmount: number;
+    vatAmount: number;
+    invoiceNumber: string | null;
+    lookupUrl: string | null;
+    lastError: string | null;
+    retryCount: number;
+    buyerName: string;
+    buyerTaxCode: string | null;
+  }>;
   items: Array<{
     id: string;
     name: string;
@@ -100,6 +117,20 @@ export function OrderDetailClient({ orderId }: { orderId: string }) {
     }
     setLoading(false);
   }, [orderId]);
+
+  async function postInvoice(body: Record<string, unknown>) {
+    const res = await fetch("/api/admin/invoices", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error || "Không phát hành được hoá đơn.");
+      return;
+    }
+    await load();
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -428,6 +459,45 @@ export function OrderDetailClient({ orderId }: { orderId: string }) {
           </ul>
         ) : (
           <p className="text-sm text-[var(--admin-text-muted)]">{PAYMENT_AUDIT_EMPTY}</p>
+        )}
+      </AdminCard>
+
+      <AdminCard className="mt-4">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 className="text-sm font-semibold">Hoá đơn điện tử</h2>
+          <AdminButton type="button" size="sm" onClick={() => void postInvoice({ action: "issue", orderId: order.id })}>
+            Tạo / Phát hành hóa đơn
+          </AdminButton>
+        </div>
+        {order.invoiceCompanyName || order.invoiceTaxCode ? (
+          <p className="mb-3 text-sm">
+            Hoá đơn công ty: {order.invoiceCompanyName || "—"} · MST {order.invoiceTaxCode || "—"}
+            {order.invoiceEmail ? ` · ${order.invoiceEmail}` : ""}
+          </p>
+        ) : (
+          <p className="mb-3 text-sm text-[var(--admin-text-muted)]">Khách không yêu cầu hoá đơn công ty.</p>
+        )}
+        {order.invoices?.length ? (
+          <ul className="space-y-2 text-sm">
+            {order.invoices.map((invoice) => (
+              <li key={invoice.id} className="rounded border border-[var(--admin-border)] p-3">
+                <p className="font-medium">{invoice.type} · {invoice.status} · {invoice.invoiceNumber || "Chưa có số"}</p>
+                <p>{invoice.buyerName}{invoice.buyerTaxCode ? ` · MST ${invoice.buyerTaxCode}` : ""} · {formatVnd(invoice.totalAmount)} · VAT {formatVnd(invoice.vatAmount)}</p>
+                <p>Thử {invoice.retryCount}{invoice.lastError ? ` · ${invoice.lastError}` : ""}</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {invoice.status === "FAILED" || invoice.status === "RETRYING" || invoice.status === "PENDING" ? (
+                    <AdminButton type="button" size="sm" onClick={() => void postInvoice({ action: "retry", invoiceId: invoice.id })}>Thử lại</AdminButton>
+                  ) : null}
+                  {invoice.status === "ISSUED" ? (
+                    <AdminButton type="button" size="sm" variant="secondary" onClick={() => void postInvoice({ action: "adjust", invoiceId: invoice.id, reason: "Điều chỉnh theo yêu cầu kế toán", amount: invoice.totalAmount })}>Điều chỉnh / Thay thế</AdminButton>
+                  ) : null}
+                  {invoice.lookupUrl ? <a href={invoice.lookupUrl} className="text-[var(--admin-accent)]">Tra cứu</a> : null}
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-[var(--admin-text-muted)]">Chưa có hoá đơn cho đơn này.</p>
         )}
       </AdminCard>
 

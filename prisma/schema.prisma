@@ -300,6 +300,7 @@ model Order {
   reviews         Review[]
   paymentAudits   PaymentAuditLog[]
   shipments       Shipment[]
+  invoices        Invoice[]
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 }
@@ -574,4 +575,74 @@ model CodReconcileLine {
   actualAmount   Int?
   result         String?
   createdAt      DateTime             @default(now())
+}
+
+/// Cấu hình hoá đơn toàn site. Null = mặc định trong code. VAT để kế toán đối chiếu 0, 8 hoặc 10.
+model InvoiceSettings {
+  id               String   @id @default("default")
+  provider         String?
+  autoIssueEnabled Boolean?
+  issueTrigger     String?
+  templateCode     String?
+  invoiceSeries    String?
+  /// Thuế suất phần trăm trên giá đã gồm VAT. Kế toán đối chiếu chính sách hiện hành: 0, 8 hoặc 10.
+  vatRate          Int?
+  sellerName       String?
+  sellerTaxCode    String?
+  sellerAddress    String?
+  maxRetries       Int?
+  retryBaseMinutes Int?
+}
+
+model Invoice {
+  id                       String            @id @default(cuid())
+  orderId                  String
+  order                    Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  type                     String
+  parentInvoiceId          String?
+  parent                   Invoice?          @relation("InvoiceLink", fields: [parentInvoiceId], references: [id])
+  children                 Invoice[]         @relation("InvoiceLink")
+  /// Có giá trị khi đây là hoá đơn gốc chưa huỷ. Unique để không có hai gốc cùng đơn.
+  originalOrderKey         String?           @unique
+  idempotencyKey           String            @unique
+  status                   String
+  buyerKind                String
+  buyerName                String
+  buyerTaxCode             String?
+  buyerAddress             String?
+  buyerEmail               String?
+  linesJson                String
+  vatRate                  Int
+  subtotalAmount           Int
+  vatAmount                Int
+  totalAmount              Int
+  provider                 String?
+  providerInvoiceId        String?
+  invoiceNumber            String?
+  templateCode             String?
+  invoiceSeries            String?
+  lookupCode               String?
+  lookupUrl                String?
+  issuedAt                 DateTime?
+  adjustmentReason         String?
+  retryCount               Int               @default(0)
+  maxRetries               Int               @default(5)
+  nextRetryAt              DateTime?
+  lastError                String?
+  needsAccountantAttention Boolean           @default(false)
+  audits                   InvoiceAuditLog[]
+  createdAt                DateTime          @default(now())
+  updatedAt                DateTime          @updatedAt
+}
+
+model InvoiceAuditLog {
+  id           String   @id @default(cuid())
+  invoiceId    String
+  invoice      Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  action       String
+  fromStatus   String?
+  toStatus     String?
+  actorId      String?
+  metadataJson String?
+  createdAt    DateTime @default(now())
 }

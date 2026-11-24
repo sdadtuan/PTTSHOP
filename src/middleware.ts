@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { adminEntryRedirect } from "@/lib/admin-gate";
 
 const CMS_PREVIEW_HEADER = "x-cms-preview";
 
@@ -23,16 +24,9 @@ export default auth((req) => {
     return NextResponse.next();
   }
 
-  if (!req.auth?.user) {
-    const url = new URL("/dang-nhap", req.nextUrl.origin);
-    // Relative path only — avoids absolute callbackUrl loops with Auth.js.
-    const returnTo = `${path}${req.nextUrl.search}`;
-    url.searchParams.set("callbackUrl", returnTo.startsWith("/admin") ? returnTo : "/admin");
-    return NextResponse.redirect(url);
-  }
-
-  if (req.auth.user.role !== "ADMIN") {
-    return NextResponse.redirect(new URL("/", req.nextUrl.origin));
+  const gate = adminEntryRedirect(req.nextUrl.origin, path, req.nextUrl.search, req.auth?.user ?? null);
+  if (gate) {
+    return NextResponse.redirect(new URL(gate.location, req.nextUrl.origin), gate.status);
   }
 
   return NextResponse.next();

@@ -1,4 +1,5 @@
 import { Prisma, type PrismaClient } from "@prisma/client";
+import { autoIssueIfReady } from "@/lib/invoices/service";
 import { withSqliteRetry } from "@/lib/payments/sqlite-retry";
 
 export async function applyPayosPayment(
@@ -28,6 +29,7 @@ export async function applyPayosPayment(
         }
       }),
     );
+    await autoIssueIfReady(db, order.id, "PAID");
     return { duplicate: false };
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {

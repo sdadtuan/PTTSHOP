@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import type { PrismaClient } from "@prisma/client";
 import { ApiError } from "@/lib/api";
 import { resolveAddress } from "@/lib/address/vn-admin";
+import { autoIssueIfReady } from "@/lib/invoices/service";
 import { withSqliteRetry } from "@/lib/payments/sqlite-retry";
 import { findGhnDestination, ghnEnv, parseGhnWebhook, resolveCarrierFee, type ShippingEnv } from "@/lib/shipping/ghn";
 import { GhnProvider, providerFor } from "@/lib/shipping/provider";
@@ -257,8 +258,9 @@ export async function applyShippingWebhook(
         await tx.shippingWebhookEvent.create({
           data: { eventId: event.eventId, provider: "GHN", shipmentId: shipment?.id || null },
         });
-        if (!shipment || !next) return { duplicate: false, ignored: true };
+        if (!shipment || !next) return { duplicate: false, ignored: true, deliveredOrderId: null as string | null };
         await tx.shipment.update({ where: { id: shipment.id }, data: { status: next, trackingCode: shipment.trackingCode || event.orderCode } });
+        let deliveredOrderId: string | null = null;
         if (shipment.orderId) {
           const order = await tx.order.findUnique({ where: { id: shipment.orderId } });
           const siblings = await tx.shipment.findMany({ where: { orderId: shipment.orderId } });
@@ -266,11 +268,13 @@ export async function applyShippingWebhook(
           const orderNext = order ? orderStatusAfterShipments(order.status, statuses) : null;
           if (order && orderNext) {
             await tx.order.update({ where: { id: order.id }, data: { status: orderNext } });
+            if (orderNext === "COMPLETED") deliveredOrderId = order.id;
           }
         }
-        return { duplicate: false, ignored: false };
+        return { duplicate: false, ignored: false, deliveredOrderId };
       }),
     );
+    if (result.deliveredOrderId) await autoIssueIfReady(db, result.deliveredOrderId, "DELIVERED");
     return { status: 200, body: { ok: true, ...result } };
   } catch (err) {
     if (err instanceof ShipmentTransitionError) {

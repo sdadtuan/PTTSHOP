@@ -6,6 +6,7 @@ import { sendOrderStatusEmail } from "@/lib/mail";
 import { canTransitionOrder, ORDER_STATUS_LABELS } from "@/lib/order-status";
 import { adminOrderDetailInclude } from "@/lib/admin-orders";
 import { paymentAuditEntries } from "@/lib/payments/audit-view";
+import { autoIssueIfReady } from "@/lib/invoices/service";
 import { reviewPaymentConfirm } from "@/lib/payments/confirm";
 import { holdEnforceFrom, releaseExpiredUnpaid } from "@/lib/payments/hold";
 import { prisma } from "@/lib/prisma";
@@ -102,6 +103,7 @@ export async function PATCH(req: Request) {
           });
           return tx.order.findUniqueOrThrow({ where: { id: current.id } });
         });
+        await autoIssueIfReady(prisma, paid.id, "PAID");
         return jsonOk({ order: paid });
       } catch (err) {
         if (err instanceof Prisma.PrismaClientKnownRequestError) throw err;
@@ -125,6 +127,8 @@ export async function PATCH(req: Request) {
       data,
     });
     const shipmentCancel = body.status === "CANCELLED" ? await cancelOpenShipments(prisma, order.id) : null;
+    if (order.status === "COMPLETED") await autoIssueIfReady(prisma, order.id, "DELIVERED");
+    if (order.paymentStatus === "PAID") await autoIssueIfReady(prisma, order.id, "PAID");
 
     if (body.status) {
       void sendOrderStatusEmail({
