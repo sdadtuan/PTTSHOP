@@ -2,8 +2,9 @@ import { execSync } from "child_process";
 import path from "path";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { testPgUrl } from "./pg";
 
-const dbUrl = process.env.DATABASE_URL || "file:./test.db";
+const dbUrl = process.env.DATABASE_URL || testPgUrl();
 
 export function resetTestDb() {
   execSync("npx prisma migrate deploy", {
@@ -16,6 +17,23 @@ export function resetTestDb() {
 export async function cleanDb(prisma: PrismaClient) {
   await prisma.consent.deleteMany();
   await prisma.review.deleteMany();
+  await prisma.refundApprovalLog.deleteMany();
+  await prisma.refundRequest.deleteMany();
+  await prisma.returnItem.deleteMany();
+  await prisma.returnRequest.deleteMany();
+  await prisma.invoiceAuditLog.deleteMany();
+  await prisma.invoice.updateMany({ data: { parentInvoiceId: null } });
+  await prisma.invoice.deleteMany();
+  await prisma.orderCancellation.deleteMany();
+  await prisma.shipmentItem.deleteMany();
+  await prisma.shipment.deleteMany();
+  await prisma.paymentAuditLog.deleteMany();
+  await prisma.webhookEvent.deleteMany();
+  await prisma.codReconcileLine.deleteMany();
+  await prisma.codReconcileSession.deleteMany();
+  await prisma.shippingWebhookEvent.deleteMany();
+  await prisma.crmSyncJob.deleteMany();
+  await prisma.emailOutbox.deleteMany();
   await prisma.orderItem.deleteMany();
   await prisma.order.deleteMany();
   await prisma.cartItem.deleteMany();
@@ -26,6 +44,7 @@ export async function cleanDb(prisma: PrismaClient) {
   await prisma.productImage.deleteMany();
   await prisma.product.deleteMany();
   await prisma.collection.deleteMany();
+  await prisma.category.updateMany({ data: { parentId: null } });
   await prisma.category.deleteMany();
   await prisma.coupon.deleteMany();
   await prisma.flashSale.deleteMany();
@@ -36,6 +55,10 @@ export async function cleanDb(prisma: PrismaClient) {
   await prisma.verificationToken.deleteMany();
   await prisma.session.deleteMany();
   await prisma.account.deleteMany();
+  await prisma.adminAuditLog.deleteMany();
+  await prisma.userRoleAssignment.deleteMany();
+  await prisma.adminTwoFactor.deleteMany();
+  await prisma.pricingRule.deleteMany();
   await prisma.user.deleteMany();
 }
 

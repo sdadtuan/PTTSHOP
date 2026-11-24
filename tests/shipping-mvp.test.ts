@@ -1,6 +1,6 @@
 import { execSync } from "child_process";
-import path from "path";
 import { PrismaClient } from "@prisma/client";
+import { testPgUrl } from "./pg";
 import { describe, expect, it } from "vitest";
 import { matchGhnWard } from "@/lib/shipping/address-map";
 import { GhnProvider, ManualProvider } from "@/lib/shipping/provider";
@@ -74,7 +74,7 @@ describe("address map", () => {
 });
 
 describe("shipment rules", () => {
-  const dbUrl = `file:${path.resolve("prisma/ship-test.db")}`;
+  const dbUrl = testPgUrl("pttshop_ship");
 
   async function db() {
     execSync("npx prisma migrate deploy", { env: { ...process.env, DATABASE_URL: dbUrl }, stdio: "pipe" });
@@ -148,7 +148,7 @@ describe("shipment rules", () => {
 });
 
 describe("shipping webhook", () => {
-  const dbUrl = `file:${path.resolve("prisma/ship-test.db")}`;
+  const dbUrl = testPgUrl("pttshop_ship");
   const env = { GHN_TOKEN: "token", GHN_SHOP_ID: "99", GHN_WEBHOOK_TOKEN: "hook-secret" };
 
   function payload(orderCode: string, clientCode: string, status: string, time: string) {
@@ -293,7 +293,7 @@ describe("COD reconcile and print slips", () => {
 
 describe("server quote", () => {
   it("recomputes from the saved rule when the client sends another fee", async () => {
-    const dbUrl = `file:${path.resolve("prisma/ship-test.db")}`;
+    const dbUrl = testPgUrl("pttshop_ship");
     execSync("npx prisma migrate deploy", { env: { ...process.env, DATABASE_URL: dbUrl }, stdio: "pipe" });
     const client = new PrismaClient({ datasourceUrl: dbUrl });
     await client.shippingSettings.upsert({

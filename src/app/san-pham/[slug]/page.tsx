@@ -45,7 +45,7 @@ export default async function ProductDetailPage({ params }: Props) {
       ...publicCatalogWhere,
       id: { not: product.id },
       OR: [
-        { slug: { contains: "hoodie" } },
+        { slug: { contains: "hoodie", mode: "insensitive" } },
         { category: { slug: "hoodie" } },
       ],
     },

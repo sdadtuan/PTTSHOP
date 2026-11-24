@@ -1,6 +1,6 @@
 import { execSync } from "child_process";
-import path from "path";
 import { PrismaClient } from "@prisma/client";
+import { testPgUrl } from "./pg";
 import { describe, expect, it, vi } from "vitest";
 
 const authMock = vi.fn();
@@ -20,7 +20,7 @@ import { normalizePhone } from "@/lib/ops/phone";
 import { approveRefund, completeRefund, completeReturn, openReturn } from "@/lib/ops/return-service";
 import { excludedCategoryHit, refundMethodForPayment, reviewRefundApproval, reviewReturnWindow, shippingFeePayer } from "@/lib/ops/returns-policy";
 
-const dbUrl = `file:${path.resolve("prisma/ops-test.db")}`;
+const dbUrl = testPgUrl("pttshop_ops");
 
 function db() {
   execSync("npx prisma migrate deploy", { env: { ...process.env, DATABASE_URL: dbUrl }, stdio: "pipe" });

@@ -1,7 +1,7 @@
 import { createHmac } from "crypto";
 import { execSync } from "child_process";
-import path from "path";
 import { describe, expect, it } from "vitest";
+import { testPgUrl } from "./pg";
 import { PrismaClient } from "@prisma/client";
 import { crc16CcittFalse } from "@/lib/payments/crc16";
 import { buildVietQrPayload, readVietQrFields } from "@/lib/payments/vietqr";
@@ -169,12 +169,23 @@ describe("sqlite busy retry and concurrent webhook", () => {
     expect(calls).toBe(3);
   });
 
+  it("does not retry a postgres constraint error", async () => {
+    let calls = 0;
+    await expect(
+      withSqliteRetry(async () => {
+        calls += 1;
+        throw new Error("duplicate key value violates unique constraint");
+      }),
+    ).rejects.toThrow(/duplicate key/);
+    expect(calls).toBe(1);
+  });
+
   it("processes one of two concurrent notices", async () => {
     execSync("npx prisma migrate deploy", {
-      env: { ...process.env, DATABASE_URL: `file:${path.resolve("prisma/pay-test.db")}` },
+      env: { ...process.env, DATABASE_URL: testPgUrl("pttshop_pay") },
       stdio: "pipe",
     });
-    const db = new PrismaClient({ datasourceUrl: `file:${path.resolve("prisma/pay-test.db")}` });
+    const db = new PrismaClient({ datasourceUrl: testPgUrl("pttshop_pay") });
     const product = await db.product.create({
       data: {
         name: "Pay Tee",
@@ -217,10 +228,10 @@ describe("sqlite busy retry and concurrent webhook", () => {
 
   it("TC-05 cancels an overdue unpaid transfer created after the cutoff and restores stock", async () => {
     execSync("npx prisma migrate deploy", {
-      env: { ...process.env, DATABASE_URL: `file:${path.resolve("prisma/pay-test.db")}` },
+      env: { ...process.env, DATABASE_URL: testPgUrl("pttshop_pay") },
       stdio: "pipe",
     });
-    const db = new PrismaClient({ datasourceUrl: `file:${path.resolve("prisma/pay-test.db")}` });
+    const db = new PrismaClient({ datasourceUrl: testPgUrl("pttshop_pay") });
     const stamp = Date.now();
     const product = await db.product.create({
       data: {

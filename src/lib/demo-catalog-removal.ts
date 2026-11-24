@@ -37,7 +37,7 @@ export function planDemoRemoval(row: DemoRemovalRow): DemoRemovalPlan {
 export async function inspectDemoCatalog(prisma: PrismaClient) {
   const products = await prisma.product.findMany({
     where: {
-      OR: [{ slug: { startsWith: "demo-" } }, { variants: { some: { sku: { startsWith: "DEMO-" } } } }],
+      OR: [{ slug: { startsWith: "demo-", mode: "insensitive" } }, { variants: { some: { sku: { startsWith: "DEMO-", mode: "insensitive" } } } }],
     },
     select: { id: true, slug: true, variants: { select: { id: true, sku: true } } },
     orderBy: { slug: "asc" },
@@ -86,7 +86,7 @@ export async function applyDemoRemoval(
     if (row.orderIds.length) await prisma.order.deleteMany({ where: { id: { in: row.orderIds } } });
     await prisma.product.delete({ where: { id: row.productId } });
   }
-  await prisma.category.deleteMany({ where: { slug: { startsWith: "demo-" }, products: { none: {} } } });
+  await prisma.category.deleteMany({ where: { slug: { startsWith: "demo-", mode: "insensitive" }, products: { none: {} } } });
   return { deleted: deleting.length, blocked: 0 };
 }
 

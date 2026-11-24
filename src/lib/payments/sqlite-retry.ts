@@ -1,3 +1,4 @@
+/** Chỉ thử lại khi SQLite báo bận. Lỗi Postgres (trùng khoá, ràng buộc) ném ngay, không chờ. */
 export function isSqliteBusy(err: unknown) {
   const message = err instanceof Error ? err.message : String(err);
   const code =

@@ -1,6 +1,6 @@
 import { execSync } from "child_process";
-import path from "path";
 import { PrismaClient } from "@prisma/client";
+import { testPgUrl } from "./pg";
 import { describe, expect, it, vi } from "vitest";
 
 const authMock = vi.fn();
@@ -14,7 +14,7 @@ import { vatFromGross } from "@/lib/invoices/money";
 import { MisaMeInvoiceProvider, SandboxMockInvoiceProvider, ViettelSInvoiceProvider } from "@/lib/invoices/provider";
 import { attemptIssue, createLinkedInvoice, issueOriginalForOrder } from "@/lib/invoices/service";
 
-const dbUrl = `file:${path.resolve("prisma/invoice-test.db")}`;
+const dbUrl = testPgUrl("pttshop_inv");
 
 function db() {
   execSync("npx prisma migrate deploy", { env: { ...process.env, DATABASE_URL: dbUrl }, stdio: "pipe" });

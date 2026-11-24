@@ -32,10 +32,10 @@ export async function GET(req: Request) {
         ...(q
           ? {
               OR: [
-                { invoiceNumber: { contains: q } },
-                { buyerTaxCode: { contains: q } },
-                { buyerName: { contains: q } },
-                { order: { orderNumber: { contains: q } } },
+          { invoiceNumber: { contains: q, mode: "insensitive" } },
+          { buyerTaxCode: { contains: q, mode: "insensitive" } },
+          { buyerName: { contains: q, mode: "insensitive" } },
+          { order: { orderNumber: { contains: q, mode: "insensitive" } } },
               ],
             }
           : {}),

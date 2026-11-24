@@ -15,7 +15,7 @@ export async function GET(req: Request) {
       where: {
         action,
         entityType,
-        ...(actor ? { OR: [{ actorEmail: { contains: actor } }, { actorId: actor }] } : {}),
+        ...(actor ? { OR: [{ actorEmail: { contains: actor, mode: "insensitive" } }, { actorId: actor }] } : {}),
         ...(from || to
           ? { createdAt: { gte: from ? new Date(`${from}T00:00:00`) : undefined, lte: to ? new Date(`${to}T23:59:59`) : undefined } }
           : {}),

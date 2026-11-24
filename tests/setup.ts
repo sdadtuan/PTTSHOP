@@ -1,10 +1,11 @@
 import path from "path";
 import { config } from "dotenv";
+import { testPgUrl } from "./pg";
 
 config({ path: path.resolve(process.cwd(), ".env") });
 
-process.env.DATABASE_URL =
-  process.env.TEST_DATABASE_URL || "file:./test.db";
+const requested = process.env.TEST_DATABASE_URL;
+process.env.DATABASE_URL = requested && !requested.startsWith("file:") ? requested : testPgUrl();
 process.env.AUTH_SECRET = process.env.AUTH_SECRET || "test-secret-vitest";
 process.env.AUTH_URL = process.env.AUTH_URL || "http://localhost:3000";
 process.env.E2E_ADMIN_EMAIL ||= "admin@test.local";

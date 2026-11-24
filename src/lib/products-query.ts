@@ -70,9 +70,9 @@ export function buildProductWhere(params: {
   }
   if (params.q) {
     where.OR = [
-      { name: { contains: params.q } },
-      { slug: { contains: params.q } },
-      { description: { contains: params.q } },
+      { name: { contains: params.q, mode: "insensitive" } },
+      { slug: { contains: params.q, mode: "insensitive" } },
+      { description: { contains: params.q, mode: "insensitive" } },
     ];
   }
   return where;
