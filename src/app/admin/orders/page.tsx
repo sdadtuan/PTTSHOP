@@ -44,6 +44,10 @@ export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("ALL");
+  const [paymentStatus, setPaymentStatus] = useState("ALL");
+  const [paymentMethod, setPaymentMethod] = useState("ALL");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [page, setPage] = useState(1);
 
   async function load() {
@@ -68,6 +72,11 @@ export default function AdminOrdersPage() {
     const query = q.trim().toLowerCase();
     return orders.filter((o) => {
       if (status !== "ALL" && o.status !== status) return false;
+      if (paymentStatus !== "ALL" && o.paymentStatus !== paymentStatus) return false;
+      if (paymentMethod !== "ALL" && o.paymentMethod !== paymentMethod) return false;
+      const created = new Date(o.createdAt).getTime();
+      if (fromDate && created < new Date(`${fromDate}T00:00:00`).getTime()) return false;
+      if (toDate && created > new Date(`${toDate}T23:59:59`).getTime()) return false;
       if (!query) return true;
       return (
         o.orderNumber.toLowerCase().includes(query) ||
@@ -75,7 +84,7 @@ export default function AdminOrdersPage() {
         o.customerPhone.toLowerCase().includes(query)
       );
     });
-  }, [orders, q, status]);
+  }, [orders, q, status, paymentStatus, paymentMethod, fromDate, toDate]);
 
   const paged = paginate(filtered, page, 10);
 
@@ -121,7 +130,7 @@ export default function AdminOrdersPage() {
       />
 
       <AdminCard className="mb-4" padding={false}>
-        <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-end">
+        <div className="flex flex-col flex-wrap gap-3 p-4 sm:flex-row sm:items-end">
           <div className="min-w-0 flex-1">
             <AdminInput
               label="Tìm kiếm"
@@ -132,6 +141,29 @@ export default function AdminOrdersPage() {
               }}
               placeholder="Mã đơn, tên, SĐT…"
             />
+          </div>
+          <div className="sm:w-44">
+            <AdminSelect label="Thanh toán" value={paymentStatus} onChange={(e) => { setPaymentStatus(e.target.value); setPage(1); }}>
+              <option value="ALL">Mọi thanh toán</option>
+              <option value="UNPAID">Chưa thanh toán</option>
+              <option value="PENDING">Chờ xác nhận</option>
+              <option value="PAID">Đã thanh toán</option>
+              <option value="FAILED">Thất bại</option>
+            </AdminSelect>
+          </div>
+          <div className="sm:w-44">
+            <AdminSelect label="Phương thức" value={paymentMethod} onChange={(e) => { setPaymentMethod(e.target.value); setPage(1); }}>
+              <option value="ALL">Mọi phương thức</option>
+              <option value="COD">COD</option>
+              <option value="BANK_TRANSFER">Chuyển khoản</option>
+              <option value="PAYOS">payOS</option>
+            </AdminSelect>
+          </div>
+          <div className="sm:w-40">
+            <AdminInput label="Từ ngày" type="date" value={fromDate} onChange={(e) => { setFromDate(e.target.value); setPage(1); }} />
+          </div>
+          <div className="sm:w-40">
+            <AdminInput label="Đến ngày" type="date" value={toDate} onChange={(e) => { setToDate(e.target.value); setPage(1); }} />
           </div>
           <div className="sm:w-52">
             <AdminSelect
@@ -231,7 +263,7 @@ export default function AdminOrdersPage() {
                       aria-label={`Trạng thái đơn ${o.orderNumber}`}
                       onChange={(e) => void updateStatus(o.id, e.target.value)}
                     >
-                      {ORDER_STATUS_FLOW.map((s) => (
+                      {ORDER_STATUS_FLOW.filter((s) => s !== "CANCELLED" || o.status === "CANCELLED").map((s) => (
                         <option key={s} value={s}>
                           {ORDER_STATUS_LABELS[s]}
                         </option>

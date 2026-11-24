@@ -98,6 +98,10 @@ export function OrderDetailClient({ orderId }: { orderId: string }) {
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [cancelReason, setCancelReason] = useState("");
+  const [returnReason, setReturnReason] = useState("DEFECTIVE");
+  const [returnType, setReturnType] = useState("RETURN_REFUND");
+  const [returnNote, setReturnNote] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -221,6 +225,45 @@ export function OrderDetailClient({ orderId }: { orderId: string }) {
     await load();
   }
 
+  async function cancelThisOrder() {
+    const res = await fetch(`/api/admin/orders/${orderId}/cancel`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reason: cancelReason }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      toast(data.error || "Không huỷ được đơn", "error");
+      return;
+    }
+    toast(data.alreadyCancelled ? "Đơn đã huỷ trước đó" : "Đã huỷ đơn");
+    if (data.suggestInvoiceAdjustment) {
+      toast("Đơn đã có hoá đơn gốc. Kế toán tạo hoá đơn điều chỉnh hoặc thay thế.");
+    }
+    await load();
+  }
+
+  async function openReturn() {
+    if (!order) return;
+    const res = await fetch("/api/admin/returns", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        orderId: order.id,
+        type: returnType,
+        reason: returnReason,
+        note: returnNote,
+        orderItemIds: order.items.map((item) => item.id),
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      toast(data.error || "Không tạo được yêu cầu đổi trả", "error");
+      return;
+    }
+    toast("Đã tạo yêu cầu đổi trả");
+  }
+
   async function cancelShipment(id: string) {
     const res = await fetch("/api/admin/shipments", {
       method: "PATCH",
@@ -310,7 +353,7 @@ export function OrderDetailClient({ orderId }: { orderId: string }) {
               value={order.status}
               onChange={(e) => void updateStatus(e.target.value)}
             >
-              {ORDER_STATUS_FLOW.map((s) => (
+              {ORDER_STATUS_FLOW.filter((s) => s !== "CANCELLED" || order.status === "CANCELLED").map((s) => (
                 <option key={s} value={s}>
                   {ORDER_STATUS_LABELS[s]}
                 </option>
@@ -355,6 +398,33 @@ export function OrderDetailClient({ orderId }: { orderId: string }) {
             >
               Xác nhận đã nhận tiền
             </AdminButton>
+          ) : null}
+          {order.status === "COMPLETED" ? (
+            <p className="mt-3 text-sm text-[var(--admin-text-muted)]">Đơn đã giao. Dùng luồng Đổi trả bên dưới, không huỷ đơn.</p>
+          ) : order.status === "CANCELLED" ? (
+            <p className="mt-3 text-sm">Đơn đã huỷ. Tồn kho chỉ được hoàn một lần.</p>
+          ) : (
+            <form
+              className="mt-3 space-y-2 print:hidden"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void cancelThisOrder();
+              }}
+            >
+              <label className="block text-sm">
+                Lý do huỷ
+                <input
+                  required
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  className="mt-1 w-full rounded border border-[var(--admin-border)] px-2 py-2"
+                />
+              </label>
+              <AdminButton type="submit" size="sm" variant="secondary">Huỷ đơn</AdminButton>
+            </form>
+          )}
+          {order.status === "CANCELLED" && order.invoices?.some((invoice) => invoice.type === "ORIGINAL" && invoice.status === "ISSUED") ? (
+            <p className="mt-2 text-sm text-amber-800">Đơn đã có hoá đơn gốc đã phát hành. Kế toán tạo hoá đơn điều chỉnh hoặc thay thế ở mục Hoá đơn điện tử.</p>
           ) : null}
           <dl className="mt-4 space-y-1 border-t border-[var(--admin-border)] pt-3 text-sm text-[var(--admin-text-muted)]">
             <div className="flex justify-between gap-2">
@@ -499,6 +569,40 @@ export function OrderDetailClient({ orderId }: { orderId: string }) {
         ) : (
           <p className="text-sm text-[var(--admin-text-muted)]">Chưa có hoá đơn cho đơn này.</p>
         )}
+      </AdminCard>
+
+      <AdminCard className="mt-4 print:hidden">
+        <h2 className="mb-3 text-sm font-semibold">Đổi trả & Hoàn tiền</h2>
+        <p className="mb-3 text-sm text-[var(--admin-text-muted)]">
+          Thời hạn mặc định 7 ngày kể từ khi giao. Lỗi sản phẩm hoặc giao sai do shop chịu phí; khách đổi ý thì khách chịu phí.
+        </p>
+        <form
+          className="grid gap-2 sm:grid-cols-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void openReturn();
+          }}
+        >
+          <label className="text-sm">Loại
+            <select value={returnType} onChange={(e) => setReturnType(e.target.value)} className="mt-1 w-full rounded border px-2 py-2">
+              <option value="RETURN_REFUND">Trả hàng hoàn tiền</option>
+              <option value="EXCHANGE">Đổi hàng</option>
+            </select>
+          </label>
+          <label className="text-sm">Lý do
+            <select value={returnReason} onChange={(e) => setReturnReason(e.target.value)} className="mt-1 w-full rounded border px-2 py-2">
+              <option value="DEFECTIVE">Lỗi sản phẩm</option>
+              <option value="WRONG_ITEM">Giao sai</option>
+              <option value="CHANGE_OF_MIND">Đổi ý</option>
+              <option value="OTHER">Khác</option>
+            </select>
+          </label>
+          <label className="text-sm sm:col-span-2">Ghi chú
+            <input value={returnNote} onChange={(e) => setReturnNote(e.target.value)} className="mt-1 w-full rounded border px-2 py-2" />
+          </label>
+          <AdminButton type="submit" size="sm">Tạo yêu cầu</AdminButton>
+          <Link href="/admin/doi-tra" className="text-sm text-[var(--admin-accent)]">Mở danh sách đổi trả</Link>
+        </form>
       </AdminCard>
 
       <AdminCard className="mt-4 print:border print:shadow-none">

@@ -10,7 +10,6 @@ import { autoIssueIfReady } from "@/lib/invoices/service";
 import { reviewPaymentConfirm } from "@/lib/payments/confirm";
 import { holdEnforceFrom, releaseExpiredUnpaid } from "@/lib/payments/hold";
 import { prisma } from "@/lib/prisma";
-import { cancelOpenShipments } from "@/lib/shipping/service";
 
 export async function GET(req: Request) {
   try {
@@ -111,6 +110,9 @@ export async function PATCH(req: Request) {
       }
     }
 
+    if (body.status === "CANCELLED") {
+      return jsonError("Huỷ đơn bằng nút Huỷ đơn trên trang chi tiết, kèm lý do.", 400);
+    }
     if (body.status && !canTransitionOrder(current.status, body.status)) {
       return jsonError("Không chuyển được trạng thái này.", 400);
     }
@@ -126,7 +128,6 @@ export async function PATCH(req: Request) {
       where: { id: body.id },
       data,
     });
-    const shipmentCancel = body.status === "CANCELLED" ? await cancelOpenShipments(prisma, order.id) : null;
     if (order.status === "COMPLETED") await autoIssueIfReady(prisma, order.id, "DELIVERED");
     if (order.paymentStatus === "PAID") await autoIssueIfReady(prisma, order.id, "PAID");
 
@@ -139,7 +140,7 @@ export async function PATCH(req: Request) {
       });
     }
 
-    return jsonOk({ order, shipmentCancel });
+    return jsonOk({ order });
   } catch (err) {
     return handleApiError(err);
   }

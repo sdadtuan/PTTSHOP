@@ -23,6 +23,8 @@ import {
   Wallet,
   Truck,
   Receipt,
+  RotateCcw,
+  Bell,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
@@ -35,6 +37,8 @@ const nav = [
   { href: "/admin/thanh-toan", label: "Thanh toán", icon: Wallet },
   { href: "/admin/van-chuyen", label: "Vận chuyển", icon: Truck },
   { href: "/admin/hoa-don", label: "Hoá đơn", icon: Receipt },
+  { href: "/admin/doi-tra", label: "Đổi trả & Hoàn tiền", icon: RotateCcw },
+  { href: "/admin/thong-bao", label: "CRM & Thông báo", icon: Bell },
   { href: "/admin/products", label: "Sản phẩm", icon: Package },
   { href: "/admin/nhap-san-pham", label: "Nhập sản phẩm", icon: Package },
   {
