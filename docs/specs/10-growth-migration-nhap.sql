@@ -63,16 +63,3 @@ CREATE TABLE "LookbookItem" (
 
 ALTER TABLE "Order" ADD COLUMN "carrierCost" INTEGER;
 ALTER TABLE "Order" ADD COLUMN "paymentFee" INTEGER;
-
--- Đợt 3, chỉ khi có hợp đồng. Chưa chạy cùng đợt 1.
--- ALTER TYPE "PaymentMethod" ADD VALUE 'VNPAY';
-
-CREATE TABLE "ZnsOutbox" (
-    "id" TEXT NOT NULL,
-    "toAddress" TEXT NOT NULL,
-    "templateKey" TEXT NOT NULL,
-    "body" TEXT NOT NULL,
-    "status" TEXT NOT NULL DEFAULT 'SKIPPED_DISABLED',
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "ZnsOutbox_pkey" PRIMARY KEY ("id")
-);

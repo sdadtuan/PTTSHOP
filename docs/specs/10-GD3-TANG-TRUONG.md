@@ -70,14 +70,13 @@ Vì chưa gắn script, từ chối cookie hiện không tạo request đo lư�
 
 Anh đã gửi container Google Tag Manager `GTM-PQX685KW` (script `gtm.js?id=GTM-PQX685KW` cộng `dataLayer` và `gtag('js', new Date())`). Đây là mã GTM, không phải Measurement ID dạng `G-`. Đoạn script chưa gọi `gtag('config', ...)` và chưa có sự kiện `gtm.start` của snippet GTM chuẩn. Chưa dán vào layout. Khi làm đợt đo lường, trang chỉ tải `https://www.googletagmanager.com/gtm.js?id=GTM-PQX685KW` sau khi cookie là `all`. Chưa chọn hoặc chọn “Chỉ cookie cần thiết” thì không có request tới `googletagmanager.com`.
 
+Bỏ qua vì chưa có tài khoản: mã GA4 dạng `G-`, Meta Pixel, Conversions API. Không thêm `GA4_MEASUREMENT_ID`, `META_PIXEL_ID`, `META_CAPI_TOKEN`.
+
 Biến sẽ dùng, chỉ tên, chưa đọc file môi trường và chưa thêm vào code:
 
 - `GTM_CONTAINER_ID` — giá trị đã chốt: `GTM-PQX685KW`
-- `GA4_MEASUREMENT_ID` — chưa có. GA4 nếu nằm trong container GTM thì không cần mã `G-` trên trang
-- `META_PIXEL_ID`
-- `META_CAPI_TOKEN`
 
-Thiếu ID hoặc khách chưa chọn `all` thì không tải script và không gọi CAPI. Purchase dùng `transaction_id` = `orderNumber`, ghi một lần vào bảng sự kiện, tải lại trang cảm ơn không gửi lại. Pixel và CAPI dùng cùng `event_id`.
+Khách chưa chọn `all` thì không tải GTM. Purchase đẩy vào `dataLayer` với `transaction_id` = `orderNumber`, ghi một lần, tải lại trang cảm ơn không gửi lại.
 
 ### c. Đánh giá thật
 
@@ -115,22 +114,13 @@ Thiếu cột phí thanh toán và phí vận chuyển thực trả theo đơn. 
 
 Mười đơn mẫu để đối chiếu tay chỉ tạo trên database test, không lấy đơn production.
 
-### f. VNPay
+### f. VNPay — bỏ qua
 
-`VnpayProviderStub` trong `src/lib/payments/index.ts` ném lỗi “chưa được cấu hình”. Enum `PaymentMethod` chưa có `VNPAY`. `getPaymentProvider` không trả stub này.
+Chưa có `VNPAY_TMN_CODE` và `VNPAY_HASH_SECRET`. Stub hiện tại giữ nguyên, không thêm adapter, không thêm giá trị enum.
 
-Đợt 3 thêm adapter cùng kiểu `PaymentProvider`, IPN kiểm chữ ký, một `eventId` chỉ xử lý một lần trên `WebhookEvent` (cùng cách payOS, BR-18). Cổng tắt khi thiếu biến. Chỉ tên biến:
+### g. Zalo ZNS và SMS — bỏ qua
 
-- `VNPAY_TMN_CODE`
-- `VNPAY_HASH_SECRET`
-
-Không đọc và không ghi giá trị.
-
-### g. Zalo ZNS và SMS
-
-Có hàng đợi email `EmailOutbox` (`src/lib/ops/email-queue.ts`). Provider `DISABLED` thì ghi `SKIPPED_DISABLED`, không gửi. Chưa có interface ZNS/SMS.
-
-Đợt 3 thêm interface và hàng đợi. Provider mặc định không gửi. Không gọi API Zalo hay nhà SMS.
+Chưa có Zalo OA và nhà SMS. Không thêm interface, không thêm hàng đợi.
 
 ## 2. Schema đề xuất
 
@@ -144,45 +134,42 @@ Chỉ thêm bảng và cột. File nháp `docs/specs/10-growth-migration-nhap.sq
 | `Combo`, `ComboItem` | giá combo và các biến thể thành phần |
 | `Lookbook`, `LookbookItem` | bài phối, trỏ tới sản phẩm đang bán |
 | `Order.carrierCost`, `Order.paymentFee` | số nguyên, để trống cho tới khi đối soát nhập |
-| `PaymentMethod` thêm `VNPAY` | chỉ khi làm đợt 3. `ALTER TYPE ... ADD VALUE` |
-| `ZnsOutbox` | hàng đợi, trạng thái mặc định không gửi |
 
 `Product.rating` không đổi kiểu và không thêm review giả.
 
 ## 3. Thứ tự và ước lượng
 
-Một người, ngày làm việc. Ước lượng, chưa tính thời gian chờ tài khoản GA4, Meta, VNPay, Zalo.
+Một người, ngày làm việc. Bỏ đợt 3.
 
 | Đợt | Nhánh con từ `feat/growth` | Việc | Ngày |
 |---|---|---|---|
 | 1 | `feat/growth-seo` | Canonical, Open Graph, sitemap bổ sung, JSON-LD Product/Offer/BreadcrumbList/Organization, bảng slug và 301 | 3 |
-| 1 | `feat/growth-do-luong` | Banner giữ nguyên cho tới khi chốt chữ. Tải GTM `GTM-PQX685KW` chỉ khi cookie là `all`. Pixel và CAPI tắt khi thiếu ID hoặc chưa đồng ý. Purchase một lần | 3 |
+| 1 | `feat/growth-do-luong` | Giữ nguyên câu banner. Tải GTM `GTM-PQX685KW` chỉ khi cookie là `all`. Purchase một lần | 2 |
 | 1 | `feat/growth-danh-gia` | Chỉ đơn đã giao, duyệt trước khi hiện, rating đệm không gồm review admin, schema không có sao giả | 2 |
-| 2 | `feat/growth-combo` | Combo và lookbook, giá combo không dưới tổng sàn | 4 |
-| 2 | `feat/growth-bao-cao` | Biên lợi nhuận, tồn, NCC, đối soát, CSV | 4 |
-| 3 | `feat/growth-vnpay` | Adapter, IPN, một lần. Chỉ khi có hợp đồng | 3 |
-| 3 | `feat/growth-zns` | Interface và hàng đợi, không gửi thật. Chỉ khi có OA hoặc nhà SMS | 2 |
+| 2 | `feat/growth-combo` | Combo và lookbook. Thiếu giá sàn một thành phần thì không lưu combo | 4 |
+| 2 | `feat/growth-bao-cao` | Biên lợi nhuận, tồn, NCC, đối soát, CSV. Cột: mã đơn, sản phẩm, số lượng, doanh thu dòng, giá vốn, phí ship khách trả, phí ship thực, phí thanh toán, đối trừ NCC, hoàn tiền, biên | 4 |
 
 Mỗi nhánh một hoặc vài commit. Không rebase, không reset, không force-push. Không push và không deploy khi chưa có câu “OK deploy”.
 
-Đợt 1 xong mới sang đợt 2. Đợt 3 không chặn hai đợt trước.
+Đợt 1 xong mới sang đợt 2.
 
 ## 4. Test sẽ viết
 
 Chưa chạy trong Phần A.
 
-- TC-12: cookie `essential` hoặc chưa chọn thì không có request tới `googletagmanager.com`, GA4 và Meta, không gọi CAPI.
+- TC-12: cookie `essential` hoặc chưa chọn thì không có request tới `googletagmanager.com`.
 - Purchase: trang cảm ơn gửi một lần. Tải lại không tạo thêm `AnalyticsEvent`. `transaction_id` bằng mã đơn.
-- `event_id` trên Pixel và CAPI là một chuỗi.
 - JSON-LD sản phẩm không có `review` hay `aggregateRating` khi chưa có review khách đã duyệt.
 - Combo có giá thấp hơn tổng `effectiveFloor` thì API từ chối.
 - Biên lợi nhuận của 10 đơn trên database test khớp bản tính tay. Không dùng 4 đơn production.
 
-## 5. Cần anh chốt
+## 5. Đã chốt
 
-- Google: đã chốt container `GTM-PQX685KW`. Chưa có mã GA4 dạng `G-`. Meta Pixel chưa gửi.
-- Giữ nguyên câu banner hiện tại hay sửa. Câu đang chạy: “Website dùng cookie cần thiết cho đăng nhập và giỏ hàng. Cookie đo lường chỉ chạy khi bạn đồng ý.”
-- Số `Product.rating` đang lưu (kể cả 4.8 từ script hoodie và review admin) có được ẩn trên cửa hàng cho tới khi có review khách đã duyệt không. Đề xuất: ẩn, không xóa số trong database.
-- Thành phần combo chưa có giá sàn thì chặn cả combo, hay chỉ cộng các thành phần đã có sàn.
-- Mẫu báo cáo cần những cột nào ngoài: mã đơn, sản phẩm, số lượng, doanh thu dòng, giá vốn, phí ship khách trả, phí ship thực, phí thanh toán, đối trừ NCC, hoàn tiền, biên.
-- VNPay, Zalo OA và nhà SMS đã có hợp đồng chưa. Chưa có thì đợt 3 không làm tiếp sau interface.
+Anh bảo mục nào chưa có thì bỏ qua.
+
+- Làm: SEO, GTM `GTM-PQX685KW` sau khi đồng ý cookie, đánh giá thật, combo/lookbook, báo cáo CSV.
+- Bỏ: mã GA4 dạng `G-`, Meta Pixel, Conversions API, VNPay, Zalo ZNS, SMS.
+- Banner giữ câu đang chạy.
+- Rating đang lưu: ẩn trên cửa hàng và không đưa vào schema cho tới khi có review khách đã duyệt. Không xóa số trong database.
+- Combo thiếu giá sàn một thành phần thì không lưu.
+- Báo cáo dùng đúng các cột đã ghi ở mục 3. Ô chưa có số để trống.
