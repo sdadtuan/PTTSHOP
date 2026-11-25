@@ -5,6 +5,7 @@ import { HEX_RE, isVideoMedia, skuPart } from "@/lib/product-media";
 import { sanitizePlainText } from "@/lib/cms/validate";
 import { bulletsToJson, sizeChartToJson, type SizeChart } from "@/lib/pdp-tabs";
 import { slugify, uniqueSlug } from "@/lib/slug";
+import { rememberSlugRedirect } from "@/lib/slug-redirect";
 
 /**
  * Full product save (basic info + all media + all colour/size variants) in one
@@ -184,11 +185,16 @@ export async function saveProductFull(
     };
 
     let productId: string;
+    let previousSlug: string | null = null;
     if (input.id) {
       const exists = await tx.product.findUnique({ where: { id: input.id } });
       if (!exists) throw new ApiError("Không tìm thấy sản phẩm", 404);
+      previousSlug = exists.slug;
       await tx.product.update({ where: { id: input.id }, data });
       productId = input.id;
+      if (previousSlug !== slug) {
+        await rememberSlugRedirect(tx, productId, previousSlug, slug);
+      }
     } else {
       productId = (await tx.product.create({ data })).id;
     }

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { handleApiError, jsonError, jsonOk } from "@/lib/api";
 import { getOptionalSession, requireSession } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
-import { PUBLISHED_REVIEW_WHERE, recomputeProductRating, reviewDisplayName } from "@/lib/reviews";
+import { PUBLISHED_REVIEW_WHERE, latestReviewableOrderId, recomputeProductRating, reviewDisplayName, reviewEligibility } from "@/lib/reviews";
 
 export async function GET(req: Request) {
   try {
@@ -31,15 +31,7 @@ export async function GET(req: Request) {
         },
       });
       if (!existing) {
-        const order = await prisma.order.findFirst({
-          where: {
-            userId: session.user.id,
-            status: { not: "CANCELLED" },
-            items: { some: { variant: { productId } } },
-          },
-          orderBy: { createdAt: "desc" },
-        });
-        eligibleOrderId = order?.id ?? null;
+        eligibleOrderId = await latestReviewableOrderId(prisma, session.user.id, productId);
       }
     }
 
@@ -70,16 +62,13 @@ export async function POST(req: Request) {
     const session = await requireSession();
     const body = createSchema.parse(await req.json());
 
-    const order = await prisma.order.findFirst({
-      where: {
-        id: body.orderId,
-        userId: session.user.id,
-        status: { not: "CANCELLED" },
-        items: { some: { variant: { productId: body.productId } } },
-      },
+    const allowed = await reviewEligibility(prisma, {
+      userId: session.user.id,
+      productId: body.productId,
+      orderId: body.orderId,
     });
-    if (!order) {
-      return jsonError("Chỉ đánh giá sản phẩm đã mua", 403);
+    if (!allowed) {
+      return jsonError("Chỉ đánh giá khi đơn đã giao hoặc đã hoàn tất", 403);
     }
 
     const review = await prisma.$transaction(async (tx) => {
@@ -90,6 +79,8 @@ export async function POST(req: Request) {
           orderId: body.orderId,
           rating: body.rating,
           comment: body.comment || null,
+          isPublished: false,
+          isAdminCreated: false,
         },
       });
       await recomputeProductRating(tx, body.productId);

@@ -6,6 +6,7 @@ type Tx = Omit<
 >;
 
 export const PUBLISHED_REVIEW_WHERE = { isPublished: true } as const;
+export const CUSTOMER_RATING_WHERE = { isPublished: true, isAdminCreated: false } as const;
 
 export function reviewDisplayName(r: {
   displayName: string | null;
@@ -21,7 +22,7 @@ export async function recomputeProductRating(
   productId: string,
 ) {
   const agg = await db.review.aggregate({
-    where: { productId, ...PUBLISHED_REVIEW_WHERE },
+    where: { productId, ...CUSTOMER_RATING_WHERE },
     _avg: { rating: true },
     _count: { rating: true },
   });
@@ -98,7 +99,7 @@ export async function listPublishedReviews(
     }),
     db.review.groupBy({
       by: ["rating"],
-      where: { isPublished: true },
+      where: { ...CUSTOMER_RATING_WHERE },
       _count: { rating: true },
     }),
   ]);
@@ -134,4 +135,52 @@ export async function listPublishedReviews(
       },
     })),
   };
+}
+
+type ReviewDb = Tx | PrismaClient;
+
+export async function reviewEligibility(
+  db: ReviewDb,
+  args: { userId: string; productId: string; orderId: string },
+) {
+  const order = await db.order.findFirst({
+    where: {
+      id: args.orderId,
+      userId: args.userId,
+      items: { some: { variant: { productId: args.productId } } },
+    },
+    select: { id: true, status: true },
+  });
+  if (!order || order.status === "CANCELLED") return false;
+  if (order.status === "COMPLETED") return true;
+  const items = await db.orderItem.findMany({
+    where: { orderId: order.id, variant: { productId: args.productId } },
+    select: { id: true },
+  });
+  if (items.length === 0) return false;
+  const delivered = await db.shipment.findFirst({
+    where: {
+      orderId: order.id,
+      status: "DELIVERED",
+      items: { some: { orderItemId: { in: items.map((item) => item.id) } } },
+    },
+    select: { id: true },
+  });
+  return Boolean(delivered);
+}
+
+export async function latestReviewableOrderId(db: ReviewDb, userId: string, productId: string) {
+  const orders = await db.order.findMany({
+    where: {
+      userId,
+      status: { not: "CANCELLED" },
+      items: { some: { variant: { productId } } },
+    },
+    orderBy: { createdAt: "desc" },
+    select: { id: true },
+  });
+  for (const order of orders) {
+    if (await reviewEligibility(db, { userId, productId, orderId: order.id })) return order.id;
+  }
+  return null;
 }

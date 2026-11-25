@@ -167,7 +167,7 @@ Một người, ngày làm việc. Bỏ đợt 3.
 | 1 | `feat/growth-do-luong` | Giữ nguyên câu banner. Consent Mode v2 mặc định denied. Sau “Đồng ý tất cả” mới tải `gtag` `G-69N0FCKD7P` và Pixel `1508219437865650`. Không nạp GTM. Purchase một lần mỗi kênh | 2 |
 | 1 | `feat/growth-danh-gia` | Chỉ đơn đã giao, duyệt trước khi hiện, rating đệm không gồm review admin, schema không có sao giả | 2 |
 | 2 | `feat/growth-combo` | Combo và lookbook. Thiếu giá sàn một thành phần thì không lưu combo | 4 |
-| 2 | `feat/growth-bao-cao` | Biên lợi nhuận, tồn, NCC, đối soát, CSV. Cột: mã đơn, sản phẩm, số lượng, doanh thu dòng, giá vốn, phí ship khách trả, phí ship thực, phí thanh toán, đối trừ NCC, hoàn tiền, biên | 4 |
+| 2 | `feat/growth-bao-cao` | Biên lợi nhuận, tồn, NCC, đối soát, CSV và Excel. Cột: mã đơn, sản phẩm, số lượng, doanh thu dòng, giá vốn, phí ship khách trả, phí ship thực, phí thanh toán, đối trừ NCC, hoàn tiền, biên | 4 |
 
 Mỗi nhánh một hoặc vài commit. Không rebase, không reset, không force-push. Không push và không deploy khi chưa có câu “OK deploy”.
 
@@ -197,5 +197,5 @@ Anh bảo mục nào chưa có thì bỏ qua.
 
 ## 6. Còn cần chốt
 
-- “Đã giao” để được đánh giá: shipment `DELIVERED`, đơn `COMPLETED`, hay một trong hai.
-- Đợt 2 có xuất Excel hay chỉ CSV.
+- “Đã giao”: shipment chứa sản phẩm đó có status `DELIVERED`, hoặc đơn `COMPLETED`.
+- Đợt 2 xuất cả CSV và Excel (`.xlsx`).

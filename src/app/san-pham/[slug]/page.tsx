@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/product/product-card";
 import { ProductDetailClient } from "@/components/product/product-detail-client";
@@ -6,6 +7,8 @@ import { ProductReviews } from "@/components/product/product-reviews";
 import { publicCatalogWhere, publicVariants } from "@/lib/catalog-visibility";
 import { sellableTotals } from "@/lib/dropship/service";
 import { prisma } from "@/lib/prisma";
+import { absoluteUrl, isDemoName, jsonLdScript, productJsonLd, siteBaseUrl } from "@/lib/seo";
+import { CUSTOMER_RATING_WHERE } from "@/lib/reviews";
 
 export const dynamic = "force-dynamic";
 
@@ -13,13 +16,27 @@ type Props = {
   params: Promise<{ slug: string }>;
 };
 
-export async function generateMetadata({ params }: Props) {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const product = await prisma.product.findFirst({ where: { slug, ...publicCatalogWhere } });
+  const product = await prisma.product.findFirst({
+    where: { slug, ...publicCatalogWhere },
+    include: { images: { orderBy: { sortOrder: "asc" } } },
+  });
   if (!product) return { title: "Sản phẩm" };
+  const image = product.images.find((item) => item.type !== "video" && !item.isHidden);
+  const canonical = `/san-pham/${product.slug}`;
   return {
     title: product.name,
     description: product.description ?? undefined,
+    alternates: { canonical },
+    robots: isDemoName(product.name) ? { index: false, follow: true } : undefined,
+    openGraph: {
+      title: product.name,
+      description: product.description ?? undefined,
+      url: canonical,
+      type: "website",
+      images: image ? [{ url: image.url, alt: image.alt || product.name }] : undefined,
+    },
   };
 }
 
@@ -36,14 +53,57 @@ export default async function ProductDetailPage({ params }: Props) {
 
   if (!product) notFound();
 
-  const sellable = await sellableTotals(prisma, product.variants.map((variant) => variant.id));
+  const [sellable, rating] = await Promise.all([
+    sellableTotals(prisma, product.variants.map((variant) => variant.id)),
+    prisma.review.aggregate({
+      where: { productId: product.id, ...CUSTOMER_RATING_WHERE },
+      _avg: { rating: true },
+      _count: { rating: true },
+    }),
+  ]);
+  const customerReviewCount = rating._count.rating;
+  const customerRating =
+    customerReviewCount > 0 && rating._avg.rating != null
+      ? Math.round(rating._avg.rating * 10) / 10
+      : null;
   const productView = {
     ...product,
+    customerRating,
+    customerReviewCount,
     variants: product.variants.map((variant) => ({
       ...variant,
       stock: sellable.get(variant.id) ?? 0,
     })),
   };
+  const base = siteBaseUrl();
+  const pageUrl = absoluteUrl(`/san-pham/${product.slug}`, base);
+  const photo = product.images.find((item) => item.type !== "video" && !item.isHidden);
+  const prices = product.variants.map((variant) => variant.price).filter((price) => price > 0);
+  const crumbs = [
+    { name: "Trang chủ", url: base },
+    { name: "Sản phẩm", url: absoluteUrl("/san-pham", base) },
+  ];
+  if (product.category) {
+    crumbs.push({
+      name: product.category.name,
+      url: absoluteUrl(`/san-pham?category=${product.category.slug}`, base),
+    });
+  }
+  crumbs.push({ name: product.name, url: pageUrl });
+  const structured = productJsonLd({
+    name: product.name,
+    description: product.description,
+    url: pageUrl,
+    image: photo ? absoluteUrl(photo.url, base) : null,
+    sku: product.variants[0]?.sku ?? null,
+    price: prices.length ? Math.min(...prices) : null,
+    availability: product.variants.some((variant) => (sellable.get(variant.id) ?? 0) > 0)
+      ? "InStock"
+      : "OutOfStock",
+    breadcrumbs: crumbs,
+    customerReviewCount,
+    customerRating,
+  });
 
   const shippingRow = await prisma.siteSettings.findUnique({
     where: { id: "default" },
@@ -69,6 +129,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 md:px-6 md:py-12">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(structured) }} />
       <nav className="mb-6 text-xs text-neutral-500 md:text-xs">
         <div className="-mx-1 flex flex-wrap items-center gap-x-0 gap-y-1 max-md:text-sm max-md:leading-relaxed max-md:py-0.5">
           <Link href="/" className="rounded px-1 py-1 hover:text-neutral-800 max-md:py-1.5">

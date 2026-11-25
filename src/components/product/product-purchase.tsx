@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Heart,
   Minus,
@@ -40,6 +40,8 @@ type Props = {
     isNew?: boolean;
     rating: number;
     reviewCount: number;
+    customerRating: number | null;
+    customerReviewCount: number;
     images: {
       url: string;
       color?: string | null;
@@ -85,16 +87,17 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
         .sort((a, b) => sizeRank(a.size) - sizeRank(b.size)),
     [product.variants, color],
   );
-  const [size, setSize] = useState(() =>
-    pickSizeForColor(product.variants, color, ""),
-  );
+  const [size, setSize] = useState(() => pickSizeForColor(product.variants, color, ""));
+  const variantKey = product.variants.map((variant) => variant.id).join(",");
+  const sizeKey = `${color}|${variantKey}`;
+  const [trackedSizeKey, setTrackedSizeKey] = useState(sizeKey);
+  if (trackedSizeKey !== sizeKey) {
+    setTrackedSizeKey(sizeKey);
+    setSize((current) => pickSizeForColor(product.variants, color, current));
+  }
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const [showChart, setShowChart] = useState(false);
-
-  useEffect(() => {
-    setSize((current) => pickSizeForColor(product.variants, color, current));
-  }, [color, product.variants]);
 
   const selected =
     product.variants.find((v) => v.color === color && v.size === size) ??
@@ -171,15 +174,15 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
         <h1 className="mt-3 type-title text-3xl font-extrabold text-neutral-900 md:text-4xl">
           {product.name}
         </h1>
-        <div className="mt-3 flex items-center gap-2 text-sm text-neutral-500">
-          <span className="text-amber-500">
-            {"★".repeat(Math.round(Math.min(5, product.rating || 5)))}
-          </span>
-          <span className="font-medium text-neutral-800">
-            {product.rating > 0 ? product.rating.toFixed(1) : "5.0"}
-          </span>
-          <span>({product.reviewCount} đánh giá)</span>
-        </div>
+        {product.customerReviewCount > 0 && product.customerRating != null ? (
+          <div className="mt-3 flex items-center gap-2 text-sm text-neutral-500">
+            <span className="text-amber-500">
+              {"★".repeat(Math.round(Math.min(5, product.customerRating)))}
+            </span>
+            <span className="font-medium text-neutral-800">{product.customerRating.toFixed(1)}</span>
+            <span>({product.customerReviewCount} đánh giá)</span>
+          </div>
+        ) : null}
       </div>
 
       <div className="flex flex-wrap items-end gap-3">

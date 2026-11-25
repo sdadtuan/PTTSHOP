@@ -327,6 +327,8 @@ model Review {
   rating    Int
   comment   String?
   /// When false, hidden from storefront but kept in admin.
+  /// Customer reviews are created with false in application code. The column
+  /// default stays true so existing rows are not rewritten.
   isPublished Boolean @default(true)
   /// Admin-entered review (no purchase); shown with displayName.
   isAdminCreated Boolean @default(false)
@@ -961,4 +963,28 @@ model EmailOutbox {
   lastError   String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+}
+
+/// Old product slug → current slug. Rows are inserted when a slug changes.
+model SlugRedirect {
+  id        String   @id @default(cuid())
+  fromSlug  String   @unique
+  toSlug    String
+  productId String?
+  createdAt DateTime @default(now())
+
+  @@index([toSlug])
+}
+
+/// One purchase signal per order and channel. eventId is the order number.
+model AnalyticsEvent {
+  id          String   @id @default(cuid())
+  orderNumber String
+  channel     String
+  eventName   String
+  eventId     String
+  createdAt   DateTime @default(now())
+
+  @@unique([orderNumber, channel, eventName])
+  @@index([eventId])
 }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import QRCode from "qrcode";
 import { PaymentInstructions } from "@/components/checkout/payment-instructions";
+import { PurchaseBeacon } from "@/components/legal/purchase-beacon";
 import { formatVnd } from "@/lib/format";
 import { orderReceipt } from "@/lib/order-receipt";
 import { canShowReceipt, RECEIPT_COOKIE } from "@/lib/order-receipt-token";
@@ -111,8 +112,10 @@ export default async function OrderSuccessPage({ searchParams }: Props) {
         />
       ) : null}
 
-      {receipt ? (
-        <div className="mt-8 border border-neutral-100 bg-white p-5 text-sm">
+      {receipt && row ? (
+        <>
+          <PurchaseBeacon orderNumber={row.orderNumber} value={row.total} />
+          <div className="mt-8 border border-neutral-100 bg-white p-5 text-sm">
           <ul className="space-y-3">
             {receipt.lines.map((line, index) => (
               <li key={`${line.label}-${index}`} className="flex justify-between gap-3">
@@ -146,6 +149,7 @@ export default async function OrderSuccessPage({ searchParams }: Props) {
             </div>
           </div>
         </div>
+        </>
       ) : null}
 
       <div className="mt-8 flex justify-center gap-3">

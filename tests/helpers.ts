@@ -15,6 +15,8 @@ export function resetTestDb() {
 }
 
 export async function cleanDb(prisma: PrismaClient) {
+  await prisma.analyticsEvent.deleteMany();
+  await prisma.slugRedirect.deleteMany();
   await prisma.supplierDebit.deleteMany();
   await prisma.supplierOrder.deleteMany();
   await prisma.syncRun.deleteMany();

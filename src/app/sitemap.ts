@@ -2,12 +2,13 @@ import type { MetadataRoute } from "next";
 import { companyPolicyLinks } from "@/content/company";
 import { publicCatalogWhere } from "@/lib/catalog-visibility";
 import { prisma } from "@/lib/prisma";
+import { isDemoName, siteBaseUrl } from "@/lib/seo";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = process.env.AUTH_URL || "http://localhost:3000";
+  const base = siteBaseUrl();
   const products = await prisma.product.findMany({
     where: publicCatalogWhere,
-    select: { slug: true, updatedAt: true },
+    select: { name: true, slug: true, updatedAt: true },
   });
 
   return [
@@ -21,11 +22,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly" as const,
       priority: 0.4,
     })),
-    ...products.map((p) => ({
-      url: `${base}/san-pham/${p.slug}`,
-      lastModified: p.updatedAt,
-      changeFrequency: "weekly" as const,
-      priority: 0.8,
-    })),
+    ...products
+      .filter((product) => !isDemoName(product.name))
+      .map((product) => ({
+        url: `${base}/san-pham/${product.slug}`,
+        lastModified: product.updatedAt,
+        changeFrequency: "weekly" as const,
+        priority: 0.8,
+      })),
   ];
 }

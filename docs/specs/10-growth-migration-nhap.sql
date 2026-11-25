@@ -1,26 +1,6 @@
--- Nháp bước 10. Nằm ngoài prisma/migrations. Không chạy bằng migrate deploy.
+-- Nháp đợt 2. Nằm ngoài prisma/migrations. Không chạy bằng migrate deploy.
+-- SlugRedirect và AnalyticsEvent đã nằm trong prisma/migrations/20261125170000_growth_seo_measure.
 -- Chỉ thêm bảng và cột. Không UPDATE, không DELETE.
-
-CREATE TABLE "SlugRedirect" (
-    "id" TEXT NOT NULL,
-    "fromSlug" TEXT NOT NULL,
-    "toSlug" TEXT NOT NULL,
-    "productId" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "SlugRedirect_pkey" PRIMARY KEY ("id")
-);
-CREATE UNIQUE INDEX "SlugRedirect_fromSlug_key" ON "SlugRedirect"("fromSlug");
-
-CREATE TABLE "AnalyticsEvent" (
-    "id" TEXT NOT NULL,
-    "eventId" TEXT NOT NULL,
-    "eventName" TEXT NOT NULL,
-    "orderNumber" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "AnalyticsEvent_pkey" PRIMARY KEY ("id")
-);
-CREATE UNIQUE INDEX "AnalyticsEvent_eventId_key" ON "AnalyticsEvent"("eventId");
-CREATE UNIQUE INDEX "AnalyticsEvent_orderNumber_eventName_key" ON "AnalyticsEvent"("orderNumber", "eventName");
 
 CREATE TABLE "Combo" (
     "id" TEXT NOT NULL,

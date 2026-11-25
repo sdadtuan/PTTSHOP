@@ -1,4 +1,5 @@
 import { Fragment, type CSSProperties, type ReactNode } from "react";
+import type { Metadata } from "next";
 import { preload } from "react-dom";
 import { StorefrontImage } from "@/components/product/storefront-image";
 import Link from "next/link";
@@ -61,6 +62,10 @@ function padProducts(list: CardProduct[], need: number, pool: CardProduct[]) {
   }
   return out.slice(0, need);
 }
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 export default async function HomePage() {
   const [{ sections }, categories, featured, catalog] = await Promise.all([

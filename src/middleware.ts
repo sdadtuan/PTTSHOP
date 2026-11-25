@@ -5,7 +5,35 @@ import { adminPermissionDenied } from "@/lib/rbac";
 
 const CMS_PREVIEW_HEADER = "x-cms-preview";
 
-export default auth((req) => {
+async function oldSlugRedirect(req: { nextUrl: URL; headers: Headers }) {
+  const match = req.nextUrl.pathname.match(/^\/san-pham\/([^/]+)$/);
+  if (!match) return null;
+  let from = match[1];
+  try {
+    from = decodeURIComponent(from);
+  } catch {
+    return null;
+  }
+  const port = process.env.PORT || "3000";
+  const probe = new URL("/api/slug-redirect", `http://127.0.0.1:${port}`);
+  probe.searchParams.set("from", from);
+  try {
+    const res = await fetch(probe, { cache: "no-store", signal: AbortSignal.timeout(1500) });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { to?: string | null };
+    if (!data.to || data.to === from) return null;
+    const dest = new URL(req.nextUrl.href);
+    dest.pathname = `/san-pham/${data.to}`;
+    return NextResponse.redirect(dest, 301);
+  } catch {
+    return null;
+  }
+}
+
+export default auth(async (req) => {
+  const redirected = await oldSlugRedirect(req);
+  if (redirected) return redirected;
+
   const path = req.nextUrl.pathname;
 
   if (path === "/") {
@@ -39,5 +67,5 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/", "/admin", "/admin/:path*"],
+  matcher: ["/", "/admin", "/admin/:path*", "/san-pham/:path*"],
 };

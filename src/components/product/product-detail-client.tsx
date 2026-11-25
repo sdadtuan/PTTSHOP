@@ -30,6 +30,8 @@ type Props = {
     isNew: boolean;
     rating: number;
     reviewCount: number;
+    customerRating: number | null;
+    customerReviewCount: number;
     images: GalleryImage[];
     variants: Variant[];
     detailBulletsJson?: string | null;

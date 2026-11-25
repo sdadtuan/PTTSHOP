@@ -19,7 +19,8 @@ export function CookieBanner() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    setOpen(choice() === "");
+    const frame = window.requestAnimationFrame(() => setOpen(choice() === ""));
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   if (!open || pathname.startsWith("/admin")) return null;
@@ -47,6 +48,7 @@ export function CookieBanner() {
             onClick={() => {
               save("all");
               setOpen(false);
+              window.dispatchEvent(new Event("pttshop-consent"));
             }}
           >
             Đồng ý tất cả

@@ -7,11 +7,15 @@ import { SiteBrandProvider } from "@/components/cms/site-brand-context";
 import { FloatingSocial } from "@/components/layout/floating-social";
 import { Footer } from "@/components/layout/footer";
 import { CookieBanner } from "@/components/legal/cookie-banner";
+import { Measurement } from "@/components/legal/measurement";
 import { Header } from "@/components/layout/header";
 import { Providers } from "@/components/providers";
 import { getSiteSettingsForRequest, getStorefrontLayoutForRequest } from "@/lib/cms/published";
 import { DEFAULT_SITE_SETTINGS } from "@/lib/cms/types";
 import { displayBrandName } from "@/lib/public-brand";
+import { CONSENT_DEFAULT_SCRIPT } from "@/lib/tracking";
+import { jsonLdScript, organizationJsonLd, siteBaseUrl } from "@/lib/seo";
+import Script from "next/script";
 import "./globals.css";
 
 /**
@@ -29,12 +33,23 @@ const sans = Be_Vietnam_Pro({
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettingsForRequest();
   const brand = displayBrandName(settings.brandName || DEFAULT_SITE_SETTINGS.brandName);
+  const title = displayBrandName(settings.seoTitle || DEFAULT_SITE_SETTINGS.seoTitle);
+  const description = displayBrandName(settings.seoDescription || DEFAULT_SITE_SETTINGS.seoDescription);
   return {
+    metadataBase: new URL(siteBaseUrl()),
     title: {
-      default: displayBrandName(settings.seoTitle || DEFAULT_SITE_SETTINGS.seoTitle),
+      default: title,
       template: `%s | ${brand}`,
     },
-    description: displayBrandName(settings.seoDescription || DEFAULT_SITE_SETTINGS.seoDescription),
+    description,
+    openGraph: {
+      title,
+      description,
+      url: "/",
+      siteName: brand,
+      locale: "vi_VN",
+      type: "website",
+    },
     icons: {
       icon: [
         { url: "/favicon.ico" },
@@ -61,12 +76,22 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           ["--accent-soft"]: `color-mix(in oklab, ${accent} 12%, white)`,
         } as CSSProperties);
 
+  const brand = displayBrandName(settings.brandName || DEFAULT_SITE_SETTINGS.brandName);
   return (
     <html lang="vi" className={`${sans.variable} h-full`}>
       <body
         className="flex min-h-full flex-col antialiased"
         style={brandStyle}
       >
+        <Script id="consent-default" strategy="beforeInteractive">
+          {CONSENT_DEFAULT_SCRIPT}
+        </Script>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: jsonLdScript(organizationJsonLd({ name: brand, url: siteBaseUrl() })),
+          }}
+        />
         <Providers>
           <SiteBrandProvider settings={settings}>
             <StorefrontLayoutProvider value={layoutCms}>
@@ -75,6 +100,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
                 <main className="min-w-0 flex-1 pb-20 md:pb-0">{children}</main>
                 <Footer />
                 <CookieBanner />
+                <Measurement />
                 <FloatingSocial />
               </CartProvider>
             </StorefrontLayoutProvider>
