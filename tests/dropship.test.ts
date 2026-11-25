@@ -5,7 +5,7 @@ import { pullCjDropshipping, pullGoogleSheet } from "@/lib/dropship/adapters";
 import { assertDemoSupplierAllowed, databaseName } from "@/lib/dropship/demo";
 import { effectiveFloor, listedPriceFromCost, DEFAULT_FLOOR_PARAMS } from "@/lib/dropship/floor";
 import { poFile, slaScan, trackingLabel } from "@/lib/dropship/orders";
-import { allocateQuantity } from "@/lib/dropship/stock";
+import { allocateQuantity, sellableQuantity } from "@/lib/dropship/stock";
 import { parseSupplierCsv } from "@/lib/dropship/sync";
 import { applySupplierCsv, ensureDemoSupplier, recordSupplierDebit, scanSupplierSlas } from "@/lib/dropship/service";
 import { decideShippingFee, normalizeShippingConfig } from "@/lib/shipping/policy";
@@ -13,6 +13,81 @@ import { publicShipments } from "@/lib/shipping/service";
 import { testPgUrl } from "./pg";
 
 const now = new Date("2026-11-25T04:00:00.000Z");
+
+describe("tồn an toàn kho riêng và tồn NCC", () => {
+  it("stores 0 when a new variant omits warehouse safety stock", async () => {
+    const db = new PrismaClient();
+    const stamp = Date.now();
+    const product = await db.product.create({
+      data: {
+        name: "Áo tồn 1",
+        slug: `ao-ton1-${stamp}`,
+        gender: "UNISEX",
+        variants: { create: { sku: `ton1-${stamp}`, color: "Đen", size: "M", price: 100_000, stock: 1 } },
+      },
+      include: { variants: true },
+    });
+    expect(product.variants[0]?.safetyStock).toBe(0);
+    expect(sellableQuantity({
+      stock: product.variants[0].stock,
+      safetyStock: product.variants[0].safetyStock,
+      isPurchasable: product.variants[0].isPurchasable,
+      hasFloor: false,
+      sources: [],
+      now,
+    }).total).toBe(1);
+    await db.$disconnect();
+  });
+
+  it("sells own stock of 1 when warehouse safety stock stays at 0", () => {
+    const row = sellableQuantity({
+      stock: 1,
+      safetyStock: 0,
+      isPurchasable: true,
+      hasFloor: true,
+      sources: [],
+      now,
+    });
+    expect(row).toEqual({ own: 1, supplier: 0, total: 1, supplierId: null });
+  });
+
+  it("keeps supplier safety at 2 and ignores supplier stock older than 24 hours", () => {
+    const fresh = sellableQuantity({
+      stock: 1,
+      safetyStock: 0,
+      isPurchasable: true,
+      hasFloor: true,
+      sources: [{
+        supplierId: "ncc",
+        priority: 1,
+        supplierStock: 5,
+        safetyStock: 2,
+        stockUpdatedAt: now,
+        isActive: true,
+        costPrice: 80_000,
+      }],
+      now,
+    });
+    expect(fresh.total).toBe(4);
+    const stale = sellableQuantity({
+      stock: 1,
+      safetyStock: 0,
+      isPurchasable: true,
+      hasFloor: true,
+      sources: [{
+        supplierId: "ncc",
+        priority: 1,
+        supplierStock: 5,
+        safetyStock: 2,
+        stockUpdatedAt: new Date(now.getTime() - 25 * 60 * 60 * 1000),
+        isActive: true,
+        costPrice: 80_000,
+      }],
+      now,
+    });
+    expect(stale).toEqual({ own: 1, supplier: 0, total: 1, supplierId: null });
+  });
+});
 
 describe("TC-07 giá sàn và ẩn SKU", () => {
   it("hides a SKU when the new cost puts the selling price under the floor and does not change the price", async () => {

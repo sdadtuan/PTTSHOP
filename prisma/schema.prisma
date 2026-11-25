@@ -216,8 +216,8 @@ model ProductVariant {
   /// Giá vốn, chỉ trang quản trị. Null = chưa chốt.
   costPrice     Int?
   stock         Int            @default(0)
-  /// Tồn an toàn của kho riêng. Dòng cũ nhận 2, không đổi số tồn.
-  safetyStock   Int            @default(2)
+  /// Tồn an toàn kho riêng. Mặc định 0 để giữ cách bán hiện tại. Admin sửa từng biến thể.
+  safetyStock   Int            @default(0)
   /// false = ẩn SKU khỏi giỏ. Không tự bật lại khi giá vốn giảm.
   isPurchasable Boolean        @default(true)
   productId     String

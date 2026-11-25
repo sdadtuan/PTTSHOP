@@ -59,7 +59,7 @@ export default function SupplierSkuPage() {
           <input name="priority" type="number" min={1} defaultValue={1} className="rounded border px-2 py-2" />
           <input name="costPrice" type="number" min={0} required placeholder="Giá vốn" className="rounded border px-2 py-2" />
           <input name="supplierStock" type="number" min={0} required placeholder="Tồn NCC" className="rounded border px-2 py-2" />
-          <input name="safetyStock" type="number" min={0} defaultValue={2} placeholder="Tồn an toàn" className="rounded border px-2 py-2" />
+          <input name="safetyStock" type="number" min={0} defaultValue={2} placeholder="Tồn an toàn NCC" className="rounded border px-2 py-2" />
           <AdminButton type="submit">Lưu ánh xạ</AdminButton>
         </form>
       </AdminCard>

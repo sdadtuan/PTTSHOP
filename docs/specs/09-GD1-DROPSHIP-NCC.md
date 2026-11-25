@@ -6,7 +6,7 @@ Repo không có bản đầy đủ FR-801…807. Lời TC-07 do anh chốt ngày
 
 Phạm vi làm thật ở Phần B: hồ sơ NCC, ánh xạ SKU, file CSV và Google Sheet dạng CSV công khai, nhập tay, đồng bộ theo lịch, phiếu đặt hàng tải file, email soạn sẵn để người gửi, cảnh báo quá SLA, tách kiện. CJ Dropshipping chỉ là `SupplierAdapter` trả lỗi “chưa nối”, không gọi mạng và không có cột khoá API. Không thu thập Shopee, Lazada, TikTok Shop, Tiki.
 
-Migration áp dụng: `prisma/migrations/20261125120000_dropship_supplier`. Chỉ thêm bảng và cột. File `docs/specs/09-dropship-migration-nhap.sql` là bản nháp, không chạy.
+Migration áp dụng: `prisma/migrations/20261125120000_dropship_supplier` thêm bảng và cột. `20261125130000_own_safety_stock_default_zero` đổi default tồn an toàn kho về 0 và đưa các dòng vừa nhận default 2 về 0. File `docs/specs/09-dropship-migration-nhap.sql` là bản nháp, không chạy.
 
 ## 1. Schema đề xuất
 
@@ -15,7 +15,7 @@ Tiền là `INTEGER`, đơn vị đồng. Id là `TEXT` cuid, cùng kiểu các 
 Hai cột thêm trên bảng cũ, cả hai có mặc định nên dòng sẵn có giữ nguyên giá và tồn:
 
 - `ProductVariant.isPurchasable BOOLEAN NOT NULL DEFAULT true`
-- `ProductVariant.safetyStock INTEGER NOT NULL DEFAULT 2`
+- `ProductVariant.safetyStock INTEGER NOT NULL DEFAULT 0`
 - `Shipment.fulfillmentSource TEXT` để trống trên vận đơn cũ. Giá trị mới: `WAREHOUSE` hoặc `SUPPLIER`.
 
 ### Supplier
@@ -56,7 +56,7 @@ Một biến thể có nhiều NCC. Một NCC có nhiều biến thể.
 | priority | INTEGER | Số nhỏ hơn được xét trước |
 | costPrice | INTEGER | Giá vốn, đồng |
 | supplierStock | INTEGER | Tồn NCC báo |
-| safetyStock | INTEGER default 0 | Tồn an toàn của riêng dòng này |
+| safetyStock | INTEGER default 2 | Tồn an toàn của riêng dòng NCC |
 | stockUpdatedAt | TIMESTAMP(3) | Ngày cập nhật tồn |
 | isActive | BOOLEAN default true | |
 
@@ -158,7 +158,7 @@ tồn NCC khả dụng   = max(0, supplierStock − SupplierSku.safetyStock)
 tồn bán            = tồn riêng khả dụng + tồn NCC khả dụng
 ```
 
-Không cộng tồn của mọi NCC. Hết NCC ưu tiên thì xét NCC kế tiếp. `safetyStock` mặc định 0 nên công thức tạm thời trùng với tồn hiện tại cho tới khi anh chốt số tồn an toàn. Hạn “tồn còn mới” là [cần chốt]; đề xuất 24 giờ, quá hạn thì coi tồn NCC bằng 0 và báo trong `SyncRun`.
+Không cộng tồn của mọi NCC. Hết NCC ưu tiên thì xét NCC kế tiếp. Tồn an toàn kho riêng mặc định 0, admin sửa từng biến thể. Tồn an toàn NCC mặc định 2. Tồn NCC cũ hơn 24 giờ không được cộng vào số bán.
 
 SKU `isPurchasable = false` thì tồn bán bằng 0 dù kho còn hàng.
 
@@ -248,7 +248,7 @@ Cách thử file mẫu khi Phần B đã chạy, trên database test local, khô
 ## 8. Đã chốt
 
 1. Chưa có NCC thật. `NCC-DEMO` chỉ được tạo trên database local hoặc `pttshop_staging`. Migration không seed. Hàm tạo từ chối khi tên database là `pttshop_prod`.
-2. Tồn an toàn mặc định 2 mỗi biến thể, sửa được theo NCC.
+2. Tồn an toàn kho riêng mặc định 0. Tồn an toàn 2 chỉ áp cho phần tồn NCC và sửa được theo dòng NCC. Admin vẫn sửa `safetyStock` từng biến thể kho.
 3. SLA mặc định 48 giờ giao đơn vị vận chuyển. Quá 24 giờ chưa có mã vận đơn thì cảnh báo admin một lần. Quá 48 giờ thì phiếu `SLA_BREACH`. Không tự huỷ đơn khách.
 4. Giá sàn hiệu lực = max(giá sàn nhập tay, giá niêm yết từ công thức G). Tham số G sửa ở `/admin/quy-tac-gia`.
 5. SKU chưa có giá sàn: phần NCC không bán (`supplierQty = 0`). Tồn kho riêng vẫn bán. Không tự đặt `isPurchasable = false` chỉ vì thiếu sàn.

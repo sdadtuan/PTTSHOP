@@ -3,6 +3,7 @@ export type VariantLike = {
   color: string;
   size: string;
   stock: number;
+  safetyStock?: number;
   price: number;
   sku?: string;
 };

@@ -9,6 +9,7 @@ const patchSchema = z.object({
   price: z.number().int().positive().optional(),
   compareAt: z.number().int().positive().optional().nullable(),
   stock: z.number().int().nonnegative().optional(),
+  safetyStock: z.number().int().nonnegative().optional(),
 });
 
 export async function PATCH(req: Request) {
@@ -16,7 +17,7 @@ export async function PATCH(req: Request) {
     const session = await enforceAdmin(req);
     const body = patchSchema.parse(await req.json());
     if (body.price != null || body.compareAt !== undefined) assertScope(session.access, ["products.write", "pricing.write"]);
-    if (body.stock != null) assertScope(session.access, ["products.write", "shipping.write"]);
+    if (body.stock != null || body.safetyStock != null) assertScope(session.access, ["products.write", "shipping.write"]);
     const { id, ...data } = body;
     const before = await prisma.productVariant.findUnique({ where: { id }, select: { price: true, compareAt: true, stock: true, costPrice: true } });
     const variant = await prisma.productVariant.update({

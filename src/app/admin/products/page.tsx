@@ -56,6 +56,7 @@ type Product = {
     id: string;
     sku: string;
     stock: number;
+    safetyStock?: number;
     price: number;
     color: string;
     size: string;
@@ -100,13 +101,27 @@ export default function AdminProductsPage() {
   }
 
   useEffect(() => {
-    void load();
+    void Promise.all([
+      fetch("/api/admin/products").then(async (res) => ({ res, data: await res.json() })),
+      fetch("/api/admin/categories").then(async (res) => ({ res, data: await res.json() })),
+    ]).then(([productsRes, categoriesRes]) => {
+      if (!productsRes.res.ok) setError(productsRes.data.error || "Không tải được sản phẩm");
+      else {
+        setError("");
+        setProducts(productsRes.data.products || []);
+      }
+      if (categoriesRes.res.ok) setCategories(categoriesRes.data.categories || []);
+      setLoading(false);
+    }).catch(() => {
+      setError("Không tải được sản phẩm");
+      setLoading(false);
+    });
   }, []);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const initial = params.get("q");
-    if (initial) setQ(initial);
+    const initial = new URLSearchParams(window.location.search).get("q");
+    if (!initial) return;
+    void Promise.resolve(initial).then((value) => setQ(value));
   }, []);
 
   const filtered = useMemo(() => {
@@ -185,6 +200,15 @@ export default function AdminProductsPage() {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, stock }),
+    });
+    await load();
+  }
+
+  async function updateSafetyStock(id: string, safetyStock: number) {
+    await fetch("/api/admin/variants", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, safetyStock }),
     });
     await load();
   }
@@ -624,6 +648,21 @@ export default function AdminProductsPage() {
                                             className="w-16 rounded border border-[var(--admin-border)] px-1 py-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--admin-accent)]/25"
                                             onBlur={(e) =>
                                               void updateStock(v.id, Number(e.target.value))
+                                            }
+                                          />
+                                        </label>
+                                        <label className="flex shrink-0 items-center gap-1.5">
+                                          <span className="text-[var(--admin-text-muted)]">
+                                            An toàn
+                                          </span>
+                                          <input
+                                            type="number"
+                                            min={0}
+                                            defaultValue={v.safetyStock ?? 0}
+                                            aria-label={`Tồn an toàn kho ${v.color} ${v.size}`}
+                                            className="w-14 rounded border border-[var(--admin-border)] px-1 py-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--admin-accent)]/25"
+                                            onBlur={(e) =>
+                                              void updateSafetyStock(v.id, Number(e.target.value))
                                             }
                                           />
                                         </label>
