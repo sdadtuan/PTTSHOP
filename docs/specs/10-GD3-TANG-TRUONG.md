@@ -68,9 +68,12 @@ Title trang chủ trên production ngắn hơn câu mặc định trong code, n�
 
 Vì chưa gắn script, từ chối cookie hiện không tạo request đo lường. TC-12 đúng với hiện trạng, nhưng chưa có bộ chặn để khi sau này gắn ID.
 
-Biến sẽ dùng, chỉ tên, chưa đọc giá trị và chưa thêm vào code:
+Anh đã gửi container Google Tag Manager `GTM-PQX685KW` (script `gtm.js?id=GTM-PQX685KW` cộng `dataLayer` và `gtag('js', new Date())`). Đây là mã GTM, không phải Measurement ID dạng `G-`. Đoạn script chưa gọi `gtag('config', ...)` và chưa có sự kiện `gtm.start` của snippet GTM chuẩn. Chưa dán vào layout. Khi làm đợt đo lường, trang chỉ tải `https://www.googletagmanager.com/gtm.js?id=GTM-PQX685KW` sau khi cookie là `all`. Chưa chọn hoặc chọn “Chỉ cookie cần thiết” thì không có request tới `googletagmanager.com`.
 
-- `GA4_MEASUREMENT_ID`
+Biến sẽ dùng, chỉ tên, chưa đọc file môi trường và chưa thêm vào code:
+
+- `GTM_CONTAINER_ID` — giá trị đã chốt: `GTM-PQX685KW`
+- `GA4_MEASUREMENT_ID` — chưa có. GA4 nếu nằm trong container GTM thì không cần mã `G-` trên trang
 - `META_PIXEL_ID`
 - `META_CAPI_TOKEN`
 
@@ -153,7 +156,7 @@ Một người, ngày làm việc. Ước lượng, chưa tính thời gian ch�
 | Đợt | Nhánh con từ `feat/growth` | Việc | Ngày |
 |---|---|---|---|
 | 1 | `feat/growth-seo` | Canonical, Open Graph, sitemap bổ sung, JSON-LD Product/Offer/BreadcrumbList/Organization, bảng slug và 301 | 3 |
-| 1 | `feat/growth-do-luong` | Banner giữ nguyên cho tới khi chốt chữ. GA4, Pixel, CAPI tắt khi thiếu ID hoặc chưa đồng ý. Purchase một lần | 3 |
+| 1 | `feat/growth-do-luong` | Banner giữ nguyên cho tới khi chốt chữ. Tải GTM `GTM-PQX685KW` chỉ khi cookie là `all`. Pixel và CAPI tắt khi thiếu ID hoặc chưa đồng ý. Purchase một lần | 3 |
 | 1 | `feat/growth-danh-gia` | Chỉ đơn đã giao, duyệt trước khi hiện, rating đệm không gồm review admin, schema không có sao giả | 2 |
 | 2 | `feat/growth-combo` | Combo và lookbook, giá combo không dưới tổng sàn | 4 |
 | 2 | `feat/growth-bao-cao` | Biên lợi nhuận, tồn, NCC, đối soát, CSV | 4 |
@@ -168,7 +171,7 @@ Mỗi nhánh một hoặc vài commit. Không rebase, không reset, không force
 
 Chưa chạy trong Phần A.
 
-- TC-12: cookie `essential` hoặc chưa chọn thì không có request tới GA4 và Meta, không gọi CAPI.
+- TC-12: cookie `essential` hoặc chưa chọn thì không có request tới `googletagmanager.com`, GA4 và Meta, không gọi CAPI.
 - Purchase: trang cảm ơn gửi một lần. Tải lại không tạo thêm `AnalyticsEvent`. `transaction_id` bằng mã đơn.
 - `event_id` trên Pixel và CAPI là một chuỗi.
 - JSON-LD sản phẩm không có `review` hay `aggregateRating` khi chưa có review khách đã duyệt.
@@ -177,7 +180,7 @@ Chưa chạy trong Phần A.
 
 ## 5. Cần anh chốt
 
-- Đã có tài khoản GA4 và Meta Pixel chưa. Chưa có thì đợt đo lường chỉ làm cổng tắt.
+- Google: đã chốt container `GTM-PQX685KW`. Chưa có mã GA4 dạng `G-`. Meta Pixel chưa gửi.
 - Giữ nguyên câu banner hiện tại hay sửa. Câu đang chạy: “Website dùng cookie cần thiết cho đăng nhập và giỏ hàng. Cookie đo lường chỉ chạy khi bạn đồng ý.”
 - Số `Product.rating` đang lưu (kể cả 4.8 từ script hoodie và review admin) có được ẩn trên cửa hàng cho tới khi có review khách đã duyệt không. Đề xuất: ẩn, không xóa số trong database.
 - Thành phần combo chưa có giá sàn thì chặn cả combo, hay chỉ cộng các thành phần đã có sàn.
