@@ -1,6 +1,15 @@
 import { readFileSync } from "node:fs";
 import { PrismaClient } from "@prisma/client";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("@/auth", () => ({ auth: async () => null }));
+vi.mock("next/headers", () => ({
+  cookies: async () => ({
+    get: () => undefined,
+    set: () => undefined,
+    delete: () => undefined,
+  }),
+}));
 import { pullCjDropshipping, pullGoogleSheet } from "@/lib/dropship/adapters";
 import { assertDemoSupplierAllowed, databaseName } from "@/lib/dropship/demo";
 import { effectiveFloor, listedPriceFromCost, DEFAULT_FLOOR_PARAMS } from "@/lib/dropship/floor";
@@ -8,6 +17,7 @@ import { poFile, slaScan, trackingLabel } from "@/lib/dropship/orders";
 import { allocateQuantity, sellableQuantity } from "@/lib/dropship/stock";
 import { parseSupplierCsv } from "@/lib/dropship/sync";
 import { applySupplierCsv, ensureDemoSupplier, recordSupplierDebit, scanSupplierSlas } from "@/lib/dropship/service";
+import { POST as placeOrder } from "@/app/api/orders/route";
 import { decideShippingFee, normalizeShippingConfig } from "@/lib/shipping/policy";
 import { publicShipments } from "@/lib/shipping/service";
 import { testPgUrl } from "./pg";
@@ -338,6 +348,104 @@ describe("nhật ký đồng bộ và adapter", () => {
     const db = new PrismaClient();
     const created = await ensureDemoSupplier(db, testPgUrl());
     expect(created.code).toBe("NCC-DEMO");
+    await db.$disconnect();
+  });
+});
+
+describe("đặt hàng ghi sau khi kiểm tra", () => {
+  function orderBody(variantId: string, consents: Array<{ purpose: "delivery"; granted: boolean }>) {
+    return {
+      customerName: "Kiem tra don",
+      customerPhone: "0901234567",
+      customerEmail: "",
+      address: "1 Nguyen Hue",
+      provinceCode: "79",
+      wardCode: "26506",
+      paymentMethod: "COD",
+      consents,
+      items: [{ variantId, quantity: 3 }],
+    };
+  }
+
+  async function postOrder(body: ReturnType<typeof orderBody>) {
+    return placeOrder(new Request("http://localhost/api/orders", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    }));
+  }
+
+  it("returns 400 and writes nothing when delivery consent is missing", async () => {
+    const db = new PrismaClient();
+    const stamp = Date.now();
+    const product = await db.product.create({
+      data: {
+        name: "Áo chưa đồng ý",
+        slug: `chua-dong-y-${stamp}`,
+        gender: "UNISEX",
+        variants: { create: { sku: `chua-${stamp}`, color: "Đen", size: "M", price: 100_000, stock: 3 } },
+      },
+      include: { variants: true },
+    });
+    const variant = product.variants[0];
+    const ordersBefore = await db.order.count();
+    const shipmentsBefore = await db.shipment.count();
+    const res = await postOrder(orderBody(variant.id, []));
+    const body = await res.json();
+    const saved = await db.productVariant.findUniqueOrThrow({ where: { id: variant.id } });
+    expect(res.status).toBe(400);
+    expect(body.error).toMatch(/giao hàng/);
+    expect(await db.order.count()).toBe(ordersBefore);
+    expect(await db.shipment.count()).toBe(shipmentsBefore);
+    expect(saved.stock).toBe(3);
+    await db.$disconnect();
+  });
+
+  it("writes one order, two shipments and one shipping fee when stock comes from both sides", async () => {
+    const db = new PrismaClient();
+    const stamp = Date.now();
+    const supplier = await db.supplier.create({
+      data: { code: `DON-${stamp}`, name: "NCC đơn", connectionType: "MANUAL", paysReturnFee: true },
+    });
+    const product = await db.product.create({
+      data: {
+        name: "Áo tách kiện",
+        slug: `tach-kien-${stamp}`,
+        gender: "UNISEX",
+        variants: { create: { sku: `tach-${stamp}`, color: "Đen", size: "M", price: 100_000, stock: 2, costPrice: 80_000 } },
+      },
+      include: { variants: true },
+    });
+    const variant = product.variants[0];
+    await db.supplierSku.create({
+      data: {
+        supplierId: supplier.id,
+        variantId: variant.id,
+        supplierSku: `TACH-${stamp}`,
+        priority: 1,
+        costPrice: 80_000,
+        supplierStock: 5,
+        safetyStock: 2,
+        stockUpdatedAt: new Date(),
+      },
+    });
+    const res = await postOrder(orderBody(variant.id, [{ purpose: "delivery", granted: true }]));
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    const saved = await db.order.findUniqueOrThrow({
+      where: { orderNumber: body.orderNumber },
+      include: { shipments: true, items: true },
+    });
+    expect(saved.items).toHaveLength(1);
+    expect(saved.items[0]?.quantity).toBe(3);
+    expect(saved.items[0]?.supplierQty).toBe(1);
+    expect(saved.shipments.map((row) => row.fulfillmentSource).sort()).toEqual(["SUPPLIER", "WAREHOUSE"]);
+    expect(saved.total).toBe(saved.subtotal + saved.shippingFee - saved.discount);
+    expect(saved.shippingFee).toBeGreaterThan(0);
+    const supplierLeft = await db.supplierSku.findFirstOrThrow({ where: { variantId: variant.id } });
+    const ownLeft = await db.productVariant.findUniqueOrThrow({ where: { id: variant.id } });
+    expect(ownLeft.stock).toBe(0);
+    expect(supplierLeft.supplierStock).toBe(4);
     await db.$disconnect();
   });
 });

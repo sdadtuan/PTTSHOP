@@ -19,7 +19,7 @@ import { createPayosLink, payosEnv } from "@/lib/payments/payos";
 import { checkoutMethodError, quoteFromServerPrices } from "@/lib/payments/policy";
 import { getPaymentConfig } from "@/lib/payments/store";
 import { prisma } from "@/lib/prisma";
-import { clientIp, recordConsents } from "@/lib/consent";
+import { checkoutConsentPlan, clientIp, recordConsents } from "@/lib/consent";
 import { orderBuyerId } from "@/lib/order-buyer";
 import { nextOrderNumber } from "@/lib/order-number";
 import { poFile } from "@/lib/dropship/orders";
@@ -85,6 +85,7 @@ function invoiceFields(data: z.infer<typeof bodySchema>) {
 export async function POST(req: Request) {
   try {
     const data = bodySchema.parse(await req.json());
+    checkoutConsentPlan(data.consents);
     const session = await getOptionalSession();
     const sessionId = await getCartSessionId();
     await releaseExpiredUnpaid(prisma, new Date(), holdEnforceFrom());
