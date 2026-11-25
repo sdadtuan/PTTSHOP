@@ -68,17 +68,35 @@ Title trang chủ trên production ngắn hơn câu mặc định trong code, n�
 
 Vì chưa gắn script, từ chối cookie hiện không tạo request đo lường. TC-12 đúng với hiện trạng, nhưng chưa có bộ chặn để khi sau này gắn ID.
 
-Anh đã gửi container Google Tag Manager `GTM-PQX685KW`, Measurement ID `G-69N0FCKD7P` và Meta Pixel `1508219437865650`. Chưa dán vào layout. Khi làm đợt đo lường, chỉ sau cookie `all` trang mới tải GTM, gọi `gtag('config', 'G-69N0FCKD7P')` một lần, và gọi `fbq('init', '1508219437865650')` một lần. Chưa chọn hoặc chọn “Chỉ cookie cần thiết” thì không có request tới `googletagmanager.com`, `google-analytics.com` hay `facebook.net`.
+Container đã publish, chỉ đọc ngày 25/11/2026:
+
+```text
+curl --http1.1 https://www.googletagmanager.com/gtm.js?id=GTM-PQX685KW
+HTTP/1.1 200 OK
+file 334731 byte. Phần resource JSON 11376 byte, version 1.
+tags: 0
+predicates: 0
+rules: 0
+macros: 5, toàn biến sẵn URL, HOST, PATH, referrer, event
+Không có G-69N0FCKD7P, không có 1508219437865650, không có thẻ purchase, không có fbq.
+```
+
+Chữ `purchase` và `google-analytics` nằm trong thư viện runtime của file `gtm.js`, không nằm trong cấu hình container. Bản nháp chưa publish trong giao diện GTM thì file này không chứa.
+
+Đường đã chọn, vì container trống: gắn trực tiếp `gtag` với `G-69N0FCKD7P` và `fbq` với `1508219437865650`. Không nạp `gtm.js?id=GTM-PQX685KW`. Không gọi cả hai đường cho cùng một kênh.
+
+Consent Mode v2 đặt ngay trong trang, trước khi tải thư viện: `analytics_storage`, `ad_storage`, `ad_user_data`, `ad_personalization` mặc định `denied`. Bấm “Đồng ý tất cả” mới `granted`, rồi mới tải `gtag/js` và `fbevents.js`. “Chỉ cookie cần thiết” hoặc chưa chọn thì các tín hiệu đó giữ `denied` và không có request tới `googletagmanager.com`, `google-analytics.com`, `facebook.net`, `facebook.com`. Cookie đăng nhập và giỏ hàng vẫn là cookie cần thiết.
 
 Bỏ qua vì chưa có token: Conversions API. Không thêm `META_CAPI_TOKEN`.
 
 Biến sẽ dùng, chưa đọc file môi trường và chưa thêm vào code:
 
-- `GTM_CONTAINER_ID` — `GTM-PQX685KW`
 - `GA4_MEASUREMENT_ID` — `G-69N0FCKD7P`
 - `META_PIXEL_ID` — `1508219437865650`
 
-Purchase gọi `gtag('event', 'purchase')` và `fbq('track', 'Purchase')` với `transaction_id` / mã đơn, mỗi kênh một lần. Tải lại trang cảm ơn không gửi lại.
+`GTM_CONTAINER_ID` không dùng ở đợt này.
+
+Purchase gọi `gtag('event', 'purchase')` và `fbq('track', 'Purchase')`, `transaction_id` bằng mã đơn, mỗi kênh một lần. Dòng `AnalyticsEvent` chặn lần gửi thứ hai khi tải lại trang cảm ơn.
 
 ### c. Đánh giá thật
 
@@ -101,7 +119,7 @@ Purchase gọi `gtag('event', 'purchase')` và `fbq('track', 'Purchase')` với 
 
 Đã có bộ sưu tập (`Collection`) và khối phối màu trên demo-v2 (`src/components/demo-v2/demo-phoi-mau.tsx`). Không có bảng combo, không có giá combo, không có lookbook bán được.
 
-Giá combo phải lớn hơn hoặc bằng tổng `effectiveFloor` của từng thành phần. Hàm nằm ở `src/lib/dropship/floor.ts`. Thiếu giá sàn của một thành phần thì không lưu combo. [cần chốt] nếu anh muốn cho phép thành phần chưa có sàn.
+Giá combo phải lớn hơn hoặc bằng tổng `effectiveFloor` của từng thành phần. Hàm nằm ở `src/lib/dropship/floor.ts`. Thiếu giá sàn của một thành phần thì không lưu combo.
 
 ### e. Báo cáo
 
@@ -146,7 +164,7 @@ Một người, ngày làm việc. Bỏ đợt 3.
 | Đợt | Nhánh con từ `feat/growth` | Việc | Ngày |
 |---|---|---|---|
 | 1 | `feat/growth-seo` | Canonical, Open Graph, sitemap bổ sung, JSON-LD Product/Offer/BreadcrumbList/Organization, bảng slug và 301 | 3 |
-| 1 | `feat/growth-do-luong` | Giữ nguyên câu banner. Sau cookie `all`: GTM `GTM-PQX685KW`, GA4 `G-69N0FCKD7P`, Meta Pixel `1508219437865650`, mỗi thứ một lần. Purchase một lần mỗi kênh | 2 |
+| 1 | `feat/growth-do-luong` | Giữ nguyên câu banner. Consent Mode v2 mặc định denied. Sau “Đồng ý tất cả” mới tải `gtag` `G-69N0FCKD7P` và Pixel `1508219437865650`. Không nạp GTM. Purchase một lần mỗi kênh | 2 |
 | 1 | `feat/growth-danh-gia` | Chỉ đơn đã giao, duyệt trước khi hiện, rating đệm không gồm review admin, schema không có sao giả | 2 |
 | 2 | `feat/growth-combo` | Combo và lookbook. Thiếu giá sàn một thành phần thì không lưu combo | 4 |
 | 2 | `feat/growth-bao-cao` | Biên lợi nhuận, tồn, NCC, đối soát, CSV. Cột: mã đơn, sản phẩm, số lượng, doanh thu dòng, giá vốn, phí ship khách trả, phí ship thực, phí thanh toán, đối trừ NCC, hoàn tiền, biên | 4 |
@@ -159,8 +177,8 @@ Mỗi nhánh một hoặc vài commit. Không rebase, không reset, không force
 
 Chưa chạy trong Phần A.
 
-- TC-12: cookie `essential` hoặc chưa chọn thì không có request tới `googletagmanager.com`, `google-analytics.com` hay `facebook.net`.
-- Purchase: trang cảm ơn gửi một lần. Tải lại không tạo thêm `AnalyticsEvent`. `transaction_id` bằng mã đơn.
+- TC-12: chưa chọn hoặc cookie `essential` thì 0 request tới `google-analytics.com`, `googletagmanager.com`, `facebook.net`, `facebook.com`. Consent Mode vẫn `denied`.
+- Đồng ý: purchase đúng một lần trên GA4 và một lần trên Pixel. `transaction_id` bằng mã đơn. Tải lại trang cảm ơn không gửi lại, không thêm dòng `AnalyticsEvent`.
 - JSON-LD sản phẩm không có `review` hay `aggregateRating` khi chưa có review khách đã duyệt.
 - Combo có giá thấp hơn tổng `effectiveFloor` thì API từ chối.
 - Biên lợi nhuận của 10 đơn trên database test khớp bản tính tay. Không dùng 4 đơn production.
@@ -169,9 +187,15 @@ Chưa chạy trong Phần A.
 
 Anh bảo mục nào chưa có thì bỏ qua.
 
-- Làm: SEO, GTM `GTM-PQX685KW`, GA4 `G-69N0FCKD7P` và Meta Pixel `1508219437865650` sau khi đồng ý cookie, đánh giá thật, combo/lookbook, báo cáo CSV.
-- Bỏ: Conversions API, VNPay, Zalo ZNS, SMS.
+- Container `GTM-PQX685KW` đã publish, 0 thẻ. Đo bằng `gtag` và `fbq` trực tiếp. Không nạp GTM.
+- Làm: SEO, GA4 `G-69N0FCKD7P` và Meta Pixel `1508219437865650` sau khi đồng ý cookie, Consent Mode v2 mặc định denied, đánh giá thật, combo/lookbook, báo cáo CSV.
+- Bỏ: nạp GTM, Conversions API, VNPay, Zalo ZNS, SMS.
 - Banner giữ câu đang chạy.
 - Rating đang lưu: ẩn trên cửa hàng và không đưa vào schema cho tới khi có review khách đã duyệt. Không xóa số trong database.
 - Combo thiếu giá sàn một thành phần thì không lưu.
 - Báo cáo dùng đúng các cột đã ghi ở mục 3. Ô chưa có số để trống.
+
+## 6. Còn cần chốt
+
+- “Đã giao” để được đánh giá: shipment `DELIVERED`, đơn `COMPLETED`, hay một trong hai.
+- Đợt 2 có xuất Excel hay chỉ CSV.
