@@ -68,15 +68,16 @@ Title trang chủ trên production ngắn hơn câu mặc định trong code, n�
 
 Vì chưa gắn script, từ chối cookie hiện không tạo request đo lường. TC-12 đúng với hiện trạng, nhưng chưa có bộ chặn để khi sau này gắn ID.
 
-Anh đã gửi container Google Tag Manager `GTM-PQX685KW` (script `gtm.js?id=GTM-PQX685KW` cộng `dataLayer` và `gtag('js', new Date())`). Đây là mã GTM, không phải Measurement ID dạng `G-`. Đoạn script chưa gọi `gtag('config', ...)` và chưa có sự kiện `gtm.start` của snippet GTM chuẩn. Chưa dán vào layout. Khi làm đợt đo lường, trang chỉ tải `https://www.googletagmanager.com/gtm.js?id=GTM-PQX685KW` sau khi cookie là `all`. Chưa chọn hoặc chọn “Chỉ cookie cần thiết” thì không có request tới `googletagmanager.com`.
+Anh đã gửi container Google Tag Manager `GTM-PQX685KW` và Measurement ID `G-69N0FCKD7P`. Chưa dán vào layout. Khi làm đợt đo lường, chỉ sau cookie `all` trang mới tải `gtm.js?id=GTM-PQX685KW` và gọi `gtag('config', 'G-69N0FCKD7P')` đúng một lần. Chưa chọn hoặc chọn “Chỉ cookie cần thiết” thì không có request tới `googletagmanager.com` hay `google-analytics.com`.
 
-Bỏ qua vì chưa có tài khoản: mã GA4 dạng `G-`, Meta Pixel, Conversions API. Không thêm `GA4_MEASUREMENT_ID`, `META_PIXEL_ID`, `META_CAPI_TOKEN`.
+Bỏ qua vì chưa có tài khoản: Meta Pixel, Conversions API. Không thêm `META_PIXEL_ID`, `META_CAPI_TOKEN`.
 
-Biến sẽ dùng, chỉ tên, chưa đọc file môi trường và chưa thêm vào code:
+Biến sẽ dùng, chưa đọc file môi trường và chưa thêm vào code:
 
-- `GTM_CONTAINER_ID` — giá trị đã chốt: `GTM-PQX685KW`
+- `GTM_CONTAINER_ID` — `GTM-PQX685KW`
+- `GA4_MEASUREMENT_ID` — `G-69N0FCKD7P`
 
-Khách chưa chọn `all` thì không tải GTM. Purchase đẩy vào `dataLayer` với `transaction_id` = `orderNumber`, ghi một lần, tải lại trang cảm ơn không gửi lại.
+Purchase gọi `gtag('event', 'purchase')` với `transaction_id` = `orderNumber`, ghi một lần, tải lại trang cảm ơn không gửi lại. Không gửi purchase lần thứ hai từ chỗ khác.
 
 ### c. Đánh giá thật
 
@@ -144,7 +145,7 @@ Một người, ngày làm việc. Bỏ đợt 3.
 | Đợt | Nhánh con từ `feat/growth` | Việc | Ngày |
 |---|---|---|---|
 | 1 | `feat/growth-seo` | Canonical, Open Graph, sitemap bổ sung, JSON-LD Product/Offer/BreadcrumbList/Organization, bảng slug và 301 | 3 |
-| 1 | `feat/growth-do-luong` | Giữ nguyên câu banner. Tải GTM `GTM-PQX685KW` chỉ khi cookie là `all`. Purchase một lần | 2 |
+| 1 | `feat/growth-do-luong` | Giữ nguyên câu banner. Sau cookie `all`: GTM `GTM-PQX685KW` và GA4 `G-69N0FCKD7P`, mỗi thứ một lần. Purchase một lần | 2 |
 | 1 | `feat/growth-danh-gia` | Chỉ đơn đã giao, duyệt trước khi hiện, rating đệm không gồm review admin, schema không có sao giả | 2 |
 | 2 | `feat/growth-combo` | Combo và lookbook. Thiếu giá sàn một thành phần thì không lưu combo | 4 |
 | 2 | `feat/growth-bao-cao` | Biên lợi nhuận, tồn, NCC, đối soát, CSV. Cột: mã đơn, sản phẩm, số lượng, doanh thu dòng, giá vốn, phí ship khách trả, phí ship thực, phí thanh toán, đối trừ NCC, hoàn tiền, biên | 4 |
@@ -157,7 +158,7 @@ Mỗi nhánh một hoặc vài commit. Không rebase, không reset, không force
 
 Chưa chạy trong Phần A.
 
-- TC-12: cookie `essential` hoặc chưa chọn thì không có request tới `googletagmanager.com`.
+- TC-12: cookie `essential` hoặc chưa chọn thì không có request tới `googletagmanager.com` hay `google-analytics.com`.
 - Purchase: trang cảm ơn gửi một lần. Tải lại không tạo thêm `AnalyticsEvent`. `transaction_id` bằng mã đơn.
 - JSON-LD sản phẩm không có `review` hay `aggregateRating` khi chưa có review khách đã duyệt.
 - Combo có giá thấp hơn tổng `effectiveFloor` thì API từ chối.
@@ -167,8 +168,8 @@ Chưa chạy trong Phần A.
 
 Anh bảo mục nào chưa có thì bỏ qua.
 
-- Làm: SEO, GTM `GTM-PQX685KW` sau khi đồng ý cookie, đánh giá thật, combo/lookbook, báo cáo CSV.
-- Bỏ: mã GA4 dạng `G-`, Meta Pixel, Conversions API, VNPay, Zalo ZNS, SMS.
+- Làm: SEO, GTM `GTM-PQX685KW` và GA4 `G-69N0FCKD7P` sau khi đồng ý cookie, đánh giá thật, combo/lookbook, báo cáo CSV.
+- Bỏ: Meta Pixel, Conversions API, VNPay, Zalo ZNS, SMS.
 - Banner giữ câu đang chạy.
 - Rating đang lưu: ẩn trên cửa hàng và không đưa vào schema cho tới khi có review khách đã duyệt. Không xóa số trong database.
 - Combo thiếu giá sàn một thành phần thì không lưu.
