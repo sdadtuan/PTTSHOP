@@ -15,6 +15,11 @@ export function resetTestDb() {
 }
 
 export async function cleanDb(prisma: PrismaClient) {
+  await prisma.supplierDebit.deleteMany();
+  await prisma.supplierOrder.deleteMany();
+  await prisma.syncRun.deleteMany();
+  await prisma.supplierSku.deleteMany();
+  await prisma.supplier.deleteMany();
   await prisma.consent.deleteMany();
   await prisma.review.deleteMany();
   await prisma.refundApprovalLog.deleteMany();

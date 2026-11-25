@@ -5,8 +5,9 @@ import {
   addToCart,
   getCartForActor,
   getOrCreateCart,
-  serializeCart,
+  serializeCartForClient,
 } from "@/lib/cart-service";
+import { sellableTotals } from "@/lib/dropship/service";
 import { getCartSessionId, getOrCreateCartSessionId } from "@/lib/cart-session";
 import { prisma } from "@/lib/prisma";
 
@@ -23,7 +24,7 @@ export async function GET() {
   try {
     const { userId, sessionId } = await actor();
     const cart = await getCartForActor({ userId, sessionId });
-    return jsonOk(serializeCart(cart));
+    return jsonOk(await serializeCartForClient(cart));
   } catch (err) {
     return handleApiError(err);
   }
@@ -44,7 +45,7 @@ export async function POST(req: Request) {
       variantId: body.variantId,
       quantity: body.quantity,
     });
-    return jsonOk(serializeCart(cart), { status: 201 });
+    return jsonOk(await serializeCartForClient(cart), { status: 201 });
   } catch (err) {
     return handleApiError(err);
   }
@@ -73,8 +74,9 @@ export async function PATCH(req: Request) {
         where: { id: body.variantId },
       });
       if (!variant) return jsonError("Biến thể không tồn tại", 404);
-      if (body.quantity > variant.stock) {
-        return jsonError(`Chỉ còn ${variant.stock} sản phẩm`, 400);
+      const available = (await sellableTotals(prisma, [variant.id])).get(variant.id) ?? 0;
+      if (body.quantity > available) {
+        return jsonError(`Chỉ còn ${available} sản phẩm`, 400);
       }
       await prisma.cartItem.upsert({
         where: {
@@ -93,7 +95,7 @@ export async function PATCH(req: Request) {
       userId,
       sessionId: userId ? null : sessionId,
     });
-    return jsonOk(serializeCart(next));
+    return jsonOk(await serializeCartForClient(next));
   } catch (err) {
     return handleApiError(err);
   }
@@ -112,7 +114,7 @@ export async function DELETE(req: Request) {
       userId,
       sessionId: userId ? null : sessionId,
     });
-    if (!cart) return jsonOk(serializeCart(null));
+    if (!cart) return jsonOk(await serializeCartForClient(null));
 
     if (body.clear) {
       await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
@@ -128,7 +130,7 @@ export async function DELETE(req: Request) {
       userId,
       sessionId: userId ? null : sessionId,
     });
-    return jsonOk(serializeCart(next));
+    return jsonOk(await serializeCartForClient(next));
   } catch (err) {
     return handleApiError(err);
   }

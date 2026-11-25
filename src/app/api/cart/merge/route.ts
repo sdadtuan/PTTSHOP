@@ -1,6 +1,6 @@
 import { handleApiError, jsonOk } from "@/lib/api";
 import { requireSession } from "@/lib/auth-guards";
-import { mergeGuestCartIntoUser, serializeCart } from "@/lib/cart-service";
+import { mergeGuestCartIntoUser, serializeCartForClient } from "@/lib/cart-service";
 import {
   clearCartSessionCookie,
   getCartSessionId,
@@ -12,7 +12,7 @@ export async function POST() {
     const sid = await getCartSessionId();
     const cart = await mergeGuestCartIntoUser(session.user.id, sid);
     await clearCartSessionCookie();
-    return jsonOk(serializeCart(cart));
+    return jsonOk(await serializeCartForClient(cart));
   } catch (err) {
     return handleApiError(err);
   }

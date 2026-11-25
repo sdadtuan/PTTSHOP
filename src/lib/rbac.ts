@@ -40,7 +40,13 @@ export type Scope =
   | "staff.write"
   | "audit.read"
   | "settings.read"
-  | "settings.write";
+  | "settings.write"
+  | "suppliers.read"
+  | "suppliers.write"
+  | "suppliers.cost"
+  | "suppliers.sync"
+  | "suppliers.order"
+  | "suppliers.debit";
 
 const ALL_READ: Scope[] = [
   "dashboard.read",
@@ -74,6 +80,12 @@ const GRANTS: Record<string, Scope[]> = {
     "audit.read",
     "settings.read",
     "settings.write",
+    "suppliers.read",
+    "suppliers.write",
+    "suppliers.cost",
+    "suppliers.sync",
+    "suppliers.order",
+    "suppliers.debit",
   ],
   DIRECTOR: [
     ...ALL_READ,
@@ -88,6 +100,9 @@ const GRANTS: Record<string, Scope[]> = {
     "staff.read",
     "audit.read",
     "settings.read",
+    "suppliers.read",
+    "suppliers.cost",
+    "suppliers.debit",
   ],
   WAREHOUSE: [
     "dashboard.read",
@@ -100,6 +115,9 @@ const GRANTS: Record<string, Scope[]> = {
     "shipping.write",
     "returns.read",
     "returns.inspect",
+    "suppliers.read",
+    "suppliers.sync",
+    "suppliers.order",
   ],
   CSKH: [
     ...ALL_READ,
@@ -111,6 +129,7 @@ const GRANTS: Record<string, Scope[]> = {
     "refunds.read",
     "refunds.create",
     "invoices.read",
+    "suppliers.read",
   ],
   ACCOUNTANT: [
     ...ALL_READ,
@@ -122,6 +141,9 @@ const GRANTS: Record<string, Scope[]> = {
     "refunds.complete",
     "invoices.read",
     "invoices.write",
+    "suppliers.read",
+    "suppliers.cost",
+    "suppliers.debit",
   ],
   MARKETING: [
     "dashboard.read",
@@ -131,6 +153,7 @@ const GRANTS: Record<string, Scope[]> = {
     "coupons.read",
     "coupons.write",
     "orders.read",
+    "suppliers.read",
   ],
 };
 
@@ -156,6 +179,11 @@ const PAGES: Array<{ prefix: string; scope: Scope }> = [
   { prefix: "/admin/van-chuyen/doi-soat-cod", scope: "invoices.read" },
   { prefix: "/admin/van-chuyen", scope: "shipping.read" },
   { prefix: "/admin/quy-tac-gia", scope: "pricing.read" },
+  { prefix: "/admin/doi-tru-ncc", scope: "suppliers.debit" },
+  { prefix: "/admin/dong-bo-ton", scope: "suppliers.read" },
+  { prefix: "/admin/phieu-dat-ncc", scope: "suppliers.read" },
+  { prefix: "/admin/anh-xa-sku", scope: "suppliers.read" },
+  { prefix: "/admin/nha-cung-cap", scope: "suppliers.read" },
   { prefix: "/admin/phan-quyen", scope: "staff.read" },
   { prefix: "/admin/tich-hop", scope: "staff.read" },
   { prefix: "/admin/nhat-ky", scope: "audit.read" },
@@ -204,7 +232,14 @@ export function accessFromSession(user: { role?: string; rbacRoles?: string[] | 
 export function scopeForApi(pathname: string, method: string): Scope | Scope[] | null {
   if (!pathname.startsWith("/api/admin")) return null;
   const write = method !== "GET" && method !== "HEAD";
-  if (pathname.startsWith("/api/admin/pricing-rules")) return write ? "pricing.write" : "pricing.read";
+  if (pathname.startsWith("/api/admin/pricing-rules") || pathname.startsWith("/api/admin/floor-settings")) {
+    return write ? "pricing.write" : "pricing.read";
+  }
+  if (pathname.startsWith("/api/admin/supplier-debits")) return write ? "suppliers.debit" : "suppliers.read";
+  if (pathname.startsWith("/api/admin/supplier-sync")) return write ? "suppliers.sync" : "suppliers.read";
+  if (pathname.startsWith("/api/admin/supplier-orders")) return write ? "suppliers.order" : "suppliers.read";
+  if (pathname.startsWith("/api/admin/supplier-skus")) return write ? "suppliers.write" : "suppliers.read";
+  if (pathname.startsWith("/api/admin/suppliers")) return write ? "suppliers.write" : "suppliers.read";
   if (pathname.startsWith("/api/admin/phan-quyen")) return write ? "staff.write" : "staff.read";
   if (pathname.startsWith("/api/admin/integrations")) return "staff.read";
   if (pathname.startsWith("/api/admin/audit")) return "audit.read";

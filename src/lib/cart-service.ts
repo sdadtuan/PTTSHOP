@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/api";
+import { sellableTotals } from "@/lib/dropship/service";
 
 export async function getCartForActor(opts: {
   userId?: string | null;
@@ -63,6 +64,18 @@ export const cartInclude = {
   },
 } as const;
 
+export async function serializeCartForClient(
+  cart: Awaited<ReturnType<typeof getOrCreateCart>> | null,
+) {
+  const body = serializeCart(cart);
+  if (!cart) return body;
+  const totals = await sellableTotals(prisma, cart.items.map((item) => item.variantId));
+  return {
+    ...body,
+    items: body.items.map((item) => ({ ...item, stock: totals.get(item.variantId) ?? 0 })),
+  };
+}
+
 export function serializeCart(
   cart: Awaited<ReturnType<typeof getOrCreateCart>> | null,
 ) {
@@ -98,7 +111,8 @@ export async function addToCart(opts: {
     where: { id: opts.variantId },
   });
   if (!variant) throw new ApiError("Biến thể không tồn tại", 404);
-  if (variant.stock <= 0) throw new ApiError("Sản phẩm hết hàng", 400);
+  const available = (await sellableTotals(prisma, [variant.id])).get(variant.id) ?? 0;
+  if (available <= 0) throw new ApiError("Sản phẩm hết hàng", 400);
 
   const cart = await getOrCreateCart({
     userId: opts.userId,
@@ -107,8 +121,8 @@ export async function addToCart(opts: {
 
   const existing = cart.items.find((i) => i.variantId === opts.variantId);
   const nextQty = (existing?.quantity ?? 0) + opts.quantity;
-  if (nextQty > variant.stock) {
-    throw new ApiError(`Chỉ còn ${variant.stock} sản phẩm`, 400);
+  if (nextQty > available) {
+    throw new ApiError(`Chỉ còn ${available} sản phẩm`, 400);
   }
 
   if (existing) {
@@ -149,12 +163,11 @@ export async function mergeGuestCartIntoUser(
 
   const userCart = await getOrCreateCart({ userId });
 
+  const totals = await sellableTotals(prisma, guest.items.map((item) => item.variantId));
   await prisma.$transaction(async (tx) => {
     for (const item of guest.items) {
-      const variant = await tx.productVariant.findUnique({
-        where: { id: item.variantId },
-      });
-      if (!variant || variant.stock <= 0) continue;
+      const available = totals.get(item.variantId) ?? 0;
+      if (available <= 0) continue;
 
       const existing = await tx.cartItem.findUnique({
         where: {
@@ -165,7 +178,7 @@ export async function mergeGuestCartIntoUser(
         },
       });
       const qty = Math.min(
-        variant.stock,
+        available,
         (existing?.quantity ?? 0) + item.quantity,
       );
       if (existing) {

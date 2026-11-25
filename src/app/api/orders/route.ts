@@ -22,6 +22,8 @@ import { prisma } from "@/lib/prisma";
 import { clientIp, recordConsents } from "@/lib/consent";
 import { orderBuyerId } from "@/lib/order-buyer";
 import { nextOrderNumber } from "@/lib/order-number";
+import { poFile } from "@/lib/dropship/orders";
+import { planCheckoutLines } from "@/lib/dropship/service";
 import { quoteCheckout } from "@/lib/shipping/service";
 import { hashReceiptToken, RECEIPT_COOKIE } from "@/lib/order-receipt-token";
 import { emailSchema, phoneSchema } from "@/lib/validation";
@@ -96,15 +98,18 @@ export async function POST(req: Request) {
       throw new ApiError("Một số sản phẩm không còn khả dụng", 400);
     }
 
+    const plans = await planCheckoutLines(
+      prisma,
+      data.items.map((item) => ({ variantId: item.variantId, quantity: item.quantity })),
+      new Date(),
+    );
     const lines = data.items.map((item) => {
       const variant = variants.find((v) => v.id === item.variantId)!;
-      if (variant.stock < item.quantity) {
-        throw new ApiError(
-          `Hết hàng: ${variant.product.name} (${variant.size})`,
-          400,
-        );
+      const plan = plans.find((row) => row.variantId === item.variantId);
+      if (!plan?.ok) {
+        throw new ApiError(`Hết hàng: ${variant.product.name} (${variant.size})`, 400);
       }
-      return { item, variant };
+      return { item, variant, plan };
     });
 
     const catalogLines = lines.map((line) => ({
@@ -165,16 +170,26 @@ export async function POST(req: Request) {
     }
 
     const order = await prisma.$transaction(async (tx) => {
-      for (const { item, variant } of lines) {
-        const updated = await tx.productVariant.updateMany({
-          where: { id: variant.id, stock: { gte: item.quantity } },
-          data: { stock: { decrement: item.quantity } },
-        });
-        if (updated.count === 0) {
-          throw new ApiError(
-            `Không đủ tồn kho: ${variant.product.name} (${variant.size})`,
-            400,
-          );
+      for (const { variant, plan } of lines) {
+        if (plan.warehouseQty > 0) {
+          const updated = await tx.productVariant.updateMany({
+            where: { id: variant.id, stock: { gte: plan.warehouseQty } },
+            data: { stock: { decrement: plan.warehouseQty } },
+          });
+          if (updated.count === 0) {
+            throw new ApiError(`Không đủ tồn kho: ${variant.product.name} (${variant.size})`, 400);
+          }
+        }
+        if (plan.supplierQty > 0 && plan.supplierId) {
+          const supplierSku = await tx.supplierSku.findFirst({
+            where: { variantId: variant.id, supplierId: plan.supplierId, isActive: true },
+          });
+          if (!supplierSku) throw new ApiError(`Không đủ tồn nhà cung cấp: ${variant.product.name}`, 400);
+          const updated = await tx.supplierSku.updateMany({
+            where: { id: supplierSku.id, supplierStock: { gte: plan.supplierQty } },
+            data: { supplierStock: { decrement: plan.supplierQty } },
+          });
+          if (updated.count === 0) throw new ApiError(`Không đủ tồn nhà cung cấp: ${variant.product.name}`, 400);
         }
       }
 
@@ -213,18 +228,82 @@ export async function POST(req: Request) {
           invoiceEmail: invoice.email,
           receiptTokenHash: hashReceiptToken(receiptToken),
           items: {
-            create: lines.map(({ item, variant }) => ({
+            create: lines.map(({ item, variant, plan }) => ({
               variantId: variant.id,
               name: variant.product.name,
               color: variant.color,
               size: variant.size,
               price: variant.price,
               quantity: item.quantity,
+              supplierQty: plan.supplierQty,
+              supplierId: plan.supplierId,
             })),
           },
         },
         include: { items: true },
       });
+
+      const warehouseLines = created.items.filter((item) => item.quantity - item.supplierQty > 0);
+      const supplierGroups = new Map<string, typeof created.items>();
+      for (const item of created.items) {
+        if (!item.supplierId || item.supplierQty <= 0) continue;
+        const group = supplierGroups.get(item.supplierId) || [];
+        group.push(item);
+        supplierGroups.set(item.supplierId, group);
+      }
+      if (warehouseLines.length > 0) {
+        await tx.shipment.create({
+          data: {
+            orderId: created.id,
+            shipmentNumber: `${created.orderNumber}-KHO`,
+            idempotencyKey: `${created.orderNumber}-KHO`,
+            provider: "MANUAL",
+            status: "CREATED",
+            fulfillmentSource: "WAREHOUSE",
+            items: { create: warehouseLines.map((item) => ({ orderItemId: item.id, quantity: item.quantity - item.supplierQty })) },
+          },
+        });
+      }
+      for (const [supplierId, group] of supplierGroups) {
+        const shipment = await tx.shipment.create({
+          data: {
+            orderId: created.id,
+            shipmentNumber: `${created.orderNumber}-NCC-${supplierId.slice(-6)}`,
+            idempotencyKey: `${created.orderNumber}-NCC-${supplierId}`,
+            provider: "MANUAL",
+            status: "CREATED",
+            fulfillmentSource: "SUPPLIER",
+            items: { create: group.map((item) => ({ orderItemId: item.id, quantity: item.supplierQty })) },
+          },
+        });
+        const supplier = await tx.supplier.findUniqueOrThrow({ where: { id: supplierId } });
+        const skus = await tx.supplierSku.findMany({ where: { supplierId, variantId: { in: group.map((item) => item.variantId) } } });
+        const poNumber = `PO-${created.orderNumber}-${supplierId.slice(-4)}`;
+        const draft = {
+          poNumber,
+          supplierName: supplier.name,
+          lines: group.map((item) => ({
+            supplierSku: skus.find((row) => row.variantId === item.variantId)?.supplierSku || item.variantId,
+            name: item.name,
+            color: item.color,
+            size: item.size,
+            quantity: item.supplierQty,
+          })),
+        };
+        const file = poFile(draft);
+        await tx.supplierOrder.create({
+          data: {
+            orderId: created.id,
+            shipmentId: shipment.id,
+            supplierId,
+            status: "READY",
+            poNumber,
+            fileName: file.fileName,
+            emailSubject: file.emailSubject,
+            emailBody: file.emailBody,
+          },
+        });
+      }
 
       const payment = await provider.createPayment(created);
       return tx.order.update({
@@ -257,10 +336,19 @@ export async function POST(req: Request) {
         await prisma.$transaction(async (tx) => {
           await tx.order.update({ where: { id: order.id }, data: { status: "CANCELLED" } });
           for (const item of order.items) {
-            await tx.productVariant.update({
-              where: { id: item.variantId },
-              data: { stock: { increment: item.quantity } },
-            });
+            const ownQty = item.quantity - item.supplierQty;
+            if (ownQty > 0) {
+              await tx.productVariant.update({
+                where: { id: item.variantId },
+                data: { stock: { increment: ownQty } },
+              });
+            }
+            if (item.supplierQty > 0 && item.supplierId) {
+              await tx.supplierSku.updateMany({
+                where: { supplierId: item.supplierId, variantId: item.variantId },
+                data: { supplierStock: { increment: item.supplierQty } },
+              });
+            }
           }
         });
         throw new ApiError("payOS không tạo được mã thanh toán.", 502);

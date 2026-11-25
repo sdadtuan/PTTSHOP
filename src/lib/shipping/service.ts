@@ -288,12 +288,13 @@ export async function applyShippingWebhook(
 }
 
 export function publicShipments(
-  rows: { shipmentNumber: string | null; provider: string | null; trackingCode: string | null; status: string | null }[],
+  rows: { shipmentNumber: string | null; provider: string | null; trackingCode: string | null; status: string | null; fulfillmentSource?: string | null }[],
 ) {
   return rows.map((row) => ({
     shipmentNumber: row.shipmentNumber,
     provider: row.provider,
     trackingCode: row.trackingCode,
     status: row.status,
+    fulfillmentSource: row.fulfillmentSource ?? null,
   }));
 }

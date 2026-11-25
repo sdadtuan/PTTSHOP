@@ -15,7 +15,7 @@ export default function LookupOrderPage() {
     total: number;
     transfer: TransferView | null;
     qrPng: string;
-    shipments?: { shipmentNumber: string | null; provider: string | null; trackingCode: string | null; status: string | null }[];
+    shipments?: { shipmentNumber: string | null; provider: string | null; trackingCode: string | null; status: string | null; fulfillmentSource?: string | null }[];
   } | null>(null);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -59,7 +59,7 @@ export default function LookupOrderPage() {
               {result.shipments.map((shipment) => (
                 <li key={shipment.shipmentNumber || shipment.trackingCode || ""} className="rounded border border-neutral-200 p-3">
                   <p>Kiện {shipment.shipmentNumber}</p>
-                  <p>Mã vận đơn: {shipment.trackingCode || "Chưa có"}</p>
+                  <p>Mã vận đơn: {shipment.trackingCode || (shipment.fulfillmentSource === "SUPPLIER" ? "Đang đặt hàng" : "Chưa có")}</p>
                   <p>Trạng thái: {shipment.status}</p>
                 </li>
               ))}

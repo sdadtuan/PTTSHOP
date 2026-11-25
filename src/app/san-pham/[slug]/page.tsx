@@ -4,6 +4,7 @@ import { ProductCard } from "@/components/product/product-card";
 import { ProductDetailClient } from "@/components/product/product-detail-client";
 import { ProductReviews } from "@/components/product/product-reviews";
 import { publicCatalogWhere, publicVariants } from "@/lib/catalog-visibility";
+import { sellableTotals } from "@/lib/dropship/service";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -34,6 +35,15 @@ export default async function ProductDetailPage({ params }: Props) {
   });
 
   if (!product) notFound();
+
+  const sellable = await sellableTotals(prisma, product.variants.map((variant) => variant.id));
+  const productView = {
+    ...product,
+    variants: product.variants.map((variant) => ({
+      ...variant,
+      stock: sellable.get(variant.id) ?? 0,
+    })),
+  };
 
   const shippingRow = await prisma.siteSettings.findUnique({
     where: { id: "default" },
@@ -84,7 +94,7 @@ export default async function ProductDetailPage({ params }: Props) {
         </div>
       </nav>
 
-      <ProductDetailClient product={product} shippingPolicyJson={shippingRow?.shippingPolicyJson ?? null} />
+      <ProductDetailClient product={productView} shippingPolicyJson={shippingRow?.shippingPolicyJson ?? null} />
 
       <ProductReviews productId={product.id} />
 

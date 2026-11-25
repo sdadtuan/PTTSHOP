@@ -216,11 +216,16 @@ model ProductVariant {
   /// Giá vốn, chỉ trang quản trị. Null = chưa chốt.
   costPrice     Int?
   stock         Int            @default(0)
+  /// Tồn an toàn của kho riêng. Dòng cũ nhận 2, không đổi số tồn.
+  safetyStock   Int            @default(2)
+  /// false = ẩn SKU khỏi giỏ. Không tự bật lại khi giá vốn giảm.
+  isPurchasable Boolean        @default(true)
   productId     String
   product       Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
   cartItems     CartItem[]
   orderItems    OrderItem[]
   wishlistItems WishlistItem[]
+  supplierSkus  SupplierSku[]
 }
 
 model ProductCollection {
@@ -306,6 +311,7 @@ model Order {
   cancellation    OrderCancellation?
   returnRequests  ReturnRequest[]
   refundRequests  RefundRequest[]
+  supplierOrders  SupplierOrder[]
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 }
@@ -341,8 +347,11 @@ model OrderItem {
   name      String
   color     String
   size      String
-  price     Int
-  quantity  Int
+  price       Int
+  quantity    Int
+  /// Số lượng lấy từ NCC. Phần còn lại lấy từ kho riêng.
+  supplierQty Int     @default(0)
+  supplierId  String?
 }
 
 model Coupon {
@@ -537,10 +546,13 @@ model Shipment {
   idempotencyKey String?        @unique
   provider       String?
   trackingCode   String?
-  status         String?
-  shippingFee    Int?
-  codAmount      Int?
-  items          ShipmentItem[]
+  status             String?
+  /// WAREHOUSE | SUPPLIER. Trống với vận đơn tạo trước dropship.
+  fulfillmentSource  String?
+  shippingFee        Int?
+  codAmount          Int?
+  items              ShipmentItem[]
+  supplierOrder      SupplierOrder?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 }
@@ -681,6 +693,7 @@ model ReturnRequest {
   exceptionReason  String?
   items            ReturnItem[]
   refunds          RefundRequest[]
+  supplierDebits   SupplierDebit[]
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
 }
@@ -806,6 +819,133 @@ model PricingRule {
   note       String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+}
+
+/// Một bộ tham số G cho cả site. Chưa có dòng thì code dùng mặc định.
+model FloorSettings {
+  id            String   @id @default("default")
+  /// Giá sàn nhập tay, đồng. Trống = không có sàn tay.
+  manualFloor   Int?
+  /// m, r, a, f, VAT theo phần vạn. 1500 = 15%.
+  marginBps     Int      @default(1500)
+  returnBps     Int      @default(500)
+  adsBps        Int      @default(0)
+  feeBps        Int      @default(0)
+  vatBps        Int      @default(0)
+  /// S, chi phí kiện thêm, đồng/đơn vị.
+  shippingCost  Int      @default(0)
+  /// P
+  paymentCost   Int      @default(0)
+  /// F
+  fixedCost     Int      @default(0)
+  updatedAt     DateTime @updatedAt
+}
+
+model Supplier {
+  id                     String         @id @default(cuid())
+  code                   String         @unique
+  name                   String
+  taxCode                String?
+  contactName            String?
+  email                  String?
+  phone                  String?
+  address                String?
+  /// FILE | GOOGLE_SHEET | MANUAL | API_STUB
+  connectionType         String
+  sheetUrl               String?
+  slaHours               Int            @default(48)
+  warnHours              Int            @default(24)
+  syncEveryHours         Int            @default(24)
+  lastSyncAt             DateTime?
+  contractRef            String?
+  contractExpiresAt      DateTime?
+  /// NONE | WRITTEN | OWN_PHOTOS
+  imageLicense           String         @default("NONE")
+  imageLicenseNote       String?
+  imageLicenseExpiresAt  DateTime?
+  paysReturnFee          Boolean?
+  isActive               Boolean        @default(true)
+  skus                   SupplierSku[]
+  syncRuns               SyncRun[]
+  orders                 SupplierOrder[]
+  debits                 SupplierDebit[]
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+}
+
+model SupplierSku {
+  id             String         @id @default(cuid())
+  supplierId     String
+  supplier       Supplier       @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  variantId      String
+  variant        ProductVariant @relation(fields: [variantId], references: [id], onDelete: Restrict)
+  supplierSku    String
+  priority       Int
+  costPrice      Int
+  supplierStock  Int
+  safetyStock    Int            @default(2)
+  stockUpdatedAt DateTime?
+  isActive       Boolean        @default(true)
+
+  @@unique([supplierId, supplierSku])
+  @@unique([supplierId, variantId])
+}
+
+model SyncRun {
+  id           String    @id @default(cuid())
+  supplierId   String?
+  supplier     Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  /// FILE | GOOGLE_SHEET | MANUAL | STUB
+  source       String
+  startedAt    DateTime
+  finishedAt   DateTime?
+  /// RUNNING | OK | PARTIAL | FAILED
+  status       String
+  rowsRead     Int       @default(0)
+  rowsChanged  Int       @default(0)
+  rowsErrored  Int       @default(0)
+  errorDetail  String?
+}
+
+model SupplierOrder {
+  id           String          @id @default(cuid())
+  orderId      String
+  order        Order           @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  shipmentId   String?         @unique
+  shipment     Shipment?       @relation(fields: [shipmentId], references: [id], onDelete: SetNull)
+  supplierId   String
+  supplier     Supplier        @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  /// DRAFT | READY | SENT | ACKNOWLEDGED | SHIPPED | CANCELLED | SLA_BREACH
+  status       String
+  poNumber     String          @unique
+  trackingCode String?
+  slaDueAt     DateTime?
+  warnAt       DateTime?
+  warnedAt     DateTime?
+  sentAt       DateTime?
+  fileName     String?
+  emailSubject String?
+  emailBody    String?
+  debits       SupplierDebit[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
+
+model SupplierDebit {
+  id               String         @id @default(cuid())
+  supplierId       String
+  supplier         Supplier       @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  supplierOrderId  String?
+  supplierOrder    SupplierOrder? @relation(fields: [supplierOrderId], references: [id], onDelete: SetNull)
+  returnRequestId  String?
+  returnRequest    ReturnRequest? @relation(fields: [returnRequestId], references: [id], onDelete: SetNull)
+  amount           Int
+  reason           String
+  /// DRAFT | CONFIRMED | SETTLED
+  status           String
+  note             String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 }
 
 model EmailOutbox {

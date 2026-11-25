@@ -44,6 +44,7 @@ const nav = [
   { href: "/admin/doi-tra", label: "Đổi trả & Hoàn tiền", icon: RotateCcw },
   { href: "/admin/thong-bao", label: "CRM & Thông báo", icon: Bell },
   { href: "/admin/quy-tac-gia", label: "Quy tắc giá", icon: BadgeDollarSign },
+  { href: "/admin/nha-cung-cap", label: "Nhà cung cấp", icon: Store },
   { href: "/admin/phan-quyen", label: "Phân quyền", icon: ShieldCheck },
   { href: "/admin/tich-hop", label: "Tích hợp", icon: Plug },
   { href: "/admin/nhat-ky", label: "Nhật ký", icon: ScrollText },
