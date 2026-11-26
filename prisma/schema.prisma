@@ -168,6 +168,8 @@ model Product {
   shippingOverrideJson String?
   /// DRAFT | SELLING | HIDDEN | DISCONTINUED. Mặc định SELLING để bản ghi cũ vẫn hiện.
   saleStatus   String              @default("SELLING")
+  /// Hàng demo. Storefront ẩn; admin vẫn xem. Không xóa cứng.
+  isDemo       Boolean             @default(false)
   createdAt    DateTime            @default(now())
   updatedAt    DateTime            @updatedAt
 }

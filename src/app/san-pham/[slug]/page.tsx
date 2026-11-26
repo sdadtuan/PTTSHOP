@@ -7,7 +7,7 @@ import { ProductReviews } from "@/components/product/product-reviews";
 import { publicCatalogWhere, publicVariants } from "@/lib/catalog-visibility";
 import { sellableTotals } from "@/lib/dropship/service";
 import { prisma } from "@/lib/prisma";
-import { absoluteUrl, isDemoName, jsonLdScript, productJsonLd, siteBaseUrl } from "@/lib/seo";
+import { absoluteUrl, jsonLdScript, productJsonLd, siteBaseUrl } from "@/lib/seo";
 import { CUSTOMER_RATING_WHERE } from "@/lib/reviews";
 
 export const dynamic = "force-dynamic";
@@ -22,14 +22,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     where: { slug, ...publicCatalogWhere },
     include: { images: { orderBy: { sortOrder: "asc" } } },
   });
-  if (!product) return { title: "Sản phẩm" };
+  if (!product) return { title: "Sản phẩm", robots: { index: false, follow: false } };
   const image = product.images.find((item) => item.type !== "video" && !item.isHidden);
   const canonical = `/san-pham/${product.slug}`;
   return {
     title: product.name,
     description: product.description ?? undefined,
     alternates: { canonical },
-    robots: isDemoName(product.name) ? { index: false, follow: true } : undefined,
+    robots: { index: true, follow: true },
     openGraph: {
       title: product.name,
       description: product.description ?? undefined,
@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProductDetailPage({ params }: Props) {
   const { slug } = await params;
-  const product = await prisma.product.findUnique({
+  const product = await prisma.product.findFirst({
     where: { slug, ...publicCatalogWhere },
     include: {
       images: { orderBy: { sortOrder: "asc" } },

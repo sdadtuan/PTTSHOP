@@ -12,7 +12,10 @@ export const SALE_STATUS_LABEL: Record<SaleStatus, string> = {
   DISCONTINUED: "Ngừng bán",
 };
 
-export const publicCatalogWhere = { saleStatus: SELLING } satisfies Prisma.ProductWhereInput;
+export const publicCatalogWhere = {
+  saleStatus: SELLING,
+  isDemo: false,
+} satisfies Prisma.ProductWhereInput;
 
 export function publicVariants() {
   return { omit: { costPrice: true } } as const;

@@ -5,6 +5,7 @@ import { tmpdir } from "os";
 import path from "path";
 import type { PrismaClient } from "@prisma/client";
 import { ApiError } from "@/lib/api";
+import { productIsDemo } from "@/lib/demo-product";
 import type { ImportIssue, ImportProduct } from "@/lib/catalog-import";
 import { validateCatalogImage } from "@/lib/upload-validate";
 
@@ -288,6 +289,16 @@ export async function commitCatalogImport(
             await tx.productVariant.create({ data: { ...data, sku: variant.sku, productId: row.id } });
           }
         }
+        await tx.product.update({
+          where: { id: row.id },
+          data: {
+            isDemo: productIsDemo({
+              name: product.name,
+              slug: product.slug,
+              skus: product.variants.map((variant) => variant.sku),
+            }),
+          },
+        });
       }
     }, { timeout: 30000 });
     return { summary: plan.summary };
