@@ -1,5 +1,5 @@
 /**
- * Gắn 12 ảnh webp đã duyệt làm ảnh chính. Ẩn mọi ảnh Unsplash của đúng 12 sản phẩm đó.
+ * Gắn 12 ảnh webp đã duyệt làm ảnh chính. Ẩn mọi ảnh Unsplash và file placeholder trống của đúng 12 sản phẩm đó.
  * Danh mục Áo thun (slug ao-thun) nhận ảnh mới của Áo Thun Nam Basic.
  * Danh mục và bộ sưu tập khác đang trỏ Unsplash được để trống, không xóa dòng.
  * Không xóa file cũ, không đụng demo, không đọc .env.
@@ -277,7 +277,7 @@ async function main() {
         slug,
         product.name,
         plan.needsCreate ? `ảnh chính ${reused ?? "(file mới)"}` : "giữ ảnh đã duyệt",
-        `ẩn Unsplash ${hidden.length}`,
+        `ẩn ${hidden.length}`,
         `đẩy thứ tự ${plan.updates.filter((update) => update.sortOrder !== update.previous.sortOrder).length}`,
       ].join("\t"),
     );
@@ -447,7 +447,7 @@ async function main() {
   await writeFile(jsonPath, JSON.stringify(log, null, 2));
   await writeFile(sqlPath, rollbackSql(log));
   console.log(
-    `Đã tạo ${created.length} ảnh chính. Ẩn ${hidden.length} ảnh Unsplash. Danh mục ${categoryLog.length}. Bộ sưu tập ${collectionLog.length}. Log ${jsonPath}`,
+    `Đã tạo ${created.length} ảnh chính. Ẩn ${hidden.length} ảnh. Danh mục ${categoryLog.length}. Bộ sưu tập ${collectionLog.length}. Log ${jsonPath}`,
   );
   await prisma.$disconnect();
 }

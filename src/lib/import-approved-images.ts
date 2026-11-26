@@ -2,6 +2,7 @@
  * Kế hoạch gắn 12 ảnh đã duyệt làm ảnh chính và ẩn mọi ảnh Unsplash của đúng các sản phẩm đó.
  * Không xóa dòng, không đụng sản phẩm demo.
  */
+import { isBlankProductPlaceholder } from "./product-image-placeholder";
 
 /** Danh mục Áo thun nhận ảnh shop của Áo Thun Nam Basic. */
 export const AO_THUN_CATEGORY_SLUG = "ao-thun";
@@ -146,8 +147,8 @@ export function webpDimensions(buf: Buffer): { width: number; height: number } |
 
 /**
  * Ảnh đã duyệt (cùng sha256) đứng sortOrder 0 và hiện.
- * Mọi URL Unsplash của sản phẩm này đặt isHidden, không xóa.
- * Ảnh khác (kể cả placeholder) chỉ bị đẩy xuống sau.
+ * Mọi URL Unsplash và file placeholder trống của sản phẩm này đặt isHidden, không xóa.
+ * Ảnh shop khác chỉ bị đẩy xuống sau.
  * Gọi lại khi đã đúng thì updates rỗng và needsCreate false.
  */
 export function planApprovedPrimary(input: {
@@ -163,7 +164,10 @@ export function planApprovedPrimary(input: {
   const updates: ImageUpdate[] = [];
   sequence.forEach((image, index) => {
     const sortOrder = approved ? index : index + 1;
-    const isHidden = isUnsplashImageUrl(image.url) ? true : image === approved ? false : image.isHidden;
+    const hide =
+      image !== approved &&
+      (isUnsplashImageUrl(image.url) || isBlankProductPlaceholder(image.url));
+    const isHidden = hide ? true : image === approved ? false : image.isHidden;
     if (image.sortOrder !== sortOrder || image.isHidden !== isHidden) {
       updates.push({
         id: image.id,

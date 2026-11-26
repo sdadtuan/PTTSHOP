@@ -41,7 +41,7 @@ describe("planApprovedPrimary", () => {
     expect(plan.updates).toEqual([]);
   });
 
-  it("pushes the blank placeholder behind the new photo without hiding it", () => {
+  it("hides the old blank placeholder after the approved photo is primary", () => {
     const plan = planApprovedPrimary({
       images: [
         {
@@ -56,8 +56,23 @@ describe("planApprovedPrimary", () => {
     });
     expect(plan.needsCreate).toBe(true);
     expect(plan.updates).toEqual([
-      { id: "blank", sortOrder: 1, isHidden: false, previous: { sortOrder: 0, isHidden: false } },
+      { id: "blank", sortOrder: 1, isHidden: true, previous: { sortOrder: 0, isHidden: false } },
     ]);
+    const again = planApprovedPrimary({
+      images: [
+        { id: "new", url: "/media/uploads/cap.webp", sortOrder: 0, isHidden: false, sha256: "cap" },
+        {
+          id: "blank",
+          url: "/images/placeholder-product.png",
+          sortOrder: 1,
+          isHidden: true,
+          sha256: null,
+        },
+      ],
+      approvedSha256: "cap",
+    });
+    expect(again.needsCreate).toBe(false);
+    expect(again.updates).toEqual([]);
   });
 });
 
