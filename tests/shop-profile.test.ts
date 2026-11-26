@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { checkoutMethodError, paymentOptions, quoteFromServerPrices } from "@/lib/payments/policy";
 import { normalizeShippingConfig, shippingFeeForCheckout } from "@/lib/shipping/policy";
 import { parseShopProfileInput } from "@/lib/shop/input";
+import { parseStorefrontUi } from "@/lib/storefront/ui-copy-validate";
 import {
   SHIPPING_PENDING_COPY,
   TOTAL_EXCLUDES_SHIPPING_COPY,
@@ -175,6 +176,23 @@ describe("shop profile display", () => {
     expect(parseShopProfileInput({ ...base, freeShipThreshold: -1 }).ok).toBe(false);
     const ok = parseShopProfileInput({ ...base, hotline: "0900000001", email: "a@b.co" });
     expect(ok.ok).toBe(true);
+  });
+
+  it("drops contact copy saved before the shop profile, even if the JSON still has it", () => {
+    const parsed = parseStorefrontUi({
+      contact: {
+        showroomAddress: "123 Nguyễn Huệ, Quận 1, TP.HCM",
+        phone: "0901 234 567",
+        hours: "9:00 – 21:00 (T2–CN)",
+        email: "demo@example.com",
+        formHeading: "Gửi tin nhắn (demo — không gửi email thật)",
+      },
+    });
+    expect(parsed.contact.showroomAddress).toBe("");
+    expect(parsed.contact.phone).toBe("");
+    expect(parsed.contact.hours).toBe("");
+    expect(parsed.contact.email).toBe("");
+    expect(parsed.contact.formHeading).toBe("Gửi tin nhắn");
   });
 
   it("does not keep invented shop defaults in src", () => {
