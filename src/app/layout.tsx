@@ -9,6 +9,7 @@ import { Footer } from "@/components/layout/footer";
 import { CookieBanner } from "@/components/legal/cookie-banner";
 import { Measurement } from "@/components/legal/measurement";
 import { Header } from "@/components/layout/header";
+import { StorefrontFrame } from "@/components/layout/storefront-frame";
 import { Providers } from "@/components/providers";
 import { getSiteSettingsForRequest, getStorefrontLayoutForRequest } from "@/lib/cms/published";
 import { DEFAULT_SITE_SETTINGS } from "@/lib/cms/types";
@@ -96,12 +97,19 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           <SiteBrandProvider settings={settings}>
             <StorefrontLayoutProvider value={layoutCms}>
               <CartProvider>
-                <Header />
-                <main className="min-w-0 flex-1 pb-20 md:pb-0">{children}</main>
-                <Footer />
-                <CookieBanner />
-                <Measurement />
-                <FloatingSocial />
+                <StorefrontFrame
+                  header={<Header />}
+                  banner={<CookieBanner />}
+                  extras={
+                    <>
+                      <Measurement />
+                      <FloatingSocial />
+                    </>
+                  }
+                >
+                  <main className="min-w-0 flex-1">{children}</main>
+                  <Footer />
+                </StorefrontFrame>
               </CartProvider>
             </StorefrontLayoutProvider>
           </SiteBrandProvider>
