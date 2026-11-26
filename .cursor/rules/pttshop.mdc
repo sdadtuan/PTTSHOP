@@ -1,0 +1,13 @@
+---
+description: Quy tắc triển khai PTT Shop — bắt buộc với mọi agent
+alwaysApply: true
+---
+
+Bạn đang làm trên repo storefront PTT Shop (pttshop.vn).
+
+- Bắt đầu bằng cách khám phá repo. Không giả định đường dẫn file.
+- Không bịa dữ liệu nghiệp vụ. Dùng config/env; thiếu thì placeholder, ghi vào PR, dừng phần phụ thuộc.
+- Không merge main. Một batch một draft PR.
+- Test + screenshot 1440 và 390. Không làm regress Lighthouse nặng trên trang chủ/PDP.
+- Không commit secret. Không đưa hàng [DEMO] hay review ảo ra storefront public.
+- Đọc AGENTS.md nếu có. Bám `docs/spec-nang-cap-pttshop.md`, `docs/ke-hoach-cursor-pttshop.md` và batch được giao; không làm vượt phạm vi.
