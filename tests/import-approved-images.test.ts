@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   planApprovedPrimary,
+  planUnsplashField,
+  rollbackSql,
   webpDimensions,
   type ExistingProductImage,
+  type ImportLog,
 } from "@/lib/import-approved-images";
 
 const unsplash = (id: string, sortOrder: number): ExistingProductImage => ({
@@ -55,6 +58,44 @@ describe("planApprovedPrimary", () => {
     expect(plan.updates).toEqual([
       { id: "blank", sortOrder: 1, isHidden: false, previous: { sortOrder: 0, isHidden: false } },
     ]);
+  });
+});
+
+describe("planUnsplashField", () => {
+  it("points an Unsplash category image at the approved tee and clears the others", () => {
+    expect(planUnsplashField("https://images.unsplash.com/photo-1", "/media/uploads/tee.webp")).toEqual({
+      next: "/media/uploads/tee.webp",
+      change: true,
+    });
+    expect(planUnsplashField("https://images.unsplash.com/photo-2", null)).toEqual({
+      next: null,
+      change: true,
+    });
+    expect(planUnsplashField("/media/uploads/shop.webp", null)).toEqual({
+      next: "/media/uploads/shop.webp",
+      change: false,
+    });
+    expect(planUnsplashField(null, "/media/uploads/tee.webp")).toEqual({ next: null, change: false });
+  });
+});
+
+describe("rollbackSql", () => {
+  it("deletes only the new rows and unhides only the logged ids", () => {
+    const log: ImportLog = {
+      database: "pttshop_staging",
+      created: [{ id: "new-1", slug: "ao-thun-nam-basic", url: "/media/uploads/a.webp" }],
+      hidden: [{ id: "old-1", slug: "ao-thun-nam-basic" }],
+      reordered: [{ id: "old-1", slug: "ao-thun-nam-basic", previousSortOrder: 0, nextSortOrder: 1 }],
+      categories: [{ id: "cat-1", slug: "ao-thun", previous: "https://images.unsplash.com/photo-1", next: "/media/uploads/a.webp" }],
+      collections: [{ id: "col-1", slug: "essentials", previous: "https://images.unsplash.com/photo-2", next: null }],
+    };
+    const sql = rollbackSql(log);
+    expect(sql).toContain(`DELETE FROM "ProductImage" WHERE id IN ('new-1');`);
+    expect(sql).toContain(`UPDATE "ProductImage" SET "isHidden" = false WHERE id IN ('old-1');`);
+    expect(sql).toContain(`SET "sortOrder" = 0 WHERE id = 'old-1'`);
+    expect(sql).toContain(`UPDATE "Category" SET image = 'https://images.unsplash.com/photo-1' WHERE id = 'cat-1';`);
+    expect(sql).toContain(`UPDATE "Collection" SET image = 'https://images.unsplash.com/photo-2' WHERE id = 'col-1';`);
+    expect(sql).not.toContain("new-2");
   });
 });
 

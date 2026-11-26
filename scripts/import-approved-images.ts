@@ -1,36 +1,59 @@
 /**
  * Gắn 12 ảnh webp đã duyệt làm ảnh chính. Ẩn mọi ảnh Unsplash của đúng 12 sản phẩm đó.
- * Không xóa dòng, không xóa file cũ, không đụng demo, không đọc .env.
+ * Danh mục Áo thun (slug ao-thun) nhận ảnh mới của Áo Thun Nam Basic.
+ * Danh mục và bộ sưu tập khác đang trỏ Unsplash được để trống, không xóa dòng.
+ * Không xóa file cũ, không đụng demo, không đọc .env.
  *
- * Staging:
- *   pg_dump --data-only --table='"ProductImage"' --dbname=pttshop_staging \
- *     -f ~/pttshop_staging-productimage-before-ai-v1.dump
- *   DATABASE_URL='postgresql://…/pttshop_staging' MEDIA_DIR=/đường/dẫn/media/staging \
- *     npx tsx scripts/import-approved-images.ts --zip /đường/dẫn/ai-v1.zip --database pttshop_staging --dry-run
- *   # bỏ --dry-run để ghi
+ * Log id đã tạo / đã ẩn: /var/backups/pttshop/import-approved-images-<database>.json
+ * và file .rollback.sql cạnh đó.
  *
- * Production chỉ sau "OK deploy", thêm --confirm-production và --database pttshop_prod.
- * MEDIA_DIR production: /var/www/pttshop/data/media
+ * Trước khi chạy (staging):
+ *   pg_dump --data-only \
+ *     --table='"ProductImage"' --table='"Category"' --table='"Collection"' \
+ *     --dbname=pttshop_staging \
+ *     -f /var/backups/pttshop/pttshop_staging-before-ai-v1.dump
+ *   DATABASE_URL='postgresql://…/pttshop_staging' \
+ *   MEDIA_DIR=/var/www/pttshop-staging/data/media \
+ *     npx tsx scripts/import-approved-images.ts \
+ *     --zip /đường/dẫn/ai-v1.zip --database pttshop_staging --dry-run
+ *   # bỏ --dry-run để ghi. Chạy lại lần 2 phải không tạo thêm.
  *
- * Quay lui: dùng data/media/import-receipts/ai-v1.json
- *   DELETE FROM "ProductImage" WHERE id IN (created ids);
- *   UPDATE từng dòng updated về previous.sortOrder và previous.isHidden;
- *   xóa đúng các file created.url trong uploads.
+ * Production, chỉ sau câu "OK deploy", và chỉ theo thứ tự:
+ *   1. pg_dump cùng các bảng trên, --dbname=pttshop_prod,
+ *      -f /var/backups/pttshop/pttshop_prod-before-ai-v1.dump
+ *   2. MEDIA_DIR=/var/www/pttshop/data/media và --database pttshop_prod --confirm-production
+ *   3. Kiểm storefront hết ảnh Unsplash đang hiện, 12 URL /media/uploads trả 200
+ *   4. Mới deploy code đã gỡ images.unsplash.com khỏi remotePatterns
+ *
+ * Quay lui, đúng id trong file JSON (không đụng dòng khác):
+ *   DELETE FROM "ProductImage" WHERE id IN (created[].id);
+ *   UPDATE "ProductImage" SET "isHidden" = false WHERE id IN (hidden[].id);
+ *   UPDATE "ProductImage" SET "sortOrder" = previousSortOrder WHERE id = reordered[].id;
+ *   UPDATE "Category" / "Collection" SET image = previous WHERE id = id trong log;
+ *   Xóa đúng file created[].url trong uploads.
  */
 import { createHash, randomUUID } from "crypto";
 import { execFile } from "child_process";
-import { mkdir, readdir, readFile, writeFile } from "fs/promises";
+import { constants } from "fs";
+import { access, mkdir, readdir, readFile, writeFile } from "fs/promises";
+import { existsSync } from "fs";
 import { tmpdir } from "os";
 import path from "path";
 import { promisify } from "util";
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { mediaRoot } from "../src/lib/catalog-import-commit";
 import {
+  AO_THUN_CATEGORY_SLUG,
+  AO_THUN_COVER_SLUG,
   APPROVED_SLUGS,
+  IMPORT_BACKUP_DIR,
   planApprovedPrimary,
+  planUnsplashField,
+  rollbackSql,
   webpDimensions,
   type ExistingProductImage,
   type ImagePlan,
+  type ImportLog,
 } from "../src/lib/import-approved-images";
 
 const execFileAsync = promisify(execFile);
@@ -75,6 +98,51 @@ async function findUploadBySha(dir: string, digest: string): Promise<string | nu
     if (sha256(buf) === digest) return `/media/uploads/${name}`;
   }
   return null;
+}
+
+function quoteIdent(ident: string): string {
+  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(ident)) throw new Error("Tên cột không hợp lệ");
+  return `"${ident}"`;
+}
+
+type Hit = { table: string; column: string; id: string; slug: string; key: string };
+
+async function unsplashHits(prisma: PrismaClient): Promise<Hit[]> {
+  const cols = await prisma.$queryRaw<Array<{ table_name: string; column_name: string }>>`
+    SELECT c.table_name, c.column_name
+    FROM information_schema.columns c
+    JOIN information_schema.tables t
+      ON t.table_schema = c.table_schema AND t.table_name = c.table_name
+    WHERE c.table_schema = 'public'
+      AND t.table_type = 'BASE TABLE'
+      AND c.data_type IN ('text', 'character varying')
+    ORDER BY c.table_name, c.column_name`;
+  const hits: Hit[] = [];
+  const known = new Set(cols.map((col) => `${col.table_name}.${col.column_name}`));
+  for (const col of cols) {
+    const table = quoteIdent(col.table_name);
+    const column = quoteIdent(col.column_name);
+    const rows = await prisma.$queryRawUnsafe<Array<{ id: string | null; slug: string | null; key: string | null }>>(
+      `SELECT ${known.has(`${col.table_name}.id`) ? `${quoteIdent("id")}::text` : "NULL"} AS id,
+              ${known.has(`${col.table_name}.slug`) ? `${quoteIdent("slug")}::text` : "NULL"} AS slug,
+              ${known.has(`${col.table_name}.key`) ? `${quoteIdent("key")}::text` : "NULL"} AS key
+       FROM ${table} WHERE ${column} LIKE '%images.unsplash.com%' LIMIT 50`,
+    );
+    for (const row of rows) {
+      hits.push({
+        table: col.table_name,
+        column: col.column_name,
+        id: row.id ?? "",
+        slug: row.slug ?? "",
+        key: row.key ?? "",
+      });
+    }
+  }
+  return hits;
+}
+
+function isNotedOnly(hit: Hit): boolean {
+  return hit.table === "HomepageVersion" || hit.column.startsWith("draft") || hit.column === "snapshotJson";
 }
 
 async function storeWebp(dir: string, buf: Buffer): Promise<string> {
@@ -168,12 +236,16 @@ async function main() {
   }
 
   const uploadDir = path.join(mediaRoot(), "uploads");
-  const plans = new Map<string, { productId: string; name: string; digest: string; plan: ImagePlan; buf: Buffer }>();
+  const plans = new Map<
+    string,
+    { productId: string; name: string; digest: string; plan: ImagePlan; buf: Buffer; existingUrl: string | null }
+  >();
   for (const slug of APPROVED_SLUGS) {
     const product = bySlug.get(slug)!;
     const buf = sources.get(slug)!;
     const digest = sha256(buf);
     const images: ExistingProductImage[] = [];
+    let existingUrl: string | null = null;
     for (const image of product.images) {
       let imageSha: string | null = null;
       if (image.url.startsWith("/media/uploads/") && image.url.endsWith(".webp")) {
@@ -183,11 +255,12 @@ async function main() {
           imageSha = null;
         }
       }
+      if (imageSha === digest) existingUrl = image.url;
       images.push({ ...image, sha256: imageSha });
     }
     const plan = planApprovedPrimary({ images, approvedSha256: digest });
     const reused = await findUploadBySha(uploadDir, digest);
-    plans.set(slug, { productId: product.id, name: product.name, digest, plan, buf });
+    plans.set(slug, { productId: product.id, name: product.name, digest, plan, buf, existingUrl: existingUrl ?? reused });
     const hidden = plan.updates.filter((update) => update.isHidden && !update.previous.isHidden);
     console.log(
       [
@@ -201,19 +274,95 @@ async function main() {
     );
   }
 
+  const [categories, collections, hits, stray] = await Promise.all([
+    prisma.category.findMany({ select: { id: true, slug: true, name: true, image: true } }),
+    prisma.collection.findMany({ select: { id: true, slug: true, name: true, image: true } }),
+    unsplashHits(prisma),
+    prisma.$queryRaw<Array<{ id: string; slug: string }>>`
+      SELECT pi.id, p.slug
+      FROM "ProductImage" pi
+      JOIN "Product" p ON p.id = pi."productId"
+      WHERE (
+        pi.url LIKE '%images.unsplash.com%'
+        OR COALESCE(pi."posterUrl", '') LIKE '%images.unsplash.com%'
+      )
+      AND p.slug NOT IN (${Prisma.join([...APPROVED_SLUGS])})
+    `,
+  ]);
+  if (!categories.some((category) => category.slug === AO_THUN_CATEGORY_SLUG)) {
+    console.error("Không có danh mục ao-thun. Dừng, không ghi.");
+    await prisma.$disconnect();
+    process.exit(1);
+  }
+  const categoryPlans = categories.flatMap((category) => {
+    const replacement = category.slug === AO_THUN_CATEGORY_SLUG ? "__cover__" : null;
+    const planned = planUnsplashField(category.image, replacement);
+    if (!planned.change) return [];
+    return [{ ...category, previous: category.image, next: planned.next }];
+  });
+  const collectionPlans = collections.flatMap((collection) => {
+    const planned = planUnsplashField(collection.image, null);
+    if (!planned.change) return [];
+    return [{ ...collection, previous: collection.image, next: planned.next }];
+  });
+  for (const category of categoryPlans) {
+    console.log(
+      [
+        dryRun ? "DRY" : "APPLY",
+        "category",
+        category.slug,
+        category.name,
+        category.next === "__cover__" ? "Unsplash → ảnh mới của Áo Thun Nam Basic" : "Unsplash → trống",
+      ].join("\t"),
+    );
+  }
+  for (const collection of collectionPlans) {
+    console.log([dryRun ? "DRY" : "APPLY", "collection", collection.slug, collection.name, "Unsplash → trống"].join("\t"));
+  }
+  const blocking = hits.filter(
+    (hit) =>
+      !isNotedOnly(hit) &&
+      !(hit.table === "ProductImage" && hit.column === "url") &&
+      !(hit.table === "Category" && hit.column === "image") &&
+      !(hit.table === "Collection" && hit.column === "image"),
+  );
+  const noted = hits.filter(isNotedOnly);
+  for (const hit of noted) {
+    console.log(`GHI_CHU\t${hit.table}.${hit.column}\tid=${hit.id}\tslug=${hit.slug}\tkey=${hit.key}\tkhông hiện trên storefront`);
+  }
+  if (stray.length || blocking.length) {
+    for (const row of stray) console.error(`NGOAI_PHAM_VI\tProductImage\tid=${row.id}\tslug=${row.slug}`);
+    for (const hit of blocking) console.error(`NGOAI_PHAM_VI\t${hit.table}.${hit.column}\tid=${hit.id}\tslug=${hit.slug}\tkey=${hit.key}`);
+    console.error("Còn URL Unsplash ngoài 12 sản phẩm, Category.image và Collection.image. Dừng, không ghi.");
+    await prisma.$disconnect();
+    process.exit(1);
+  }
+
   if (dryRun) {
     console.log("Dry-run. Không copy file, không ghi database.");
     await prisma.$disconnect();
     return;
   }
 
-  const created: Array<{ id: string; slug: string; url: string }> = [];
-  const updated: Array<{ id: string; slug: string; previous: { sortOrder: number; isHidden: boolean }; next: { sortOrder: number; isHidden: boolean } }> = [];
+  try {
+    await mkdir(IMPORT_BACKUP_DIR, { recursive: true });
+    await access(IMPORT_BACKUP_DIR, constants.W_OK);
+  } catch {
+    console.error(`Không ghi được ${IMPORT_BACKUP_DIR}. Dừng, chưa sửa database.`);
+    await prisma.$disconnect();
+    process.exit(1);
+  }
+
+  const created: ImportLog["created"] = [];
+  const hidden: ImportLog["hidden"] = [];
+  const reordered: ImportLog["reordered"] = [];
+  let coverUrl = plans.get(AO_THUN_COVER_SLUG)?.existingUrl ?? null;
 
   for (const slug of APPROVED_SLUGS) {
     const item = plans.get(slug)!;
-    let url = await findUploadBySha(uploadDir, item.digest);
+    let url = item.existingUrl ?? (await findUploadBySha(uploadDir, item.digest));
     if (item.plan.needsCreate && !url) url = await storeWebp(uploadDir, item.buf);
+    if (slug === AO_THUN_COVER_SLUG && url) coverUrl = url;
     const written = url;
     await prisma.$transaction(async (tx) => {
       for (const update of item.plan.updates) {
@@ -221,12 +370,15 @@ async function main() {
           where: { id: update.id },
           data: { sortOrder: update.sortOrder, isHidden: update.isHidden },
         });
-        updated.push({
-          id: update.id,
-          slug,
-          previous: update.previous,
-          next: { sortOrder: update.sortOrder, isHidden: update.isHidden },
-        });
+        if (update.isHidden && !update.previous.isHidden) hidden.push({ id: update.id, slug });
+        if (update.sortOrder !== update.previous.sortOrder) {
+          reordered.push({
+            id: update.id,
+            slug,
+            previousSortOrder: update.previous.sortOrder,
+            nextSortOrder: update.sortOrder,
+          });
+        }
       }
       if (!item.plan.needsCreate || !written) return;
       const already = await tx.productImage.findFirst({ where: { productId: item.productId, url: written } });
@@ -246,18 +398,53 @@ async function main() {
     });
   }
 
-  const receiptDir = path.join(mediaRoot(), "import-receipts");
-  await mkdir(receiptDir, { recursive: true });
-  const receiptPath = path.join(receiptDir, "ai-v1.json");
-  await writeFile(
-    receiptPath,
-    JSON.stringify({ database: dbName, created, updated }, null, 2),
+  const categoryLog: ImportLog["categories"] = [];
+  const collectionLog: ImportLog["collections"] = [];
+  if (categoryPlans.some((category) => category.next === "__cover__") && !coverUrl) {
+    console.error("Chưa có ảnh Áo Thun Nam Basic để gán cho danh mục ao-thun. Dừng phần danh mục.");
+    await prisma.$disconnect();
+    process.exit(1);
+  }
+  for (const category of categoryPlans) {
+    const next = category.next === "__cover__" ? coverUrl : category.next;
+    await prisma.category.update({ where: { id: category.id }, data: { image: next } });
+    categoryLog.push({ id: category.id, slug: category.slug, previous: category.previous, next });
+  }
+  for (const collection of collectionPlans) {
+    await prisma.collection.update({ where: { id: collection.id }, data: { image: null } });
+    collectionLog.push({ id: collection.id, slug: collection.slug, previous: collection.previous, next: null });
+  }
+
+  const log: ImportLog = {
+    database: dbName,
+    created,
+    hidden,
+    reordered,
+    categories: categoryLog,
+    collections: collectionLog,
+  };
+  const changed = created.length + hidden.length + reordered.length + categoryLog.length + collectionLog.length;
+  if (changed === 0) {
+    console.log("Không có thay đổi mới. Không tạo thêm dòng, không ghi đè log.");
+    await prisma.$disconnect();
+    return;
+  }
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const canonical = path.join(IMPORT_BACKUP_DIR, `import-approved-images-${dbName}.json`);
+  const jsonPath = existsSync(canonical)
+    ? path.join(IMPORT_BACKUP_DIR, `import-approved-images-${dbName}-${stamp}.json`)
+    : canonical;
+  const sqlPath = jsonPath.replace(/\.json$/, ".rollback.sql");
+  await writeFile(jsonPath, JSON.stringify(log, null, 2));
+  await writeFile(sqlPath, rollbackSql(log));
+  console.log(
+    `Đã tạo ${created.length} ảnh chính. Ẩn ${hidden.length} ảnh Unsplash. Danh mục ${categoryLog.length}. Bộ sưu tập ${collectionLog.length}. Log ${jsonPath}`,
   );
-  console.log(`Đã ghi ${created.length} ảnh chính. Ẩn/đẩy ${updated.length} dòng cũ. Biên bản ${receiptPath}`);
   await prisma.$disconnect();
 }
 
 main().catch((error) => {
-  console.error(error instanceof Error ? error.message : error);
+  const message = error instanceof Error ? error.message : String(error);
+  console.error(message.replace(/postgres(?:ql)?:\/\/\S+/gi, "postgresql://***"));
   process.exit(1);
 });

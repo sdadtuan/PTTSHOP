@@ -3,6 +3,13 @@
  * Không xóa dòng, không đụng sản phẩm demo.
  */
 
+/** Danh mục Áo thun nhận ảnh shop của Áo Thun Nam Basic. */
+export const AO_THUN_CATEGORY_SLUG = "ao-thun";
+export const AO_THUN_COVER_SLUG = "ao-thun-nam-basic";
+
+/** Thư mục log id đã tạo và đã ẩn. Không đổi theo môi trường. */
+export const IMPORT_BACKUP_DIR = "/var/backups/pttshop";
+
 export const APPROVED_SLUGS = [
   "ao-polo-essential",
   "ao-thun-raglan",
@@ -46,6 +53,66 @@ export function isUnsplashImageUrl(url: string): boolean {
   return url.startsWith("https://images.unsplash.com/");
 }
 
+/**
+ * URL Unsplash được thay. `replacement` null nghĩa là để trống (placeholder / ảnh sản phẩm kế tiếp).
+ * URL shop hoặc ô trống giữ nguyên.
+ */
+export function planUnsplashField(
+  current: string | null,
+  replacement: string | null,
+): { next: string | null; change: boolean } {
+  if (!current || !isUnsplashImageUrl(current)) return { next: current, change: false };
+  if (current === replacement) return { next: current, change: false };
+  return { next: replacement, change: true };
+}
+
+export type ImportLog = {
+  database: string;
+  created: Array<{ id: string; slug: string; url: string }>;
+  hidden: Array<{ id: string; slug: string }>;
+  reordered: Array<{ id: string; slug: string; previousSortOrder: number; nextSortOrder: number }>;
+  categories: Array<{ id: string; slug: string; previous: string | null; next: string | null }>;
+  collections: Array<{ id: string; slug: string; previous: string | null; next: string | null }>;
+};
+
+function sqlLiteral(value: string | null): string {
+  if (value === null) return "NULL";
+  return `'${value.replace(/'/g, "''")}'`;
+}
+
+/** Lệnh quay lui đúng các id trong log. Không đụng dòng khác. */
+export function rollbackSql(log: ImportLog): string {
+  const created = log.created.map((row) => sqlLiteral(row.id)).join(", ");
+  const hidden = log.hidden.map((row) => sqlLiteral(row.id)).join(", ");
+  const lines = [
+    "BEGIN;",
+    created
+      ? `DELETE FROM "ProductImage" WHERE id IN (${created});`
+      : "-- không có dòng ProductImage mới",
+    hidden
+      ? `UPDATE "ProductImage" SET "isHidden" = false WHERE id IN (${hidden});`
+      : "-- không có ảnh đã ẩn",
+  ];
+  for (const row of log.reordered) {
+    if (!Number.isInteger(row.previousSortOrder)) throw new Error("sortOrder không hợp lệ");
+    lines.push(
+      `UPDATE "ProductImage" SET "sortOrder" = ${row.previousSortOrder} WHERE id = ${sqlLiteral(row.id)};`,
+    );
+  }
+  for (const row of log.categories) {
+    lines.push(
+      `UPDATE "Category" SET image = ${sqlLiteral(row.previous)} WHERE id = ${sqlLiteral(row.id)};`,
+    );
+  }
+  for (const row of log.collections) {
+    lines.push(
+      `UPDATE "Collection" SET image = ${sqlLiteral(row.previous)} WHERE id = ${sqlLiteral(row.id)};`,
+    );
+  }
+  lines.push("COMMIT;");
+  return `${lines.join("\n")}\n`;
+}
+
 /** Rộng/cao của WebP VP8 hoặc VP8X. Trả null nếu không đọc được. */
 export function webpDimensions(buf: Buffer): { width: number; height: number } | null {
   if (buf.length < 30) return null;
@@ -81,7 +148,7 @@ export function webpDimensions(buf: Buffer): { width: number; height: number } |
  * Ảnh đã duyệt (cùng sha256) đứng sortOrder 0 và hiện.
  * Mọi URL Unsplash của sản phẩm này đặt isHidden, không xóa.
  * Ảnh khác (kể cả placeholder) chỉ bị đẩy xuống sau.
- * Gọi lại khi đã đúng thì updates rỗng và createUrl null.
+ * Gọi lại khi đã đúng thì updates rỗng và needsCreate false.
  */
 export function planApprovedPrimary(input: {
   images: ExistingProductImage[];

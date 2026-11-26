@@ -63,9 +63,11 @@ const nextConfig: NextConfig = {
   },
   images: {
     remotePatterns: [
-      // images.unsplash.com đã gỡ: script import-approved-images ẩn mọi ảnh Unsplash
-      // của 12 sản phẩm đang bán, storefront không còn request host này.
-      // Ảnh cũ vẫn nằm trong DB (isHidden). cdn.vietqr.io giữ cho QR thanh toán.
+      // images.unsplash.com đã gỡ sau khi script import-approved-images chạy:
+      // 12 sản phẩm ẩn mọi ảnh Unsplash, danh mục Áo thun nhận ảnh shop,
+      // danh mục và bộ sưu tập khác đang trỏ Unsplash được để trống.
+      // Ảnh cũ vẫn nằm trong DB. cdn.vietqr.io giữ cho QR thanh toán.
+      // Không deploy file này trước khi script đã chạy trên database đó.
       {
         protocol: "https",
         hostname: "cdn.vietqr.io",
