@@ -7,6 +7,7 @@ import {
 } from "@/components/demo-v2/demo-style-tabs";
 import { homeImages } from "@/config/home-images";
 import type { DiverseContent } from "@/lib/cms/types";
+import { publicWatermark } from "@/lib/public-brand";
 
 export function DemoDiverse({
   content,
@@ -48,9 +49,11 @@ export function DemoDiverse({
               style={{ objectFit: "cover", objectPosition: "top" }}
             />
           </div>
-          <p className="dv2-diverse__watermark" aria-hidden>
-            {content.watermark || "WEARLY"}
-          </p>
+          {publicWatermark(content.watermark) ? (
+            <p className="dv2-diverse__watermark" aria-hidden>
+              {publicWatermark(content.watermark)}
+            </p>
+          ) : null}
         </div>
 
         <div className="dv2-diverse__right">

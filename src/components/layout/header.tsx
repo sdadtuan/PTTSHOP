@@ -8,7 +8,7 @@ import { useCart } from "@/components/cart/cart-context";
 import { useSiteBrand } from "@/components/cms/site-brand-context";
 import { useStorefrontLayout } from "@/components/cms/storefront-layout-context";
 import { cn } from "@/lib/utils";
-import { displayBrandName } from "@/lib/public-brand";
+import { displayBrandName, publicNavLabel } from "@/lib/public-brand";
 
 export function Header() {
   const pathname = usePathname();
@@ -119,7 +119,7 @@ export function Header() {
                 href={item.href}
                 className="whitespace-nowrap transition hover:text-[var(--accent)]"
               >
-                {item.label}
+                {publicNavLabel(item.label)}
               </Link>
             </li>
           ))}
@@ -161,7 +161,7 @@ export function Header() {
                 onClick={() => setOpen(false)}
                 className="rounded-lg px-3 py-3 text-sm font-medium text-neutral-800 transition hover:bg-black/5 hover:text-[var(--accent)]"
               >
-                {item.label}
+                {publicNavLabel(item.label)}
               </Link>
             ))}
           </nav>

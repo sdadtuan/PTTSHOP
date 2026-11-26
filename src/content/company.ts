@@ -1,3 +1,5 @@
+import { publicCopy } from "@/lib/public-brand";
+
 // Nguồn: docs/02-P0-PHAP-LY-NOI-DUNG.md, mục "Đã có".
 // Điền: tên, MST, ngày cấp, trụ sở, người đại diện.
 // Để nguyên [cần chốt]: nơi cấp, hotline, email.
@@ -27,7 +29,13 @@ export function visibleParagraphs(lines: string[]) {
       line
         .split(/(?<=\.)\s+/)
         .map((sentence) => sentence.trim())
-        .filter((sentence) => sentence && !sentence.includes(UNSET))
+        .filter(
+          (sentence) =>
+            sentence &&
+            !sentence.includes(UNSET) &&
+            !/@[^ \t]*vizfas|vizfas\.vn/i.test(sentence),
+        )
+        .map((sentence) => publicCopy(sentence))
         .join(" "),
     )
     .filter(Boolean);

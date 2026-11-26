@@ -20,7 +20,7 @@ export const SECTION_HELP: Partial<Record<HomepageSectionKey, string>> = {
   hero: "Khối đầu trang: ảnh vỡ mảnh (shatter), tiêu đề lớn, nút và 4 ưu điểm.",
   dual_banner: "Banner 2 ảnh “Phong Cách Đơn Giản – Mang Đậm Tính Cá Nhân”.",
   collections: "Lưới 3 bộ sưu tập (Áo Thun / Quần / Phụ Kiện) — chọn danh mục có sẵn cho từng ô.",
-  diverse: "Khối “Đa Dạng Kiểu Dáng – Dễ Phối Đồ” với ảnh người mẫu và chữ nền WEARLY.",
+  diverse: "Khối “Đa Dạng Kiểu Dáng – Dễ Phối Đồ” với ảnh người mẫu và chữ nền lớn.",
   featured: "Sản phẩm nổi bật (2 khung lớn + 4 khung nhỏ).",
   color_play:
     "Khối PHỐI MÀU TẠO CHẤT: ảnh lớn, 2 ảnh dưới đoạn “Xu Hướng”, lưới ảnh và chữ dọc.",
