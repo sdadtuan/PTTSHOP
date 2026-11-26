@@ -15,7 +15,8 @@
             video/webm webm;
         }
         default_type application/octet-stream;
-        add_header Strict-Transport-Security "max-age=86400" always;
+        # 180 ngày, không preload. Chỉ có hiệu lực sau nginx -t && reload (chưa làm ở batch này).
+        add_header Strict-Transport-Security "max-age=15552000" always;
         add_header X-Frame-Options "SAMEORIGIN" always;
         add_header X-Content-Type-Options "nosniff" always;
         add_header Referrer-Policy "strict-origin-when-cross-origin" always;
