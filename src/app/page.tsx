@@ -75,13 +75,13 @@ export default async function HomePage() {
     prisma.category.findMany({ orderBy: { sortOrder: "asc" }, take: 6 }),
     prisma.product.findMany({
       where: { isFeatured: true, ...publicCatalogWhere },
-      include: { images: { orderBy: { sortOrder: "asc" } }, variants: publicVariants() },
+      include: { images: { where: { isHidden: false }, orderBy: { sortOrder: "asc" } }, variants: publicVariants() },
       take: 12,
     }),
     prisma.product.findMany({
       where: publicCatalogWhere,
       include: {
-        images: { orderBy: { sortOrder: "asc" } },
+        images: { where: { isHidden: false }, orderBy: { sortOrder: "asc" } },
         variants: publicVariants(),
         category: { select: { slug: true } },
       },
@@ -127,7 +127,7 @@ export default async function HomePage() {
   if (featuredCms.productIds.length > 0) {
     const picked = await prisma.product.findMany({
       where: { id: { in: featuredCms.productIds }, ...publicCatalogWhere },
-      include: { images: { orderBy: { sortOrder: "asc" } }, variants: publicVariants() },
+      include: { images: { where: { isHidden: false }, orderBy: { sortOrder: "asc" } }, variants: publicVariants() },
     });
     const order = new Map(featuredCms.productIds.map((id, i) => [id, i]));
     selectedFeatured = [...picked].sort(
