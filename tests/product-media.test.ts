@@ -202,6 +202,43 @@ describe("saveProductFull (DB)", () => {
     expect(await prisma.product.count({ where: { slug: "test-media-product" } })).toBe(0);
   });
 
+  it("keeps an Unsplash URL already stored and rejects a new external URL", async () => {
+    const { productId } = await saveProductFull(prisma, basePayload());
+    const kept = "https://images.unsplash.com/photo-kept?auto=format&fit=crop&w=800&q=80";
+    await prisma.productImage.create({
+      data: { productId, url: kept, alt: "ảnh cũ", sortOrder: 9 },
+    });
+    await expect(
+      saveProductFull(
+        prisma,
+        basePayload({
+          id: productId,
+          media: [
+            { url: kept, type: "image" },
+            { url: "/uploads/t1.jpg", type: "image" },
+          ],
+        }),
+      ),
+    ).resolves.toMatchObject({ productId });
+    const fresh = "https://images.unsplash.com/photo-new";
+    await expect(
+      saveProductFull(
+        prisma,
+        basePayload({
+          id: productId,
+          media: [
+            { url: fresh, type: "image" },
+            { url: "/uploads/t1.jpg", type: "image" },
+          ],
+        }),
+      ),
+    ).rejects.toThrow(/cdn\.vietqr\.io/);
+    await expect(
+      saveProductFull(prisma, basePayload({ media: [{ url: fresh, type: "image" }] })),
+    ).rejects.toThrow();
+    expect(await prisma.product.count({ where: { slug: "test-media-product" } })).toBe(1);
+  });
+
   it("slug conflict → saved with a unique suffix, the other product is untouched", async () => {
     const before = await prisma.product.findUniqueOrThrow({ where: { slug: "test-tee" } });
     const { productId } = await saveProductFull(prisma, basePayload({ slug: "test-tee" }));

@@ -57,7 +57,9 @@ describe("CMS validation / sanitising", () => {
     expect(isSafeMediaUrl("/images/home-v2/hero-main.jpg")).toBe(true);
     expect(isSafeMediaUrl("/uploads/a.jpg) ;background:url(x")).toBe(false);
     expect(isSafeMediaUrl("https://evil.example/x.jpg")).toBe(false);
-    expect(isSafeMediaUrl("https://images.unsplash.com/photo-1")).toBe(true);
+    expect(isSafeMediaUrl("https://images.unsplash.com/photo-1")).toBe(false);
+    expect(isSafeMediaUrl("https://cdn.vietqr.io/image/970422-123-compact.png")).toBe(true);
+    expect(isSafeMediaUrl("/media/uploads/logo.png")).toBe(true);
   });
 
   it("strips HTML tags but keeps normal text such as 'Free ship > 500k'", () => {

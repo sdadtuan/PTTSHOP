@@ -6,6 +6,7 @@ import { sanitizePlainText } from "@/lib/cms/validate";
 import { bulletsToJson, sizeChartToJson, type SizeChart } from "@/lib/pdp-tabs";
 import { slugify, uniqueSlug } from "@/lib/slug";
 import { productIsDemo } from "@/lib/demo-product";
+import { isAllowedNewMediaUrl, isAllowedProductMediaUrl, isLegacyUnsplashUrl } from "@/lib/product-media-url";
 import { rememberSlugRedirect } from "@/lib/slug-redirect";
 
 /**
@@ -14,15 +15,16 @@ import { rememberSlugRedirect } from "@/lib/slug-redirect";
  * images, video and variants are always persisted together.
  */
 
+const MEDIA_URL_MESSAGE =
+  "URL ảnh/video không hợp lệ (chỉ /media, /images, /uploads, /videos hoặc https://cdn.vietqr.io)";
+
 const mediaUrl = z
   .string()
   .trim()
   .min(1)
   .refine(
-    (u) =>
-      (u.startsWith("/") && !u.startsWith("//") && !/[\s"'()<>\\]/.test(u)) ||
-      u.startsWith("https://images.unsplash.com/"),
-    "URL ảnh/video không hợp lệ (chỉ /media, /uploads, /images, /videos hoặc images.unsplash.com)",
+    (u) => isAllowedNewMediaUrl(u) || isLegacyUnsplashUrl(u),
+    MEDIA_URL_MESSAGE,
   );
 
 export const mediaInputSchema = z.object({
@@ -202,6 +204,13 @@ export async function saveProductFull(
 
     // ---- media
     const existingMedia = await tx.productImage.findMany({ where: { productId } });
+    const existingMediaUrls = new Set(existingMedia.map((m) => m.url));
+    for (const m of ordered) {
+      const urls = [m.url, m.posterUrl].filter((u): u is string => Boolean(u && u.trim()));
+      if (urls.some((u) => !isAllowedProductMediaUrl(u, existingMediaUrls))) {
+        throw new ApiError(MEDIA_URL_MESSAGE, 400);
+      }
+    }
     const existingMediaIds = new Set(existingMedia.map((m) => m.id));
     const keepMedia = new Set(ordered.filter((m) => m.id && existingMediaIds.has(m.id)).map((m) => m.id!));
     await tx.productImage.deleteMany({
