@@ -2,6 +2,7 @@ import { ReviewsCatalogClient } from "@/components/reviews/reviews-catalog-clien
 import { publicCatalogWhere } from "@/lib/catalog-visibility";
 import { prisma } from "@/lib/prisma";
 import { listPublishedReviews } from "@/lib/reviews";
+import { publicCopy, publicNavLabel } from "@/lib/public-brand";
 import { getStorefrontPageBySlug } from "@/lib/storefront/pages";
 
 export const dynamic = "force-dynamic";
@@ -9,8 +10,8 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata() {
   const page = await getStorefrontPageBySlug("danh-gia");
   return {
-    title: page?.title || "Đánh giá",
-    description: page?.description || "Đánh giá sản phẩm từ khách hàng PTT Shop",
+    title: publicNavLabel(page?.title || "Đánh giá"),
+    description: publicCopy(page?.description, "Đánh giá sản phẩm từ khách hàng PTT Shop"),
   };
 }
 
@@ -32,9 +33,10 @@ export default async function ReviewsPage() {
   ]);
 
   const intro =
-    page?.body?.[0] ||
-    page?.description ||
-    "Xem nhận xét thật từ khách đã mua và trải nghiệm sản phẩm PTT Shop.";
+    publicCopy(
+      page?.body?.[0] || page?.description,
+      "Xem nhận xét thật từ khách đã mua và trải nghiệm sản phẩm PTT Shop.",
+    );
 
   const initialClient = {
     ...initial,

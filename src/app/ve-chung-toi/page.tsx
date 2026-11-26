@@ -1,4 +1,5 @@
 import { visibleParagraphs } from "@/content/company";
+import { publicCopy } from "@/lib/public-brand";
 import { getStorefrontPageBySlug } from "@/lib/storefront/pages";
 
 export const dynamic = "force-dynamic";
@@ -6,14 +7,14 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata() {
   const page = await getStorefrontPageBySlug("ve-chung-toi");
   return {
-    title: page?.title || "Về chúng tôi",
-    description: page?.description || "Câu chuyện thương hiệu PTT Shop.",
+    title: publicCopy(page?.title, "Về chúng tôi"),
+    description: publicCopy(page?.description, "Câu chuyện thương hiệu PTT Shop."),
   };
 }
 
 export default async function AboutPage() {
   const page = await getStorefrontPageBySlug("ve-chung-toi");
-  const title = page?.title || "Về PTT Shop";
+  const title = publicCopy(page?.title, "Về PTT Shop");
   const body = visibleParagraphs(page?.body ?? []);
 
   return (

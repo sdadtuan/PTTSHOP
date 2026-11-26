@@ -1,9 +1,34 @@
 const PLACEHOLDER_PHONE_DIGITS = new Set(["0321456789", "0901234567"]);
 
-/** Tên hiển thị. Giá trị CMS trống hoặc còn VIZFAS thì dùng PTT Shop. Không sửa dòng trong database. */
-export function displayBrandName(value: string | null | undefined, fallback = "PTT Shop") {
-  const text = (value || "").replace(/vizfas/gi, fallback).trim();
+/** Chuỗi public. Không ghi đè database. Tên cũ và lỗi “Nữmỗi” được sửa lúc hiển thị. */
+export function publicCopy(value: string | null | undefined, fallback = "") {
+  const text = (value || "")
+    .replace(/vizfas(?:\.vn)?/gi, "PTT Shop")
+    .replace(/\bWEARLY\b/gi, "PTT Shop")
+    .replace(/Nữmỗi/g, "Nữ mỗi")
+    .replace(/PTT Shop(?:\s+PTT Shop)+/g, "PTT Shop")
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
   return text || fallback;
+}
+
+/** Tên hiển thị. Giá trị CMS trống hoặc còn tên cũ thì dùng PTT Shop. Không sửa dòng trong database. */
+export function displayBrandName(value: string | null | undefined, fallback = "PTT Shop") {
+  return publicCopy(value, "") || fallback;
+}
+
+/** Chữ nền trang chủ. Tên theme cũ thì ẩn, không thay bằng chữ khác. */
+export function publicWatermark(value: string | null | undefined) {
+  const text = (value || "").trim();
+  if (!text || /wearly|vizfas/i.test(text)) return "";
+  return text;
+}
+
+/** Nhãn menu. “Đánh giá” viết thường được đưa về “Đánh Giá”. */
+export function publicNavLabel(label: string) {
+  const text = publicCopy(label);
+  if (/^đánh giá$/i.test(text)) return "Đánh Giá";
+  return text;
 }
 
 export function visiblePhone(value: string | null | undefined) {

@@ -409,7 +409,7 @@ export function defaultSectionContent(
         ctaLabel: "Xem tất cả sản phẩm",
         ctaHref: "/san-pham",
         modelImage: homeImages.diverse.model,
-        watermark: "WEARLY",
+        watermark: "",
       } satisfies DiverseContent;
     case "featured":
       return {

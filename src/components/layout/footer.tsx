@@ -9,7 +9,7 @@ import { useStorefrontLayout } from "@/components/cms/storefront-layout-context"
 import { TYPE_SCALE } from "@/config/home-type-scale";
 import { company, companyPolicyLinks, isUnset } from "@/content/company";
 import { withOrderLookupLink } from "@/lib/cms/order-lookup-link";
-import { displayBrandName, visibleEmail, visibleHref, visiblePhone } from "@/lib/public-brand";
+import { displayBrandName, publicCopy, publicNavLabel, visibleEmail, visibleHref, visiblePhone } from "@/lib/public-brand";
 
 function InstagramIcon({ className }: { className?: string }) {
   return (
@@ -158,7 +158,7 @@ export function Footer() {
                 className="font-bold tracking-wide text-neutral-900"
                 style={{ fontSize: TYPE_SCALE.footerTagline.css }}
               >
-                {col.title}
+                {publicCopy(col.title)}
               </p>
               <span
                 className="mt-2 block h-[3px] w-9 rounded-full bg-[var(--accent)]"
@@ -172,7 +172,7 @@ export function Footer() {
                       className="text-neutral-500 transition hover:text-[var(--accent)]"
                       style={{ fontSize: TYPE_SCALE.footerLink.css }}
                     >
-                      {link.label}
+                      {publicNavLabel(link.label)}
                     </Link>
                   </li>
                 ))}
@@ -250,7 +250,7 @@ export function Footer() {
           <p className="flex flex-wrap gap-x-3 gap-y-1">
             {companyPolicyLinks.map((link) => (
               <Link key={link.href} href={link.href} className="hover:text-neutral-800">
-                {link.label}
+                {publicNavLabel(link.label)}
               </Link>
             ))}
           </p>
@@ -269,7 +269,7 @@ export function Footer() {
               <span key={link.href + link.label} className="contents">
                 {i > 0 ? <span aria-hidden>|</span> : null}
                 <Link href={link.href} className="hover:text-neutral-800">
-                  {link.label}
+                  {publicNavLabel(link.label)}
                 </Link>
               </span>
             ))}

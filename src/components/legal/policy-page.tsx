@@ -1,19 +1,20 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isUnset, visibleParagraphs } from "@/content/company";
+import { publicCopy } from "@/lib/public-brand";
 import { policyBySlug } from "@/content/policies";
 import { getStorefrontPageBySlug } from "@/lib/storefront/pages";
 
 export async function policyMetadata(slug: string): Promise<Metadata> {
   const policy = policyBySlug(slug);
-  return { title: policy?.title ?? "Chính sách" };
+  return { title: publicCopy(policy?.title, "Chính sách") };
 }
 
 export async function PolicyDocument({ slug }: { slug: string }) {
   const fallback = policyBySlug(slug);
   if (!fallback) notFound();
   const stored = await getStorefrontPageBySlug(slug);
-  const title = stored?.title || fallback.title;
+  const title = publicCopy(stored?.title || fallback.title);
   const body = visibleParagraphs(stored?.body?.length ? stored.body : fallback.body);
 
   return (
