@@ -131,7 +131,7 @@ export default async function OrderSuccessPage({ searchParams }: Props) {
             </div>
             <div className="flex justify-between">
               <span className="text-neutral-500">Phí ship</span>
-              <span>{receipt.shippingFee === 0 ? "Miễn phí" : formatVnd(receipt.shippingFee)}</span>
+              <span>{receipt.shippingFee == null ? "Phí vận chuyển sẽ báo khi xác nhận đơn" : receipt.shippingFee === 0 ? "Miễn phí" : formatVnd(receipt.shippingFee)}</span>
             </div>
             {receipt.discount > 0 ? (
               <div className="flex justify-between">
@@ -143,6 +143,7 @@ export default async function OrderSuccessPage({ searchParams }: Props) {
               <span>Tổng</span>
               <span>{formatVnd(receipt.total)}</span>
             </div>
+            {receipt.shippingFee == null ? <p className="text-xs text-neutral-500">chưa gồm phí vận chuyển</p> : null}
             <div className="flex justify-between">
               <span className="text-neutral-500">Thanh toán</span>
               <span>{receipt.paymentLabel}</span>

@@ -10,7 +10,7 @@ export type OrderReceiptInput = {
   orderNumber: string;
   paymentMethod: string;
   subtotal: number;
-  shippingFee: number;
+  shippingFee: number | null;
   discount: number;
   total: number;
   items: ReceiptItem[];

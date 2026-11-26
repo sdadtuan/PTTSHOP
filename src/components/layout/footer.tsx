@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MapPin, Mail, Phone, Clock } from "lucide-react";
 import { BrandLogoImg } from "@/components/cms/brand-logo-img";
+import { useShopProfile } from "@/components/cms/shop-profile-context";
 import { useSiteBrand } from "@/components/cms/site-brand-context";
 import { useStorefrontLayout } from "@/components/cms/storefront-layout-context";
 import { TYPE_SCALE } from "@/config/home-type-scale";
@@ -64,6 +65,7 @@ function SparkLogo({ className }: { className?: string }) {
 export function Footer() {
   const pathname = usePathname();
   const brand = useSiteBrand();
+  const shop = useShopProfile();
   const { footerLinks } = useStorefrontLayout();
   const columns = withOrderLookupLink(footerLinks.columns);
   const legalLinks = footerLinks.legalLinks;
@@ -80,8 +82,8 @@ export function Footer() {
   ].filter((item) => item.href);
 
   const brandName = displayBrandName(brand.brandName);
-  const email = visibleEmail(brand.contactEmail);
-  const phone = visiblePhone(brand.hotline || brand.contactPhone);
+  const email = visibleEmail(shop.email);
+  const phone = visiblePhone(shop.hotline);
   const showFooterBrandText = Boolean(brand.logoUrl && brand.logoLayout.footerShowBrandName);
 
   return (
@@ -195,10 +197,12 @@ export function Footer() {
               className="mt-4 space-y-3 text-neutral-500"
               style={{ fontSize: TYPE_SCALE.footerLink.css }}
             >
+              {shop.address ? (
               <li className="flex items-start gap-2.5">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" />
-                <span>{brand.contactAddress}</span>
+                <span>{shop.address}</span>
               </li>
+              ) : null}
               {email ? (
               <li className="flex items-center gap-2.5">
                 <Mail className="h-4 w-4 shrink-0 text-[var(--accent)]" />
@@ -221,10 +225,20 @@ export function Footer() {
                 </a>
               </li>
               ) : null}
+              {shop.hours ? (
               <li className="flex items-start gap-2.5">
                 <Clock className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" />
-                <span>{brand.contactHours}</span>
+                <span>{shop.hours}</span>
               </li>
+              ) : null}
+              {shop.zaloUrl ? (
+              <li className="flex items-start gap-2.5">
+                <span className="mt-0.5 text-xs font-bold text-[var(--accent)]">Zalo</span>
+                <a href={shop.zaloUrl} className="hover:text-[var(--accent)]" target="_blank" rel="noopener noreferrer">
+                  Nhắn Zalo
+                </a>
+              </li>
+              ) : null}
             </ul>
           </div>
         </div>

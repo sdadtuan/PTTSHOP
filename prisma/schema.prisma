@@ -288,7 +288,8 @@ model Order {
   note            String?
   couponCode      String?
   subtotal        Int
-  shippingFee     Int            @default(0)
+  /// Null = phí chưa báo, không phải 0đ. Đơn cũ giữ số đã lưu.
+  shippingFee     Int?
   discount        Int            @default(0)
   total           Int
   receiptTokenHash String?
@@ -403,6 +404,8 @@ model SiteSettings {
   contactEmail    String?
   contactPhone    String?
   contactHours    String?
+  /// Link Zalo. Null hoặc rỗng thì không hiện nút.
+  zaloUrl         String?
   socialInstagram String?
   socialFacebook  String?
   socialTiktok    String?
@@ -498,6 +501,8 @@ model Consent {
 model PaymentSettings {
   id                  String  @id @default("default")
   codEnabled          Boolean?
+  /// Null hoặc false = ẩn chuyển khoản. Chỉ hiện khi true và đủ tài khoản.
+  bankTransferEnabled Boolean?
   codMaxAmount        Int?
   holdHours           Int?
   codConfirmHours     Int?
@@ -526,7 +531,7 @@ model WebhookEvent {
   createdAt DateTime @default(now())
 }
 
-/// Một nguồn phí ship. Null = mặc định trong code. Kho để trống cho tới khi admin nhập.
+/// Một nguồn phí ship. Null = chưa cấu hình, không thay bằng số trong code. Kho để trống cho tới khi admin nhập.
 model ShippingSettings {
   id                    String  @id @default("default")
   freeShipThreshold     Int?

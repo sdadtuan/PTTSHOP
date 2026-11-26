@@ -74,7 +74,6 @@ export const POLICY_PAGES: PolicyPage[] = [
     effectiveLabel: "[cần chốt]",
     body: [
       draft,
-      "Khách được yêu cầu đổi hoặc trả trong 7 ngày kể từ khi nhận.",
       "Hàng cần còn tem, chưa qua sử dụng, còn hóa đơn hoặc mã đơn. Lỗi do nhà sản xuất được đổi hoặc trả.",
       "Không đổi trả với hàng đã qua sử dụng, mất tem, hoặc thuộc nhóm vệ sinh cá nhân đã mở niêm phong. Danh mục cụ thể: [cần chốt].",
       "Với hàng đúng mô tả và không lỗi, chi phí gửi trả do [cần chốt].",

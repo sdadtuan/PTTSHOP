@@ -62,7 +62,7 @@ export function DemoFooter({
           <div>
             <h4>{contactTitle}</h4>
             <ul>
-              <li>{settings.contactAddress}</li>
+              {settings.contactAddress ? <li>{settings.contactAddress}</li> : null}
               {email ? (
                 <li>
                   <a href={`mailto:${email}`}>{email}</a>
@@ -73,7 +73,7 @@ export function DemoFooter({
                   <a href={`tel:${phone.replace(/\s/g, "")}`}>{phone}</a>
                 </li>
               ) : null}
-              <li>{settings.contactHours}</li>
+              {settings.contactHours ? <li>{settings.contactHours}</li> : null}
               {footerLinks.showHomepageSwitcher ? (
                 <>
                   <li>

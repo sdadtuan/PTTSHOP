@@ -17,7 +17,9 @@ import { discountPercent, formatVnd } from "@/lib/format";
 import { resolveSwatch, swatchBackground } from "@/lib/color-names";
 import { primaryImage } from "@/lib/product-media";
 import { cn } from "@/lib/utils";
+import { useShopProfile } from "@/components/cms/shop-profile-context";
 import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
+import { purchaseBadges } from "@/lib/shop/profile";
 import { formatStockTemplate } from "@/lib/storefront/ui-copy-types";
 import { colorOutOfStock, pickSizeForColor } from "@/lib/variant-stock";
 
@@ -64,6 +66,7 @@ function sizeRank(size: string) {
 
 export function ProductPurchase({ product, color, onColorChange, sizeChart }: Props) {
   const pdp = useStorefrontUi().pdp;
+  const badges = purchaseBadges(useShopProfile());
   const { addItem } = useCart();
   const { status } = useSession();
   const [wishSaved, setWishSaved] = useState(false);
@@ -404,19 +407,13 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
         </button>
       </div>
 
-      <div className="grid grid-cols-3 gap-3 border-t border-neutral-100 pt-5 text-center text-[11px] text-neutral-500 sm:text-xs">
-        <div className="flex flex-col items-center gap-1.5">
-          <Truck className="h-4 w-4" />
-          Free Shipping
-        </div>
-        <div className="flex flex-col items-center gap-1.5">
-          <RefreshCw className="h-4 w-4" />
-          Đổi trả 30 ngày
-        </div>
-        <div className="flex flex-col items-center gap-1.5">
-          <ShieldCheck className="h-4 w-4" />
-          Thanh toán an toàn
-        </div>
+      <div className="flex flex-wrap justify-center gap-3 border-t border-neutral-100 pt-5 text-center text-[11px] text-neutral-500 sm:text-xs">
+        {badges.map((label) => (
+          <div key={label} className="flex min-w-24 flex-col items-center gap-1.5">
+            {label.startsWith("Freeship") ? <Truck className="h-4 w-4" /> : label.startsWith("Đổi trả") ? <RefreshCw className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
+            {label}
+          </div>
+        ))}
       </div>
     </div>
   );

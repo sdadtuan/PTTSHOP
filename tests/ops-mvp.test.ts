@@ -116,6 +116,11 @@ describe("cancel, return and refund records", () => {
   it("blocks a late return, an excluded category, and stores the fee payer", async () => {
     const client = db();
     const { order, category, variant } = await sale(client, { status: "COMPLETED" });
+    await client.returnSettings.upsert({
+      where: { id: "default" },
+      create: { id: "default", returnWindowDays: 7 },
+      update: { returnWindowDays: 7 },
+    });
     await expect(openReturn(client, {
       orderId: order.id,
       type: "RETURN_REFUND",

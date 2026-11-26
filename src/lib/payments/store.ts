@@ -13,6 +13,7 @@ export async function getPaymentConfig(): Promise<PaymentConfig> {
     codMaxAmount: row?.codMaxAmount ?? DEFAULT_COD_MAX_AMOUNT,
     holdHours: row?.holdHours ?? DEFAULT_HOLD_HOURS,
     codConfirmHours: row?.codConfirmHours ?? DEFAULT_COD_CONFIRM_HOURS,
+    bankTransferEnabled: row?.bankTransferEnabled === true,
     bankBin: row?.bankBin ?? "",
     bankName: row?.bankName ?? "",
     bankAccountNumber: row?.bankAccountNumber ?? "",

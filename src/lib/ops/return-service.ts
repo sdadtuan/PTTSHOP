@@ -2,7 +2,6 @@ import type { PrismaClient } from "@prisma/client";
 import { ApiError } from "@/lib/api";
 import {
   DEFAULT_DUAL_APPROVAL_THRESHOLD,
-  DEFAULT_RETURN_WINDOW_DAYS,
   excludedCategoryHit,
   refundMethodForPayment,
   reviewRefundApproval,
@@ -16,7 +15,7 @@ export async function loadReturnSettings(db: Db) {
   const row = await db.returnSettings.findUnique({ where: { id: "default" } });
   const excluded = row?.excludedCategoryIds ? (JSON.parse(row.excludedCategoryIds) as string[]) : [];
   return {
-    returnWindowDays: row?.returnWindowDays ?? DEFAULT_RETURN_WINDOW_DAYS,
+    returnWindowDays: row?.returnWindowDays ?? null,
     excludedCategoryIds: Array.isArray(excluded) ? excluded : [],
     dualApprovalThreshold: row?.dualApprovalThreshold ?? DEFAULT_DUAL_APPROVAL_THRESHOLD,
   };
@@ -32,6 +31,9 @@ export async function openReturn(db: Db, input: {
   now?: Date;
 }) {
   const settings = await loadReturnSettings(db);
+  if (settings.returnWindowDays == null) {
+    throw new ApiError("Chưa cấu hình số ngày đổi trả.", 400);
+  }
   const order = await db.order.findUnique({
     where: { id: input.orderId },
     include: { items: { include: { variant: { include: { product: true } } } } },

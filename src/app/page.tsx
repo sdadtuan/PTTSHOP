@@ -21,7 +21,9 @@ import { homeImages } from "@/config/home-images";
 import { TYPE_SCALE } from "@/config/home-type-scale";
 import { optimizedPublicImageUrl } from "@/lib/catalog-image";
 import { collectionTileSrc } from "@/lib/collection-tile";
+import { DEFAULT_HERO_TRUST_ITEMS } from "@/lib/cms/layout-defaults";
 import { getHomeSectionsForRequest } from "@/lib/cms/published";
+import { visibleTrustText } from "@/lib/shop/profile";
 import { displayBrandName, publicWatermark } from "@/lib/public-brand";
 import type {
   ColorPlayContent,
@@ -196,12 +198,10 @@ export default async function HomePage() {
             </Link>
 
             <ul className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-3 md:mt-12 md:gap-4">
-              {(hero.trustItems.length ? hero.trustItems : [
-                "Chất liệu thoáng mát",
-                "Form dáng hiện đại",
-                "Bền màu",
-                "Free ship > 500k",
-              ]).map((title, i) => {
+              {(hero.trustItems.length ? hero.trustItems : [...DEFAULT_HERO_TRUST_ITEMS])
+                .map((title) => visibleTrustText(title))
+                .filter(Boolean)
+                .map((title, i) => {
                 const Icon = TRUST_ICONS[i % TRUST_ICONS.length]!;
                 return (
                   <li key={title} className="flex items-start gap-2.5">

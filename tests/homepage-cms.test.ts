@@ -62,10 +62,10 @@ describe("CMS validation / sanitising", () => {
     expect(isSafeMediaUrl("/media/uploads/logo.png")).toBe(true);
   });
 
-  it("strips HTML tags but keeps normal text such as 'Free ship > 500k'", () => {
+  it("strips HTML tags but keeps normal text such as 'Size > M'", () => {
     expect(sanitizePlainText("<script>alert(1)</script>hi")).toBe("alert(1)hi");
     expect(sanitizePlainText('<img src=x onerror="a()">ok')).toBe("ok");
-    expect(sanitizePlainText("Free ship > 500k")).toBe("Free ship > 500k");
+    expect(sanitizePlainText("Size > M")).toBe("Size > M");
   });
 
   it("every default section passes its schema unchanged (no visual drift)", () => {
@@ -117,7 +117,8 @@ describe("homepage CMS draft / publish / versions", () => {
     await ensureHomepageCmsSeeded();
     const v = await getPublishedHomepage();
     expect(heroTitle(v)).toBe("Mặc Đơn Giản");
-    expect((v.sections.hero.content as Hero).trustItems).toContain("Free ship > 500k");
+    expect((v.sections.hero.content as Hero).trustItems).toContain("Bền màu");
+    expect((v.sections.hero.content as Hero).trustItems.join(" ")).not.toMatch(/free ship/i);
     expect(v.sections.promo_banner.isEnabled).toBe(false);
     expect(v.settings).toEqual(DEFAULT_SITE_SETTINGS);
     expect(await prisma.homepageVersion.count()).toBe(1);

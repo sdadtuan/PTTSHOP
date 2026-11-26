@@ -1,5 +1,6 @@
 import { Gem, Headphones, Leaf, PackageOpen, ShieldCheck, Shirt, Truck } from "lucide-react";
 import type { TrustPair } from "@/lib/cms/types";
+import { visibleTrustText } from "@/lib/shop/profile";
 
 const FALLBACK_ICONS = [Truck, PackageOpen, ShieldCheck, Headphones, Leaf, Shirt, Gem] as const;
 
@@ -14,8 +15,8 @@ export function DemoTrustBar({
     pairs && pairs.length > 0
       ? pairs.slice(0, 4).map((p, i) => ({
           icon: FALLBACK_ICONS[i % FALLBACK_ICONS.length]!,
-          title: p.title,
-          subtitle: p.subtitle,
+          title: visibleTrustText(p.title) || p.title,
+          subtitle: visibleTrustText(p.subtitle),
         }))
       : items && items.length > 0
         ? items.slice(0, 4).map((title, i) => ({
@@ -25,7 +26,7 @@ export function DemoTrustBar({
           }))
         : [
             { icon: Truck, title: "Giao Hàng Nhanh", subtitle: "Toàn Quốc" },
-            { icon: PackageOpen, title: "Đổi Trả Dễ Dàng", subtitle: "Trong 7 Ngày" },
+            { icon: PackageOpen, title: "Đổi Trả Dễ Dàng", subtitle: "Theo chính sách cửa hàng" },
             { icon: ShieldCheck, title: "Thanh Toán An Toàn", subtitle: "Nhiều Phương Thức" },
             { icon: Headphones, title: "Hỗ Trợ 24/7", subtitle: "Luôn Sẵn Sàng" },
           ];

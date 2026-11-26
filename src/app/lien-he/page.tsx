@@ -1,45 +1,39 @@
 "use client";
 
-import { useSiteBrand } from "@/components/cms/site-brand-context";
-import { isUnset } from "@/content/company";
-import { visibleEmail, visiblePhone } from "@/lib/public-brand";
+import { useShopProfile } from "@/components/cms/shop-profile-context";
 import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
+import { contactRows } from "@/lib/shop/profile";
 
 export default function ContactPage() {
   const ui = useStorefrontUi().contact;
-  const brand = useSiteBrand();
-  const email = visibleEmail(ui.useSiteContactFields ? brand.contactEmail : ui.email);
-  const phone = visiblePhone(ui.useSiteContactFields ? brand.hotline || brand.contactPhone : ui.phone);
-  const hours = ui.useSiteContactFields ? brand.contactHours : ui.hours;
+  const shop = useShopProfile();
+  const rows = contactRows(shop, {
+    address: ui.showroomLabel,
+    email: ui.emailLabel,
+    phone: ui.phoneLabel,
+    hours: ui.hoursLabel,
+  });
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 md:px-6">
       <h1 className="type-title text-3xl font-extrabold md:text-4xl">{ui.title}</h1>
       <p className="mt-3 text-sm text-neutral-600">{ui.intro}</p>
-      <div className="mt-8 space-y-4 border border-neutral-100 bg-white p-6 text-sm text-neutral-700">
-        <p>
-          <strong>{ui.showroomLabel}</strong> {ui.showroomAddress}
-        </p>
-        {isUnset(email) ? null : (
-        <p>
-          <strong>{ui.emailLabel}</strong>{" "}
-          <a href={`mailto:${email}`} className="text-[var(--accent)]">
-            {email}
-          </a>
-        </p>
-        )}
-        {phone ? (
-        <p>
-          <strong>{ui.phoneLabel}</strong>{" "}
-          <a href={`tel:${phone.replace(/\s/g, "")}`} className="text-[var(--accent)]">
-            {phone}
-          </a>
-        </p>
-        ) : null}
-        <p>
-          <strong>{ui.hoursLabel}</strong> {hours}
-        </p>
-      </div>
+      {rows.length ? (
+        <div className="mt-8 space-y-4 border border-neutral-100 bg-white p-6 text-sm text-neutral-700">
+          {rows.map((row) => (
+            <p key={row.key}>
+              <strong>{row.label}</strong>{" "}
+              {row.href ? (
+                <a href={row.href} className="text-[var(--accent)]" target={row.href.startsWith("http") ? "_blank" : undefined} rel={row.href.startsWith("http") ? "noopener noreferrer" : undefined}>
+                  {row.value}
+                </a>
+              ) : (
+                row.value
+              )}
+            </p>
+          ))}
+        </div>
+      ) : null}
       {ui.mapEmbedUrl ? (
         <div className="mt-6 aspect-video w-full overflow-hidden border border-neutral-100">
           <iframe

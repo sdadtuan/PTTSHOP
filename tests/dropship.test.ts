@@ -179,7 +179,7 @@ describe("TC-06 tách kiện", () => {
     expect(split).toMatchObject({ ok: true, warehouseQty: 2, supplierQty: 1 });
     const fee = decideShippingFee({
       subtotal: 600_000,
-      config: normalizeShippingConfig(null),
+      config: normalizeShippingConfig({ freeShipThreshold: 500000, fallbackFee: 30000 }),
       sameProvince: null,
       carrierFee: null,
       carrierAvailable: false,
@@ -440,8 +440,8 @@ describe("đặt hàng ghi sau khi kiểm tra", () => {
     expect(saved.items[0]?.quantity).toBe(3);
     expect(saved.items[0]?.supplierQty).toBe(1);
     expect(saved.shipments.map((row) => row.fulfillmentSource).sort()).toEqual(["SUPPLIER", "WAREHOUSE"]);
-    expect(saved.total).toBe(saved.subtotal + saved.shippingFee - saved.discount);
-    expect(saved.shippingFee).toBeGreaterThan(0);
+    expect(saved.total).toBe(saved.subtotal + (saved.shippingFee ?? 0) - saved.discount);
+    if (saved.shippingFee != null) expect(saved.shippingFee).toBeGreaterThan(0);
     const supplierLeft = await db.supplierSku.findFirstOrThrow({ where: { variantId: variant.id } });
     const ownLeft = await db.productVariant.findUniqueOrThrow({ where: { id: variant.id } });
     expect(ownLeft.stock).toBe(0);

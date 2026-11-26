@@ -14,7 +14,7 @@ const bodySchema = z.object({
   orderItemIds: z.array(z.string()).optional(),
   exceptionReason: z.string().optional(),
   restock: z.boolean().optional(),
-  returnWindowDays: z.number().int().min(0).max(60).optional(),
+  returnWindowDays: z.number().int().min(0).max(60).nullable().optional(),
   excludedCategoryIds: z.array(z.string()).optional(),
   dualApprovalThreshold: z.number().int().min(0).optional(),
 });

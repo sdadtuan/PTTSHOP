@@ -81,13 +81,12 @@ export const DEFAULT_HERO_TRUST_ITEMS = [
   "Chất liệu thoáng mát",
   "Form dáng hiện đại",
   "Bền màu",
-  "Free ship > 500k",
 ] as const;
 
 /** Demo trust bar when titles come from hero.trustItems only — subtitles from trustPairs. */
 export const DEFAULT_DEMO_TRUST_PAIRS: TrustPair[] = [
   { title: "Giao Hàng Nhanh", subtitle: "Toàn Quốc" },
-  { title: "Đổi Trả Dễ Dàng", subtitle: "Trong 7 Ngày" },
+  { title: "Đổi Trả Dễ Dàng", subtitle: "Theo chính sách cửa hàng" },
   { title: "Thanh Toán An Toàn", subtitle: "Nhiều Phương Thức" },
   { title: "Hỗ Trợ 24/7", subtitle: "Luôn Sẵn Sàng" },
 ];

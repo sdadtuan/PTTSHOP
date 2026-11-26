@@ -5,8 +5,8 @@ import Link from "next/link";
 import { AdminButton, AdminCard, AdminPageHeader } from "@/components/admin/ui";
 
 type FormState = {
-  freeShipThreshold: number;
-  fallbackFee: number;
+  freeShipThreshold: number | null;
+  fallbackFee: number | null;
   intraProvinceFee: number | null;
   interProvinceFee: number | null;
   parcelWeightGrams: number;
@@ -82,11 +82,11 @@ export default function ShippingSettingsPage() {
         </p>
         <label className="block text-sm">
           Ngưỡng miễn phí ship (đ)
-          <input className="mt-1 w-full rounded border px-3 py-2" type="number" value={form.freeShipThreshold} onChange={(e) => setForm({ ...form, freeShipThreshold: Number(e.target.value) })} />
+          <input className="mt-1 w-full rounded border px-3 py-2" type="number" value={form.freeShipThreshold ?? ""} onChange={(e) => setForm({ ...form, freeShipThreshold: e.target.value === "" ? null : Number(e.target.value) })} />
         </label>
         <label className="block text-sm">
           Phí dự phòng (đ)
-          <input className="mt-1 w-full rounded border px-3 py-2" type="number" value={form.fallbackFee} onChange={(e) => setForm({ ...form, fallbackFee: Number(e.target.value) })} />
+          <input className="mt-1 w-full rounded border px-3 py-2" type="number" value={form.fallbackFee ?? ""} onChange={(e) => setForm({ ...form, fallbackFee: e.target.value === "" ? null : Number(e.target.value) })} />
         </label>
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block text-sm">

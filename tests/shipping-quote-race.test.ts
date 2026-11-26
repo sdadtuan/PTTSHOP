@@ -16,7 +16,7 @@ describe("shipping quote race", () => {
       { requestedSubtotal: 0, currentSubtotal: 0, responseFee: 30_000 },
       { requestedSubtotal: 549_000, currentSubtotal: 549_000, responseFee: 0 },
       { requestedSubtotal: 0, currentSubtotal: 549_000, responseFee: 30_000 },
-    ]);
+    ], 500000, 30000);
     expect(fee).toBe(0);
   });
 });

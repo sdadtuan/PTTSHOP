@@ -11,7 +11,7 @@ import { reconcileCod } from "@/lib/shipping/reconcile";
 import { applyShippingWebhook, createOrderShipment, cancelShipmentRecord, publicShipments, quoteCheckout } from "@/lib/shipping/service";
 import { canTransitionShipment, orderStatusAfterShipments } from "@/lib/shipping/status";
 
-const config = normalizeShippingConfig(null);
+const config = normalizeShippingConfig({ freeShipThreshold: 500000, fallbackFee: 30000 });
 
 describe("shipping fee", () => {
   it("frees shipping at the threshold and ignores a fake client fee", () => {

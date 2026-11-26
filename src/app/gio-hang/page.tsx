@@ -9,7 +9,7 @@ import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
 import { NOT_FOR_SALE_MESSAGE } from "@/lib/catalog-visibility";
 import { formatVnd } from "@/lib/format";
 import { displayBrandName } from "@/lib/public-brand";
-import { DEFAULT_FALLBACK_FEE, DEFAULT_FREE_SHIP_THRESHOLD } from "@/lib/shipping/policy";
+import { SHIPPING_PENDING_COPY, TOTAL_EXCLUDES_SHIPPING_COPY } from "@/lib/shop/profile";
 import { shouldQuoteShipping } from "@/lib/shipping/quote-client";
 
 export default function CartPage() {
@@ -17,10 +17,8 @@ export default function CartPage() {
   const payable = items.filter((item) => item.forSale !== false);
   const subtotal = payable.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const c = useStorefrontUi().cart;
-  const [shipping, setShipping] = useState(
-    subtotal >= DEFAULT_FREE_SHIP_THRESHOLD ? 0 : DEFAULT_FALLBACK_FEE,
-  );
-  const [freeFrom, setFreeFrom] = useState(DEFAULT_FREE_SHIP_THRESHOLD);
+  const [shipping, setShipping] = useState<number | null>(null);
+  const [freeFrom, setFreeFrom] = useState<number | null>(null);
 
   useEffect(() => {
     if (!shouldQuoteShipping({ loading, itemCount: payable.length })) return;
@@ -31,13 +29,14 @@ export default function CartPage() {
       .then((res) => res.json())
       .then((data) => {
         if (cancelled || requestedSubtotal !== subtotal) return;
-        if (typeof data.fee === "number") setShipping(data.fee);
-        if (typeof data.freeShipThreshold === "number") setFreeFrom(data.freeShipThreshold);
+        setShipping(typeof data.fee === "number" ? data.fee : null);
+        setFreeFrom(typeof data.freeShipThreshold === "number" ? data.freeShipThreshold : null);
       })
       .catch((err: unknown) => {
         if (cancelled || (err instanceof DOMException && err.name === "AbortError")) return;
         if (requestedSubtotal !== subtotal) return;
-        setShipping(requestedSubtotal >= DEFAULT_FREE_SHIP_THRESHOLD ? 0 : DEFAULT_FALLBACK_FEE);
+        setShipping(null);
+        setFreeFrom(null);
       });
     return () => {
       cancelled = true;
@@ -73,7 +72,7 @@ export default function CartPage() {
     );
   }
 
-  const total = subtotal + shipping;
+  const total = subtotal + (shipping ?? 0);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 md:px-6 md:py-14">
@@ -166,16 +165,19 @@ export default function CartPage() {
             </div>
             <div className="flex justify-between">
               <dt className="text-neutral-500">{c.shippingLabel}</dt>
-              <dd>{shipping === 0 ? c.shippingFree : formatVnd(shipping)}</dd>
+              <dd>{shipping == null ? SHIPPING_PENDING_COPY : shipping === 0 ? c.shippingFree : formatVnd(shipping)}</dd>
             </div>
             <div className="flex justify-between border-t border-neutral-100 pt-3 text-base font-semibold">
               <dt>{c.totalLabel}</dt>
               <dd>{formatVnd(total)}</dd>
             </div>
           </dl>
+          {shipping == null ? <p className="mt-3 text-xs text-neutral-500">{TOTAL_EXCLUDES_SHIPPING_COPY}</p> : null}
+          {freeFrom != null ? (
           <p className="mt-3 text-xs text-neutral-500">
             Miễn phí vận chuyển từ {formatVnd(freeFrom)}.
           </p>
+          ) : null}
           {payable.length === 0 ? (
             <span className="mt-6 flex w-full items-center justify-center rounded bg-neutral-200 py-3 text-sm font-semibold text-neutral-500">
               {c.checkoutCta}
