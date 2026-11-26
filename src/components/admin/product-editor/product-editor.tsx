@@ -734,15 +734,15 @@ export function ProductEditor({ productId }: { productId?: string }) {
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
-                    <label className="flex items-center gap-1.5 text-[11px] text-[var(--admin-text-muted)]">
-                      <input
-                        type="checkbox"
-                        checked={m.isHidden}
-                        onChange={(e) => patchMedia(m.key, { isHidden: e.target.checked })}
-                        data-testid="pe-image-hidden"
-                      />
-                      Ẩn trên trang khách
-                    </label>
+                    <button
+                      type="button"
+                      className="w-full rounded border border-[var(--admin-border)] px-2 py-1 text-[11px] font-medium text-[var(--admin-text)] hover:bg-[var(--admin-surface-muted)]"
+                      aria-pressed={m.isHidden}
+                      data-testid="pe-image-hidden"
+                      onClick={() => patchMedia(m.key, { isHidden: !m.isHidden })}
+                    >
+                      {m.isHidden ? "Hiện ảnh" : "Ẩn ảnh"}
+                    </button>
                   </div>
                 </li>
               ))}

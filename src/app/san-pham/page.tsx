@@ -67,7 +67,7 @@ export default async function ProductsPage({
         isNew: params.new === "1",
       }),
       include: {
-        images: { orderBy: { sortOrder: "asc" } },
+        images: { where: { isHidden: false }, orderBy: { sortOrder: "asc" } },
         variants: publicVariants(),
         category: true,
       },

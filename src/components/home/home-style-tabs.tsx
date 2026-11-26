@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { ProductCard } from "@/components/product/product-card";
 import { GAPS } from "@/config/home-frame-specs";
-import { homeImages } from "@/config/home-images";
 
 type Product = {
   id: string;
@@ -71,25 +70,9 @@ export function HomeStyleTabs({ products }: Props) {
         className="grid grid-cols-2 sm:grid-cols-3 min-w-0"
         style={{ gap: GAPS.productGrid.desktop }}
       >
-        {filtered.map((p, i) => {
-          const useFlat =
-            tab === "all" ||
-            tab === "quan" ||
-            !p.images[0]?.url ||
-            p.images[0].url.includes("unsplash");
-          return (
-            <ProductCard
-              key={p.id}
-              product={p}
-              frame="diversePants"
-              imageOverride={
-                useFlat
-                  ? homeImages.diverse.pants[i % homeImages.diverse.pants.length]
-                  : undefined
-              }
-            />
-          );
-        })}
+        {filtered.map((p) => (
+          <ProductCard key={p.id} product={p} frame="diversePants" />
+        ))}
         {filtered.length === 0 ? (
           <p className="col-span-full text-sm text-neutral-500">
             Chưa có sản phẩm trong nhóm này.

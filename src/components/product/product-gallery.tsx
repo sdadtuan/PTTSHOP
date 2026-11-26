@@ -1,9 +1,11 @@
 "use client";
 
+import { ProductImagePlaceholder } from "@/components/product/product-image-placeholder";
 import { StorefrontImage } from "@/components/product/storefront-image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Pause, Play, Search, Volume2, VolumeX } from "lucide-react";
 import { mediaListKey } from "@/lib/media-list-key";
+import { shopDisplaySrc } from "@/lib/product-image-placeholder";
 import { firstColorPhotoIndex, isVideoMedia, mediaForColor } from "@/lib/product-media";
 import { cn } from "@/lib/utils";
 
@@ -29,7 +31,11 @@ const isVideo = (img: GalleryImage) => isVideoMedia(img);
 
 export function ProductGallery({ images, name, selectedColor, colorPickNonce = 0 }: Props) {
   const filtered = useMemo(
-    () => mediaForColor(images, selectedColor),
+    () =>
+      mediaForColor(
+        images.filter((img) => isVideoMedia(img) || Boolean(shopDisplaySrc(img.url))),
+        selectedColor,
+      ),
     [images, selectedColor],
   );
 
@@ -81,8 +87,8 @@ export function ProductGallery({ images, name, selectedColor, colorPickNonce = 0
 
   if (!current) {
     return (
-      <div className="flex aspect-[3/4] items-center justify-center bg-neutral-100 text-neutral-400">
-        Không có ảnh
+      <div className="relative aspect-[3/4] overflow-hidden">
+        <ProductImagePlaceholder name={name} />
       </div>
     );
   }
@@ -132,6 +138,7 @@ export function ProductGallery({ images, name, selectedColor, colorPickNonce = 0
             <StorefrontImage
               src={img.url}
               alt={img.alt || name}
+              emptyName={name}
               fill
               sizes="80px"
               loading="lazy"
@@ -208,6 +215,7 @@ export function ProductGallery({ images, name, selectedColor, colorPickNonce = 0
               <StorefrontImage
                 src={current.url}
                 alt={current.alt || name}
+                emptyName={name}
                 fill
                 priority
                 fetchPriority="high"

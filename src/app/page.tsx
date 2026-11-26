@@ -14,11 +14,13 @@ import {
 import { HeroShatterCollage } from "@/components/home/hero-shatter-collage";
 import { HomeStyleTabs } from "@/components/home/home-style-tabs";
 import { PhoiMauType } from "@/components/home/phoi-mau-type";
+import { ProductImagePlaceholder } from "@/components/product/product-image-placeholder";
 import { ProductCard } from "@/components/product/product-card";
 import { FRAME_ASPECT, GAPS, OBJECT_POSITION } from "@/config/home-frame-specs";
 import { homeImages } from "@/config/home-images";
 import { TYPE_SCALE } from "@/config/home-type-scale";
 import { optimizedPublicImageUrl } from "@/lib/catalog-image";
+import { collectionTileSrc } from "@/lib/collection-tile";
 import { getHomeSectionsForRequest } from "@/lib/cms/published";
 import { displayBrandName, publicWatermark } from "@/lib/public-brand";
 import type {
@@ -73,13 +75,13 @@ export default async function HomePage() {
     prisma.category.findMany({ orderBy: { sortOrder: "asc" }, take: 6 }),
     prisma.product.findMany({
       where: { isFeatured: true, ...publicCatalogWhere },
-      include: { images: { orderBy: { sortOrder: "asc" } }, variants: publicVariants() },
+      include: { images: { where: { isHidden: false }, orderBy: { sortOrder: "asc" } }, variants: publicVariants() },
       take: 12,
     }),
     prisma.product.findMany({
       where: publicCatalogWhere,
       include: {
-        images: { orderBy: { sortOrder: "asc" } },
+        images: { where: { isHidden: false }, orderBy: { sortOrder: "asc" } },
         variants: publicVariants(),
         category: { select: { slug: true } },
       },
@@ -125,7 +127,7 @@ export default async function HomePage() {
   if (featuredCms.productIds.length > 0) {
     const picked = await prisma.product.findMany({
       where: { id: { in: featuredCms.productIds }, ...publicCatalogWhere },
-      include: { images: { orderBy: { sortOrder: "asc" } }, variants: publicVariants() },
+      include: { images: { where: { isHidden: false }, orderBy: { sortOrder: "asc" } }, variants: publicVariants() },
     });
     const order = new Map(featuredCms.productIds.map((id, i) => [id, i]));
     selectedFeatured = [...picked].sort(
@@ -387,13 +389,11 @@ export default async function HomePage() {
             }
             className="group relative aspect-[5/4] max-h-[380px] overflow-hidden rounded-2xl bg-neutral-200 md:row-span-2 md:aspect-[233/266] md:max-h-none"
           >
-            <StorefrontImage
-              src={col.tiles[0]?.imageUrl || homeImages.collections.aoThun}
-              alt={col.tiles[0]?.title || mosaicCats.ao?.name || "Áo thun"}
-              fill
-              sizes="(max-width:768px) 100vw, 50vw"
-              className="object-cover transition duration-500 group-hover:scale-105"
-              style={{ objectPosition: OBJECT_POSITION.catAoThun }}
+            <CollectionTileMedia
+              imageUrl={col.tiles[0]?.imageUrl}
+              resolvedSlug={mosaicCats.ao?.slug}
+              title={col.tiles[0]?.title || mosaicCats.ao?.name || "Áo thun"}
+              objectPosition={OBJECT_POSITION.catAoThun}
             />
             <div className="absolute top-4 left-4 z-10 max-w-[48%] md:top-5 md:left-5 md:max-w-[70%]">
               <p
@@ -420,13 +420,11 @@ export default async function HomePage() {
             className="group relative overflow-hidden rounded-2xl bg-neutral-200"
             style={{ aspectRatio: FRAME_ASPECT.catQuan }}
           >
-            <StorefrontImage
-              src={col.tiles[1]?.imageUrl || homeImages.collections.quan}
-              alt={col.tiles[1]?.title || mosaicCats.quan?.name || "Quần"}
-              fill
-              sizes="(max-width:768px) 100vw, 50vw"
-              className="object-cover transition duration-500 group-hover:scale-105"
-              style={{ objectPosition: OBJECT_POSITION.catQuan }}
+            <CollectionTileMedia
+              imageUrl={col.tiles[1]?.imageUrl}
+              resolvedSlug={mosaicCats.quan?.slug}
+              title={col.tiles[1]?.title || mosaicCats.quan?.name || "Quần"}
+              objectPosition={OBJECT_POSITION.catQuan}
             />
             <div className="absolute top-4 left-4 z-10 max-w-[45%] md:max-w-[65%]">
               <p
@@ -453,13 +451,11 @@ export default async function HomePage() {
             className="group relative overflow-hidden rounded-2xl bg-neutral-200"
             style={{ aspectRatio: FRAME_ASPECT.catPhuKien }}
           >
-            <StorefrontImage
-              src={col.tiles[2]?.imageUrl || homeImages.collections.phuKien}
-              alt={col.tiles[2]?.title || mosaicCats.pk?.name || "Phụ kiện"}
-              fill
-              sizes="(max-width:768px) 100vw, 50vw"
-              className="object-cover transition duration-500 group-hover:scale-105"
-              style={{ objectPosition: OBJECT_POSITION.catPhuKien }}
+            <CollectionTileMedia
+              imageUrl={col.tiles[2]?.imageUrl}
+              resolvedSlug={mosaicCats.pk?.slug}
+              title={col.tiles[2]?.title || mosaicCats.pk?.name || "Phụ kiện"}
+              objectPosition={OBJECT_POSITION.catPhuKien}
             />
             <div className="absolute top-4 left-4 z-10 max-w-[45%] md:max-w-[65%]">
               <p
@@ -772,5 +768,31 @@ export default async function HomePage() {
         <Fragment key={k}>{blocks[k] ?? null}</Fragment>
       ))}
     </div>
+  );
+}
+
+function CollectionTileMedia({
+  imageUrl,
+  resolvedSlug,
+  title,
+  objectPosition,
+}: {
+  imageUrl?: string | null;
+  resolvedSlug?: string | null;
+  title: string;
+  objectPosition: string;
+}) {
+  const src = collectionTileSrc({ imageUrl, resolvedCategorySlug: resolvedSlug });
+  if (!src) return <ProductImagePlaceholder name={title} />;
+  return (
+    <StorefrontImage
+      src={src}
+      alt={title}
+      emptyName={title}
+      fill
+      sizes="(max-width:768px) 100vw, 50vw"
+      className="object-cover transition duration-500 group-hover:scale-105"
+      style={{ objectPosition }}
+    />
   );
 }

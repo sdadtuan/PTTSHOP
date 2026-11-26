@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const product = await prisma.product.findFirst({
     where: { slug, ...publicCatalogWhere },
-    include: { images: { orderBy: { sortOrder: "asc" } } },
+    include: { images: { where: { isHidden: false }, orderBy: { sortOrder: "asc" } } },
   });
   if (!product) return { title: "Sản phẩm", robots: { index: false, follow: false } };
   const image = product.images.find((item) => item.type !== "video" && !item.isHidden);
@@ -45,7 +45,7 @@ export default async function ProductDetailPage({ params }: Props) {
   const product = await prisma.product.findFirst({
     where: { slug, ...publicCatalogWhere },
     include: {
-      images: { orderBy: { sortOrder: "asc" } },
+      images: { where: { isHidden: false }, orderBy: { sortOrder: "asc" } },
       variants: publicVariants(),
       category: true,
     },
@@ -120,7 +120,7 @@ export default async function ProductDetailPage({ params }: Props) {
       ],
     },
     include: {
-      images: { orderBy: { sortOrder: "asc" } },
+      images: { where: { isHidden: false }, orderBy: { sortOrder: "asc" } },
       variants: publicVariants(),
     },
     take: 4,
