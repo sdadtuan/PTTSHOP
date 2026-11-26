@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { DEFAULT_LOGO_LAYOUT, logoLayoutSchema } from "@/lib/cms/logo-layout";
+import { isLocalShopMediaUrl, isVietqrMediaUrl } from "@/lib/product-media-url";
 
 const HEX_COLOR = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 
@@ -20,24 +21,16 @@ export function isSafeHref(value: string): boolean {
   }
 }
 
-export const ALLOWED_IMAGE_HOSTS = new Set(["images.unsplash.com"]);
+/** Host ảnh ngoài còn được CMS nhận. Unsplash không còn trong danh sách này. */
+export const ALLOWED_IMAGE_HOSTS = new Set(["cdn.vietqr.io"]);
 
 export function isSafeMediaUrl(value: string): boolean {
   const v = value.trim();
   if (!v) return false;
   // Used in src attributes and CSS url(); forbid characters that could break out of either.
   if (/["'()\s<>\\`]/.test(v)) return false;
-  if (v.startsWith("/")) {
-    if (v.startsWith("//")) return false;
-    return !v.includes("<") && !v.includes(">");
-  }
-  try {
-    // Only hosts allowed by next.config images.remotePatterns, otherwise next/image would throw.
-    const u = new URL(v);
-    return u.protocol === "https:" && ALLOWED_IMAGE_HOSTS.has(u.hostname);
-  } catch {
-    return false;
-  }
+  if (v.startsWith("/")) return isLocalShopMediaUrl(v);
+  return isVietqrMediaUrl(v);
 }
 
 /**

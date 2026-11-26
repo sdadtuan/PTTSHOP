@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { ProductImagePlaceholder } from "@/components/product/product-image-placeholder";
 import { StorefrontImage } from "@/components/product/storefront-image";
 import { ShoppingBag } from "lucide-react";
 import { FRAME_ASPECT, OBJECT_POSITION } from "@/config/home-frame-specs";
 import { TYPE_SCALE } from "@/config/home-type-scale";
 import { formatVnd } from "@/lib/format";
 import { resolveSwatch, swatchBackground } from "@/lib/color-names";
+import { shopDisplaySrc } from "@/lib/product-image-placeholder";
 import { primaryImage } from "@/lib/product-media";
 import { cn } from "@/lib/utils";
 
@@ -47,8 +49,10 @@ export function ProductCard({
   mobileFrame,
   priority,
 }: ProductCardProps) {
-  const cover = primaryImage(product.images);
-  const imageUrl = imageOverride || cover?.url;
+  const cover = primaryImage(
+    product.images.filter((img) => !img.url || shopDisplaySrc(img.url)),
+  );
+  const imageUrl = shopDisplaySrc(imageOverride || cover?.url);
   const imageAlt = cover?.alt || product.name;
   const prices = product.variants.map((v) => v.price);
   const minPrice = prices.length ? Math.min(...prices) : 0;
@@ -90,6 +94,7 @@ export function ProductCard({
             <StorefrontImage
               src={imageUrl}
               alt={imageAlt}
+              emptyName={product.name}
               fill
               sizes={
                 large
@@ -102,9 +107,7 @@ export function ProductCard({
               loading={priority ? undefined : "lazy"}
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-sm text-neutral-400">
-              No image
-            </div>
+            <ProductImagePlaceholder name={product.name} />
           )}
           <span className="absolute right-3 bottom-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-[var(--accent)] text-white opacity-95 shadow-sm transition group-hover:scale-105">
             <ShoppingBag className="h-4 w-4" />

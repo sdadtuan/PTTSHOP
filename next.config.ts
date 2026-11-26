@@ -63,6 +63,9 @@ const nextConfig: NextConfig = {
   },
   images: {
     remotePatterns: [
+      // Giữ images.unsplash.com: 11 sản phẩm đang bán vẫn lưu URL này và storefront
+      // vẫn hiển thị cho đến khi có ảnh shop. URL mới bị chặn ở product-save và CMS.
+      // Gỡ pattern khi DB không còn host này.
       {
         protocol: "https",
         hostname: "images.unsplash.com",
