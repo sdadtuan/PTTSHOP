@@ -19,6 +19,7 @@ import { createPayosLink, payosEnv } from "@/lib/payments/payos";
 import { checkoutMethodError, quoteFromServerPrices } from "@/lib/payments/policy";
 import { getPaymentConfig } from "@/lib/payments/store";
 import { prisma } from "@/lib/prisma";
+import { NOT_FOR_SALE_MESSAGE, variantIsForSale } from "@/lib/catalog-visibility";
 import { checkoutConsentPlan, clientIp, recordConsents } from "@/lib/consent";
 import { orderBuyerId } from "@/lib/order-buyer";
 import { nextOrderNumber } from "@/lib/order-number";
@@ -97,6 +98,9 @@ export async function POST(req: Request) {
 
     if (variants.length !== data.items.length) {
       throw new ApiError("Một số sản phẩm không còn khả dụng", 400);
+    }
+    if (variants.some((variant) => !variantIsForSale(variant.product))) {
+      throw new ApiError(NOT_FOR_SALE_MESSAGE, 400);
     }
 
     const plans = await planCheckoutLines(
