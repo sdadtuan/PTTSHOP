@@ -24,6 +24,7 @@ export type CartLine = {
   compareAt?: number | null;
   image: string;
   quantity: number;
+  forSale?: boolean;
 };
 
 type CartContextValue = {

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/api";
+import { NOT_FOR_SALE_MESSAGE, variantIsForSale } from "@/lib/catalog-visibility";
 import { sellableTotals } from "@/lib/dropship/service";
 
 export async function getCartForActor(opts: {
@@ -95,6 +96,7 @@ export function serializeCart(
     image: i.variant.product.images[0]?.url ?? "",
     quantity: i.quantity,
     stock: i.variant.stock,
+    forSale: variantIsForSale(i.variant.product),
   }));
   const count = items.reduce((s, i) => s + i.quantity, 0);
   const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
@@ -109,8 +111,10 @@ export async function addToCart(opts: {
 }) {
   const variant = await prisma.productVariant.findUnique({
     where: { id: opts.variantId },
+    include: { product: { select: { isDemo: true, saleStatus: true } } },
   });
   if (!variant) throw new ApiError("Biến thể không tồn tại", 404);
+  if (!variantIsForSale(variant.product)) throw new ApiError(NOT_FOR_SALE_MESSAGE, 400);
   const available = (await sellableTotals(prisma, [variant.id])).get(variant.id) ?? 0;
   if (available <= 0) throw new ApiError("Sản phẩm hết hàng", 400);
 

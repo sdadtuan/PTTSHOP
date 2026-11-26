@@ -51,6 +51,7 @@ type Product = {
   isNew: boolean;
   isBestSeller: boolean;
   saleStatus?: SaleStatus;
+  isDemo?: boolean;
   category?: { name: string } | null;
   variants: {
     id: string;
@@ -78,6 +79,7 @@ export default function AdminProductsPage() {
   const [dragOver, setDragOver] = useState(false);
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<"ALL" | SaleStatus>("ALL");
+  const [demo, setDemo] = useState<"ALL" | "DEMO" | "REAL">("ALL");
   const [page, setPage] = useState(1);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -128,6 +130,8 @@ export default function AdminProductsPage() {
     const query = q.trim().toLowerCase();
     return products.filter((p) => {
       if (status !== "ALL" && (p.saleStatus || "SELLING") !== status) return false;
+      if (demo === "DEMO" && !p.isDemo) return false;
+      if (demo === "REAL" && p.isDemo) return false;
       if (!query) return true;
       return (
         p.name.toLowerCase().includes(query) ||
@@ -135,7 +139,7 @@ export default function AdminProductsPage() {
         (p.category?.name || "").toLowerCase().includes(query)
       );
     });
-  }, [products, q, status]);
+  }, [products, q, status, demo]);
 
   const paged = paginate(filtered, page, 8);
 
@@ -294,7 +298,7 @@ export default function AdminProductsPage() {
       />
 
       <AdminCard className="mb-4">
-        <div className="grid gap-3 sm:grid-cols-[1fr_220px]">
+        <div className="grid gap-3 sm:grid-cols-[1fr_220px_180px]">
           <AdminInput
             label="Tìm kiếm"
             value={q}
@@ -316,6 +320,18 @@ export default function AdminProductsPage() {
             {Object.entries(SALE_STATUS_LABEL).map(([value, label]) => (
               <option key={value} value={value}>{label}</option>
             ))}
+          </AdminSelect>
+          <AdminSelect
+            label="Demo"
+            value={demo}
+            onChange={(e) => {
+              setDemo(e.target.value as "ALL" | "DEMO" | "REAL");
+              setPage(1);
+            }}
+          >
+            <option value="ALL">Tất cả</option>
+            <option value="DEMO">Chỉ demo</option>
+            <option value="REAL">Không demo</option>
           </AdminSelect>
         </div>
       </AdminCard>
@@ -527,12 +543,15 @@ export default function AdminProductsPage() {
                             ) : null}
                           </div>
                           <div className="min-w-0">
-                            <Link
-                              href={`/admin/products/${p.id}`}
-                              className="font-medium hover:text-[var(--admin-accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--admin-accent)]/30"
-                            >
-                              {p.name}
-                            </Link>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <Link
+                                href={`/admin/products/${p.id}`}
+                                className="font-medium hover:text-[var(--admin-accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--admin-accent)]/30"
+                              >
+                                {p.name}
+                              </Link>
+                              {p.isDemo ? <AdminBadge tone="pending">Demo</AdminBadge> : null}
+                            </div>
                             <p className="truncate text-xs text-[var(--admin-text-muted)]">
                               {p.slug}
                             </p>

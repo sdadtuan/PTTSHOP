@@ -33,9 +33,9 @@ export async function resolveSlugRedirect(db: RedirectDb, fromSlug: string) {
     if (!row || row.toSlug === cursor || seen.has(row.toSlug)) return null;
     const product = await db.product.findUnique({
       where: { slug: row.toSlug },
-      select: { slug: true, saleStatus: true },
+      select: { slug: true, saleStatus: true, isDemo: true },
     });
-    if (product) return product.saleStatus === "SELLING" ? product.slug : null;
+    if (product) return product.saleStatus === "SELLING" && !product.isDemo ? product.slug : null;
     seen.add(row.toSlug);
     cursor = row.toSlug;
   }
