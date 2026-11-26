@@ -216,10 +216,19 @@ async function main() {
       id: true,
       name: true,
       slug: true,
-      isDemo: true,
       images: { orderBy: { sortOrder: "asc" }, select: { id: true, url: true, sortOrder: true, isHidden: true } },
     },
   });
+  const demoColumn = await prisma.$queryRaw<Array<{ column_name: string }>>`
+    SELECT column_name FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'Product' AND column_name = 'isDemo'
+  `;
+  const demoSlugs = demoColumn.length
+    ? await prisma.$queryRaw<Array<{ slug: string }>>`
+        SELECT slug FROM "Product"
+        WHERE "isDemo" = true AND slug IN (${Prisma.join([...APPROVED_SLUGS])})
+      `
+    : [];
   const bySlug = new Map(products.map((product) => [product.slug, product]));
   for (const slug of APPROVED_SLUGS) {
     const product = bySlug.get(slug);
@@ -228,7 +237,7 @@ async function main() {
       await prisma.$disconnect();
       process.exit(1);
     }
-    if (product.isDemo) {
+    if (demoSlugs.some((row) => row.slug === slug)) {
       console.error(`${slug}: là demo. Dừng, không ghi.`);
       await prisma.$disconnect();
       process.exit(1);
