@@ -179,9 +179,25 @@ export default async function ProductsPage({
       </div>
 
       {products.length === 0 ? (
-        <p className="py-20 text-center text-neutral-500">
-          {ui.emptyMessage}
-        </p>
+        <div className="py-16 text-center">
+          <p className="text-neutral-500">{ui.emptyMessage}</p>
+          {params.q?.trim() && categories.length > 0 ? (
+            <div className="mt-6">
+              <p className="text-sm text-neutral-600">Thử một danh mục:</p>
+              <div className="mt-3 flex flex-wrap justify-center gap-2">
+                {categories.map((category) => (
+                  <Link
+                    key={category.id}
+                    href={`/san-pham?category=${category.slug}`}
+                    className="rounded-full border border-neutral-200 px-4 py-2 text-sm text-neutral-700 hover:border-neutral-400"
+                  >
+                    {category.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
       ) : (
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 md:gap-6">
           {products.map((p) => (

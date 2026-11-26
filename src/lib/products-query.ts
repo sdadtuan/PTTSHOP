@@ -68,11 +68,13 @@ export function buildProductWhere(params: {
   if (params.collection) {
     where.collections = { some: { collection: { slug: params.collection } } };
   }
-  if (params.q) {
+  const term = params.q?.trim();
+  if (term) {
     where.OR = [
-      { name: { contains: params.q, mode: "insensitive" } },
-      { slug: { contains: params.q, mode: "insensitive" } },
-      { description: { contains: params.q, mode: "insensitive" } },
+      { name: { contains: term, mode: "insensitive" } },
+      { slug: { contains: term, mode: "insensitive" } },
+      { description: { contains: term, mode: "insensitive" } },
+      { category: { name: { contains: term, mode: "insensitive" } } },
     ];
   }
   return where;
