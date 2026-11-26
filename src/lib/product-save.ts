@@ -5,6 +5,7 @@ import { HEX_RE, isVideoMedia, skuPart } from "@/lib/product-media";
 import { sanitizePlainText } from "@/lib/cms/validate";
 import { bulletsToJson, sizeChartToJson, type SizeChart } from "@/lib/pdp-tabs";
 import { slugify, uniqueSlug } from "@/lib/slug";
+import { productIsDemo } from "@/lib/demo-product";
 import { rememberSlugRedirect } from "@/lib/slug-redirect";
 
 /**
@@ -273,6 +274,18 @@ export async function saveProductFull(
         await tx.productVariant.create({ data: { ...row, sku, productId } });
       }
     }
+
+    const skus = await tx.productVariant.findMany({ where: { productId }, select: { sku: true } });
+    await tx.product.update({
+      where: { id: productId },
+      data: {
+        isDemo: productIsDemo({
+          name: product.name,
+          slug: product.slug,
+          skus: skus.map((row) => row.sku),
+        }),
+      },
+    });
 
     return { productId, keptVariantIds: kept };
   }, { timeout: 30000, maxWait: 10000 });

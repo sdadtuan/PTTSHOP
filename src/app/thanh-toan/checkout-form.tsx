@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useCart } from "@/components/cart/cart-context";
 import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
 import { ConsentFields, consentsFromForm } from "@/components/legal/consent-fields";
+import { NOT_FOR_SALE_MESSAGE } from "@/lib/catalog-visibility";
 import { formatVnd } from "@/lib/format";
 import { codCeilingNotice } from "@/lib/payments/policy";
 import { DEFAULT_FALLBACK_FEE, DEFAULT_FREE_SHIP_THRESHOLD } from "@/lib/shipping/policy";
@@ -19,7 +20,9 @@ type PaymentOptions = {
 };
 
 export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOptions }) {
-  const { items, subtotal, clear, loading: cartLoading } = useCart();
+  const { items, clear, loading: cartLoading } = useCart();
+  const payable = items.filter((item) => item.forSale !== false);
+  const subtotal = payable.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -63,7 +66,7 @@ export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOption
   }, [provinceCode]);
 
   useEffect(() => {
-    if (!shouldQuoteShipping({ loading: cartLoading, itemCount: items.length })) return;
+    if (!shouldQuoteShipping({ loading: cartLoading, itemCount: payable.length })) return;
     const controller = new AbortController();
     let cancelled = false;
     const requestedSubtotal = subtotal;
@@ -86,7 +89,7 @@ export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOption
       cancelled = true;
       controller.abort();
     };
-  }, [cartLoading, items.length, subtotal, provinceCode, wardCode]);
+  }, [cartLoading, payable.length, subtotal, provinceCode, wardCode]);
 
   if (items.length === 0) {
     return (
@@ -133,6 +136,10 @@ export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOption
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (payable.length === 0) {
+      setError(NOT_FOR_SALE_MESSAGE);
+      return;
+    }
     setLoading(true);
     setError("");
 
@@ -152,7 +159,7 @@ export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOption
       invoiceEmail: String(form.get("invoiceEmail") || ""),
       couponCode: couponCode || undefined,
       consents: consentsFromForm(form),
-      items: items.map((i) => ({
+      items: payable.map((i) => ({
         variantId: i.variantId,
         quantity: i.quantity,
       })),
@@ -289,9 +296,12 @@ export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOption
                   <span className="block text-xs text-neutral-400">
                     {i.color} / {i.size}
                   </span>
+                  {i.forSale === false ? (
+                    <span className="block text-xs text-red-600">{NOT_FOR_SALE_MESSAGE}</span>
+                  ) : null}
                 </span>
                 <span className="font-medium">
-                  {formatVnd(i.price * i.quantity)}
+                  {i.forSale === false ? "—" : formatVnd(i.price * i.quantity)}
                 </span>
               </li>
             ))}
@@ -345,7 +355,7 @@ export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOption
           </div>
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || payable.length === 0}
             className="mt-6 w-full rounded bg-[var(--accent)] py-3 text-sm font-semibold text-white disabled:opacity-60"
           >
             {loading ? ck.submitLoading : ck.submitLabel}

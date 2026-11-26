@@ -2,13 +2,14 @@ import type { MetadataRoute } from "next";
 import { companyPolicyLinks } from "@/content/company";
 import { publicCatalogWhere } from "@/lib/catalog-visibility";
 import { prisma } from "@/lib/prisma";
-import { isDemoName, siteBaseUrl } from "@/lib/seo";
+import { includeInPublicSitemap } from "@/lib/demo-product";
+import { siteBaseUrl } from "@/lib/seo";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = siteBaseUrl();
   const products = await prisma.product.findMany({
     where: publicCatalogWhere,
-    select: { name: true, slug: true, updatedAt: true },
+    select: { name: true, slug: true, updatedAt: true, isDemo: true },
   });
 
   return [
@@ -23,7 +24,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.4,
     })),
     ...products
-      .filter((product) => !isDemoName(product.name))
+      .filter((product) => includeInPublicSitemap(product))
       .map((product) => ({
         url: `${base}/san-pham/${product.slug}`,
         lastModified: product.updatedAt,

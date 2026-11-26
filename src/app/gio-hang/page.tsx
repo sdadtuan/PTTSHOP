@@ -6,13 +6,16 @@ import { useEffect, useState } from "react";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useCart } from "@/components/cart/cart-context";
 import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
+import { NOT_FOR_SALE_MESSAGE } from "@/lib/catalog-visibility";
 import { formatVnd } from "@/lib/format";
 import { displayBrandName } from "@/lib/public-brand";
 import { DEFAULT_FALLBACK_FEE, DEFAULT_FREE_SHIP_THRESHOLD } from "@/lib/shipping/policy";
 import { shouldQuoteShipping } from "@/lib/shipping/quote-client";
 
 export default function CartPage() {
-  const { items, subtotal, updateQuantity, removeItem, loading } = useCart();
+  const { items, updateQuantity, removeItem, loading } = useCart();
+  const payable = items.filter((item) => item.forSale !== false);
+  const subtotal = payable.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const c = useStorefrontUi().cart;
   const [shipping, setShipping] = useState(
     subtotal >= DEFAULT_FREE_SHIP_THRESHOLD ? 0 : DEFAULT_FALLBACK_FEE,
@@ -20,7 +23,7 @@ export default function CartPage() {
   const [freeFrom, setFreeFrom] = useState(DEFAULT_FREE_SHIP_THRESHOLD);
 
   useEffect(() => {
-    if (!shouldQuoteShipping({ loading, itemCount: items.length })) return;
+    if (!shouldQuoteShipping({ loading, itemCount: payable.length })) return;
     const controller = new AbortController();
     let cancelled = false;
     const requestedSubtotal = subtotal;
@@ -40,7 +43,7 @@ export default function CartPage() {
       cancelled = true;
       controller.abort();
     };
-  }, [loading, items.length, subtotal]);
+  }, [loading, payable.length, subtotal]);
 
   if (loading) {
     return (
@@ -115,34 +118,38 @@ export default function CartPage() {
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
-                <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center border border-neutral-200">
-                    <button
-                      type="button"
-                      className="px-2 py-1.5"
-                      onClick={() =>
-                        updateQuantity(item.variantId, item.quantity - 1)
-                      }
-                    >
-                      <Minus className="h-3.5 w-3.5" />
-                    </button>
-                    <span className="min-w-7 text-center text-sm">
-                      {item.quantity}
-                    </span>
-                    <button
-                      type="button"
-                      className="px-2 py-1.5"
-                      onClick={() =>
-                        updateQuantity(item.variantId, item.quantity + 1)
-                      }
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                    </button>
+                {item.forSale === false ? (
+                  <p className="mt-4 text-sm text-red-600">{NOT_FOR_SALE_MESSAGE}</p>
+                ) : (
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center border border-neutral-200">
+                      <button
+                        type="button"
+                        className="px-2 py-1.5"
+                        onClick={() =>
+                          updateQuantity(item.variantId, item.quantity - 1)
+                        }
+                      >
+                        <Minus className="h-3.5 w-3.5" />
+                      </button>
+                      <span className="min-w-7 text-center text-sm">
+                        {item.quantity}
+                      </span>
+                      <button
+                        type="button"
+                        className="px-2 py-1.5"
+                        onClick={() =>
+                          updateQuantity(item.variantId, item.quantity + 1)
+                        }
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                    <p className="font-semibold">
+                      {formatVnd(item.price * item.quantity)}
+                    </p>
                   </div>
-                  <p className="font-semibold">
-                    {formatVnd(item.price * item.quantity)}
-                  </p>
-                </div>
+                )}
               </div>
             </li>
           ))}
@@ -169,12 +176,18 @@ export default function CartPage() {
           <p className="mt-3 text-xs text-neutral-500">
             Miễn phí vận chuyển từ {formatVnd(freeFrom)}.
           </p>
-          <Link
-            href="/thanh-toan"
-            className="mt-6 flex w-full items-center justify-center rounded bg-[var(--accent)] py-3 text-sm font-semibold text-white transition hover:brightness-110"
-          >
-            {c.checkoutCta}
-          </Link>
+          {payable.length === 0 ? (
+            <span className="mt-6 flex w-full items-center justify-center rounded bg-neutral-200 py-3 text-sm font-semibold text-neutral-500">
+              {c.checkoutCta}
+            </span>
+          ) : (
+            <Link
+              href="/thanh-toan"
+              className="mt-6 flex w-full items-center justify-center rounded bg-[var(--accent)] py-3 text-sm font-semibold text-white transition hover:brightness-110"
+            >
+              {c.checkoutCta}
+            </Link>
+          )}
         </aside>
       </div>
     </div>
