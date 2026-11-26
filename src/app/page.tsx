@@ -20,7 +20,7 @@ import { homeImages } from "@/config/home-images";
 import { TYPE_SCALE } from "@/config/home-type-scale";
 import { optimizedPublicImageUrl } from "@/lib/catalog-image";
 import { getHomeSectionsForRequest } from "@/lib/cms/published";
-import { displayBrandName } from "@/lib/public-brand";
+import { displayBrandName, publicWatermark } from "@/lib/public-brand";
 import type {
   ColorPlayContent,
   CollectionsContent,
@@ -527,9 +527,11 @@ export default async function HomePage() {
                 </div>
               </div>
             </div>
-            <p className="pointer-events-none mt-auto pt-1 font-[family-name:var(--font-display)] text-[2.75rem] leading-none font-black tracking-[0.04em] text-neutral-200 select-none md:text-[5.5rem]">
-              {diverse.watermark}
-            </p>
+            {publicWatermark(diverse.watermark) ? (
+              <p className="pointer-events-none mt-auto pt-1 font-[family-name:var(--font-display)] text-[2.75rem] leading-none font-black tracking-[0.04em] text-neutral-200 select-none md:text-[5.5rem]">
+                {publicWatermark(diverse.watermark)}
+              </p>
+            ) : null}
           </div>
 
           <div className="relative z-10 min-w-0 overflow-hidden">
