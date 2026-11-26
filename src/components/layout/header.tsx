@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Heart, Menu, Search, ShoppingBag, User, X } from "lucide-react";
 import { useCart } from "@/components/cart/cart-context";
@@ -12,6 +12,7 @@ import { displayBrandName, publicNavLabel } from "@/lib/public-brand";
 
 export function Header() {
   const pathname = usePathname();
+  const router = useRouter();
   const { count } = useCart();
   const brand = useSiteBrand();
   const { navigation } = useStorefrontLayout();
@@ -131,7 +132,19 @@ export function Header() {
           <form
             action="/san-pham"
             className="mx-auto flex max-w-7xl gap-2 px-4 py-3 md:px-6"
-            onSubmit={() => setSearchOpen(false)}
+            onSubmit={(event) => {
+              event.preventDefault();
+              setSearchOpen(false);
+              const params = new URLSearchParams(
+                pathname === "/san-pham" ? window.location.search : "",
+              );
+              params.delete("page");
+              const term = q.trim();
+              if (term) params.set("q", term);
+              else params.delete("q");
+              const next = params.toString();
+              router.push(next ? `/san-pham?${next}` : "/san-pham");
+            }}
           >
             <input
               name="q"
