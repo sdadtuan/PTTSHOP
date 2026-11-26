@@ -63,13 +63,9 @@ const nextConfig: NextConfig = {
   },
   images: {
     remotePatterns: [
-      // Giữ images.unsplash.com: 11 sản phẩm đang bán vẫn lưu URL này và storefront
-      // vẫn hiển thị cho đến khi có ảnh shop. URL mới bị chặn ở product-save và CMS.
-      // Gỡ pattern khi DB không còn host này.
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-      },
+      // images.unsplash.com đã gỡ: script import-approved-images ẩn mọi ảnh Unsplash
+      // của 12 sản phẩm đang bán, storefront không còn request host này.
+      // Ảnh cũ vẫn nằm trong DB (isHidden). cdn.vietqr.io giữ cho QR thanh toán.
       {
         protocol: "https",
         hostname: "cdn.vietqr.io",
