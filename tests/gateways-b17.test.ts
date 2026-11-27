@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { describe, expect, it } from "vitest";
 import { applyGatewayPayment } from "@/lib/payments/apply-gateway";
 import {
+  crc16Ccitt,
   paymentDecision,
   signGateway,
   signedPayload,
@@ -43,11 +44,21 @@ describe("cổng thanh toán", () => {
     expect(paymentDecision({ amount: 199000, orderAmount: 199000, alreadyPaid: true })).toBe("duplicate");
   });
 
-  it("QR chứa đúng số tiền và mã đơn", () => {
+  it("QR VietQR là EMV Napas và CRC khớp vector độc lập", () => {
+    expect(crc16Ccitt("123456789")).toBe("29B1");
     const content = vietqrContent({ amount: 199000, orderNumber: "PTT1", bin: "970436", account: "0123456789" });
-    expect(content).toContain("amount=199000");
-    expect(content).toContain("addInfo=PTT1");
-    expect(content).not.toContain("secret");
+    expect(content).toBeTruthy();
+    const payload = content!;
+    expect(payload.slice(-4)).toBe(crc16Ccitt(payload.slice(0, -4)));
+    expect(payload).toContain("0006970436");
+    expect(payload).toContain("01100123456789");
+    expect(payload).toContain("5406199000");
+    expect(payload).toContain("0804PTT1");
+    expect(payload.startsWith("000201")).toBe(true);
+    expect(payload).toContain("0010A000000727");
+    expect(payload).toContain("0208QRIBFTTA");
+    expect(payload).not.toContain("secret");
+    expect(vietqrContent({ amount: 199000, orderNumber: "PTT1", bin: "12345", account: "0123456789" })).toBeNull();
   });
 });
 
