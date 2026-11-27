@@ -30,6 +30,9 @@ enum PaymentMethod {
   COD
   BANK_TRANSFER
   PAYOS
+  VIETQR
+  MOMO
+  ZALOPAY
 }
 
 enum PaymentStatus {
@@ -313,6 +316,7 @@ model Order {
   items           OrderItem[]
   reviews         Review[]
   paymentAudits   PaymentAuditLog[]
+  paymentTransactions PaymentTransaction[]
   shipments       Shipment[]
   invoices        Invoice[]
   cancellation    OrderCancellation?
@@ -522,6 +526,12 @@ model PaymentSettings {
   bankAccountNumber   String?
   bankAccountName     String?
   bankBranch          String?
+  vietqrEnabled       Boolean @default(false)
+  vietqrMerchantId    String?
+  momoEnabled         Boolean @default(false)
+  momoPartnerCode     String?
+  zalopayEnabled      Boolean @default(false)
+  zalopayAppId        String?
 }
 
 /// Thử nghiệm A/B. enabled=false thì mọi khách thấy control.
@@ -530,6 +540,20 @@ model Experiment {
   enabled        Boolean @default(false)
   variants       String
   trafficPercent Int     @default(50)
+}
+
+model PaymentTransaction {
+  id            String   @id @default(cuid())
+  orderId       String
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  provider      String
+  providerTxnId String
+  amount        Int
+  status        String
+  createdAt     DateTime @default(now())
+
+  @@unique([provider, providerTxnId])
+  @@index([orderId])
 }
 
 model PaymentAuditLog {

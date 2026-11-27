@@ -22,6 +22,9 @@ type PaymentOptions = {
   bankVisible: boolean;
   bankReady: boolean;
   payosEnabled: boolean;
+  vietqr: boolean;
+  momo: boolean;
+  zalopay: boolean;
 };
 
 export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOptions }) {
@@ -31,7 +34,7 @@ export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOption
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"" | "COD" | "BANK_TRANSFER" | "PAYOS">("");
+  const [paymentMethod, setPaymentMethod] = useState<"" | "COD" | "BANK_TRANSFER" | "PAYOS" | "VIETQR" | "MOMO" | "ZALOPAY">("");
   const [options, setOptions] = useState<PaymentOptions>(initialOptions);
   const [provinces, setProvinces] = useState<{ code: string; name: string }[]>([]);
   const [wards, setWards] = useState<{ code: string; name: string }[]>([]);
@@ -54,6 +57,9 @@ export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOption
           bankVisible: Boolean(data.bankVisible),
           bankReady: Boolean(data.bankReady),
           payosEnabled: Boolean(data.payosEnabled),
+          vietqr: Boolean(data.vietqr),
+          momo: Boolean(data.momo),
+          zalopay: Boolean(data.zalopay),
         });
       })
       .catch(() => setOptions(initialOptions));
@@ -127,19 +133,31 @@ export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOption
   const payosAllowed = Boolean(options.payosEnabled);
   const codLimitNote = codCeilingNotice(total, options);
   const selected =
-    paymentMethod === "PAYOS" && payosAllowed
-      ? "PAYOS"
-      : paymentMethod === "BANK_TRANSFER" && bankAllowed
-        ? "BANK_TRANSFER"
-        : paymentMethod === "COD" && codAllowed
-          ? "COD"
-          : codAllowed
-            ? "COD"
-            : bankAllowed
+    paymentMethod === "VIETQR" && options.vietqr
+      ? "VIETQR"
+      : paymentMethod === "MOMO" && options.momo
+        ? "MOMO"
+        : paymentMethod === "ZALOPAY" && options.zalopay
+          ? "ZALOPAY"
+          : paymentMethod === "PAYOS" && payosAllowed
+            ? "PAYOS"
+            : paymentMethod === "BANK_TRANSFER" && bankAllowed
               ? "BANK_TRANSFER"
-              : payosAllowed
-                ? "PAYOS"
-                : "";
+              : paymentMethod === "COD" && codAllowed
+                ? "COD"
+                : codAllowed
+                  ? "COD"
+                  : bankAllowed
+                    ? "BANK_TRANSFER"
+                    : payosAllowed
+                      ? "PAYOS"
+                      : options.vietqr
+                        ? "VIETQR"
+                        : options.momo
+                          ? "MOMO"
+                          : options.zalopay
+                            ? "ZALOPAY"
+                            : "";
 
   async function applyCoupon() {
     setCouponMsg("");
@@ -305,6 +323,24 @@ export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOption
                 <label className="flex items-center gap-3 border border-neutral-200 p-3 text-sm">
                   <input type="radio" checked={selected === "PAYOS"} onChange={() => setPaymentMethod("PAYOS")} />
                   payOS
+                </label>
+              ) : null}
+              {options.vietqr ? (
+                <label className="flex items-center gap-3 border border-neutral-200 p-3 text-sm">
+                  <input type="radio" checked={selected === "VIETQR"} onChange={() => setPaymentMethod("VIETQR")} />
+                  VietQR
+                </label>
+              ) : null}
+              {options.momo ? (
+                <label className="flex items-center gap-3 border border-neutral-200 p-3 text-sm">
+                  <input type="radio" checked={selected === "MOMO"} onChange={() => setPaymentMethod("MOMO")} />
+                  MoMo
+                </label>
+              ) : null}
+              {options.zalopay ? (
+                <label className="flex items-center gap-3 border border-neutral-200 p-3 text-sm">
+                  <input type="radio" checked={selected === "ZALOPAY"} onChange={() => setPaymentMethod("ZALOPAY")} />
+                  ZaloPay
                 </label>
               ) : null}
             </div>

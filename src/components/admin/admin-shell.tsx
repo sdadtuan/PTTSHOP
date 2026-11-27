@@ -41,6 +41,7 @@ const nav = [
   { href: "/admin/orders", label: "Đơn hàng", icon: ShoppingBag },
   { href: "/admin/cua-hang", label: "Cửa hàng", icon: Store },
   { href: "/admin/thanh-toan", label: "Thanh toán", icon: Wallet },
+  { href: "/admin/giao-dich", label: "Giao dịch", icon: Receipt },
   { href: "/admin/van-chuyen", label: "Vận chuyển", icon: Truck },
   { href: "/admin/hoa-don", label: "Hoá đơn", icon: Receipt },
   { href: "/admin/doi-tra", label: "Đổi trả & Hoàn tiền", icon: RotateCcw },

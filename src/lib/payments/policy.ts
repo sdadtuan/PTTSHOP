@@ -52,7 +52,7 @@ export function paymentOptions(config: PaymentConfig, payosEnabled: boolean) {
 }
 
 export function checkoutMethodError(
-  method: "COD" | "BANK_TRANSFER" | "PAYOS",
+  method: "COD" | "BANK_TRANSFER" | "PAYOS" | "VIETQR" | "MOMO" | "ZALOPAY",
   total: number,
   config: PaymentConfig,
   payosEnabled: boolean,
@@ -66,6 +66,7 @@ export function checkoutMethodError(
     if (!payosEnabled) return "payOS chưa được cấu hình.";
     return null;
   }
+  if (method === "VIETQR" || method === "MOMO" || method === "ZALOPAY") return null;
   if (!config.bankTransferEnabled || !bankReady(config)) return "Chưa cấu hình tài khoản nhận tiền.";
   return null;
 }
@@ -83,7 +84,7 @@ export function codCeilingNotice(
 }
 
 export function isTransferHold(method: string) {
-  return method === "BANK_TRANSFER" || method === "PAYOS";
+  return method === "BANK_TRANSFER" || method === "PAYOS" || method === "VIETQR" || method === "MOMO" || method === "ZALOPAY";
 }
 
 export function isPaymentOverdue(input: {

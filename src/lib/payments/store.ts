@@ -21,3 +21,15 @@ export async function getPaymentConfig(): Promise<PaymentConfig> {
     bankBranch: row?.bankBranch ?? "",
   };
 }
+
+export async function getGatewayFlags() {
+  const row = await prisma.paymentSettings.findUnique({ where: { id: "default" } });
+  return {
+    vietqrEnabled: row?.vietqrEnabled === true,
+    vietqrMerchantId: row?.vietqrMerchantId ?? "",
+    momoEnabled: row?.momoEnabled === true,
+    momoPartnerCode: row?.momoPartnerCode ?? "",
+    zalopayEnabled: row?.zalopayEnabled === true,
+    zalopayAppId: row?.zalopayAppId ?? "",
+  };
+}
