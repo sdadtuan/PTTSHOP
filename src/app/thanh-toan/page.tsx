@@ -12,6 +12,7 @@ export default async function CheckoutPage() {
       initialOptions={{
         codEnabled: options.codEnabled,
         codMaxAmount: options.codMaxAmount,
+        bankVisible: options.bankVisible,
         bankReady: options.bankReady,
         payosEnabled: options.payosEnabled,
       }}

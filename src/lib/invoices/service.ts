@@ -56,11 +56,11 @@ function snapshot(order: {
   invoiceEmail: string | null;
   items: Array<{ name: string; color: string; size: string; price: number; quantity: number }>;
   discount: number;
-  shippingFee: number;
+  shippingFee: number | null;
   total: number;
 }, config: InvoiceConfig) {
   const buyer = invoiceBuyer(order);
-  const lines = buildInvoiceLines(order, config.vatRate);
+  const lines = buildInvoiceLines({ ...order, shippingFee: order.shippingFee ?? 0 }, config.vatRate);
   const money = vatFromGross(order.total, config.vatRate);
   return { buyer, lines, money };
 }

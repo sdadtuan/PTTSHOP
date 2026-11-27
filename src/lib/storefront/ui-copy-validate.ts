@@ -164,7 +164,21 @@ const storefrontUiSchema = z.object({
 
 export function parseStorefrontUi(raw: unknown): StorefrontUiCopy {
   const merged = deepMerge(DEFAULT_STOREFRONT_UI, stripDemoAuthHints(raw));
-  return storefrontUiSchema.parse(merged);
+  const parsed = storefrontUiSchema.parse(merged);
+  return {
+    ...parsed,
+    contact: {
+      ...parsed.contact,
+      showroomAddress: "",
+      phone: "",
+      email: "",
+      hours: "",
+      formHeading: /demo/i.test(parsed.contact.formHeading) ? "Gửi tin nhắn" : parsed.contact.formHeading,
+      demoSubmitAlert: /demo/i.test(parsed.contact.demoSubmitAlert)
+        ? "Chưa gửi được tin nhắn. Hãy dùng kênh liên hệ đang hiện trên trang."
+        : parsed.contact.demoSubmitAlert,
+    },
+  };
 }
 
 export function parseStorefrontUiSection<K extends UiCopySectionKey>(

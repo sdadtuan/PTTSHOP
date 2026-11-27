@@ -5,7 +5,9 @@ import { useMemo, useState } from "react";
 import { ProductGallery, type GalleryImage } from "@/components/product/product-gallery";
 import { ProductPurchase } from "@/components/product/product-purchase";
 import { isVideoMedia, visibleMedia } from "@/lib/product-media";
+import { useShopProfile } from "@/components/cms/shop-profile-context";
 import { resolvePdpTabs, type SizeChart } from "@/lib/pdp-tabs";
+import { presentShippingBullets } from "@/lib/shop/profile";
 
 type Variant = {
   id: string;
@@ -58,10 +60,12 @@ export function ProductDetailClient({ product, shippingPolicyJson }: Props) {
     setColorPickNonce((n) => n + 1);
   };
   const [tab, setTab] = useState<(typeof TABS)[number]["id"]>("details");
+  const shop = useShopProfile();
   const resolved = useMemo(
     () => resolvePdpTabs(product, shippingPolicyJson),
     [product, shippingPolicyJson],
   );
+  const shippingBullets = presentShippingBullets(resolved.shippingBullets, shop);
 
   const detailImage = useMemo(() => {
     const photos = visibleMedia(product.images).filter(
@@ -193,20 +197,11 @@ export function ProductDetailClient({ product, shippingPolicyJson }: Props) {
               )
             ) : null}
             {tab === "shipping" ? (
-              resolved.shippingCustom ? (
-                <ul className="list-disc space-y-2 pl-5">
-                  {resolved.shippingBullets.map((line, i) => (
-                    <li key={i}>{line}</li>
-                  ))}
-                </ul>
-              ) : (
               <ul className="list-disc space-y-2 pl-5">
-                <li>Giao hàng toàn quốc 2–5 ngày làm việc</li>
-                <li>Miễn phí đổi size trong 30 ngày nếu còn tem/tag</li>
-                <li>Hoàn tiền theo chính sách cửa hàng khi lỗi sản xuất</li>
-                <li>Thanh toán COD hoặc chuyển khoản an toàn</li>
+                {shippingBullets.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
               </ul>
-              )
             ) : null}
           </div>
           <div className="relative min-h-[320px] min-w-0 overflow-hidden rounded-sm bg-neutral-100 md:min-h-[380px]">

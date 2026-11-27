@@ -1,12 +1,9 @@
-/** Ngưỡng và phí dự phòng [cần chốt]. Dùng khi admin chưa lưu cài đặt. */
-export const DEFAULT_FREE_SHIP_THRESHOLD = 500_000;
-export const DEFAULT_FALLBACK_FEE = 30_000;
 /** Khối lượng một kiện khi sản phẩm chưa có cân nặng, tính bằng gam [cần chốt]. */
 export const DEFAULT_PARCEL_WEIGHT_GRAMS = 500;
 
 export type ShippingConfig = {
-  freeShipThreshold: number;
-  fallbackFee: number;
+  freeShipThreshold: number | null;
+  fallbackFee: number | null;
   intraProvinceFee: number | null;
   interProvinceFee: number | null;
   parcelWeightGrams: number;
@@ -18,7 +15,7 @@ export type ShippingConfig = {
   defaultProvider: "MANUAL" | "GHN" | "GHTK";
 };
 
-export type ShippingSource = "FREE" | "CARRIER" | "INTRA" | "INTER" | "FALLBACK";
+export type ShippingSource = "FREE" | "CARRIER" | "INTRA" | "INTER" | "FALLBACK" | "PENDING";
 
 export function normalizeShippingConfig(
   row: Partial<{
@@ -37,8 +34,8 @@ export function normalizeShippingConfig(
 ): ShippingConfig {
   const provider = row?.defaultProvider;
   return {
-    freeShipThreshold: positiveOr(row?.freeShipThreshold, DEFAULT_FREE_SHIP_THRESHOLD),
-    fallbackFee: nonNegativeOr(row?.fallbackFee, DEFAULT_FALLBACK_FEE),
+    freeShipThreshold: optionalPositive(row?.freeShipThreshold),
+    fallbackFee: optionalFee(row?.fallbackFee),
     intraProvinceFee: optionalFee(row?.intraProvinceFee),
     interProvinceFee: optionalFee(row?.interProvinceFee),
     parcelWeightGrams: positiveOr(row?.parcelWeightGrams, DEFAULT_PARCEL_WEIGHT_GRAMS),
@@ -55,8 +52,8 @@ function positiveOr(value: number | null | undefined, fallback: number) {
   return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : fallback;
 }
 
-function nonNegativeOr(value: number | null | undefined, fallback: number) {
-  return typeof value === "number" && Number.isInteger(value) && value >= 0 ? value : fallback;
+function optionalPositive(value: number | null | undefined) {
+  return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : null;
 }
 
 function optionalFee(value: number | null | undefined) {
@@ -79,8 +76,8 @@ export function decideShippingFee(input: {
   sameProvince: boolean | null;
   carrierFee: number | null;
   carrierAvailable: boolean;
-}): { fee: number; source: ShippingSource } {
-  if (input.subtotal >= input.config.freeShipThreshold) {
+}): { fee: number | null; source: ShippingSource } {
+  if (input.config.freeShipThreshold != null && input.subtotal >= input.config.freeShipThreshold) {
     return { fee: 0, source: "FREE" };
   }
   if (input.carrierAvailable && typeof input.carrierFee === "number" && input.carrierFee >= 0) {
@@ -92,7 +89,8 @@ export function decideShippingFee(input: {
   if (input.sameProvince === false && input.config.interProvinceFee !== null) {
     return { fee: input.config.interProvinceFee, source: "INTER" };
   }
-  return { fee: input.config.fallbackFee, source: "FALLBACK" };
+  if (input.config.fallbackFee != null) return { fee: input.config.fallbackFee, source: "FALLBACK" };
+  return { fee: null, source: "PENDING" };
 }
 
 export function sameProvince(warehouseCode: string, destinationCode: string): boolean | null {

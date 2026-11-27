@@ -15,20 +15,21 @@ export function shippingFeeFromQuote(input: {
 
 export function displayedShippingFee(input: {
   currentSubtotal: number;
-  freeFrom: number;
+  freeFrom: number | null;
   acceptedFee: number | null;
-  fallbackFee: number;
+  fallbackFee: number | null;
 }) {
   if (input.acceptedFee !== null) return input.acceptedFee;
-  return input.currentSubtotal >= input.freeFrom ? 0 : input.fallbackFee;
+  if (input.freeFrom != null && input.currentSubtotal >= input.freeFrom) return 0;
+  return input.fallbackFee;
 }
 
 export function replayShippingQuotes(
   events: Array<{ requestedSubtotal: number; currentSubtotal: number; responseFee: number }>,
-  freeFrom = 500_000,
-  fallbackFee = 30_000,
+  freeFrom: number | null,
+  fallbackFee: number | null,
 ) {
-  let fee = fallbackFee;
+  let fee: number | null = fallbackFee;
   for (const event of events) {
     const accepted = shippingFeeFromQuote(event);
     fee = displayedShippingFee({

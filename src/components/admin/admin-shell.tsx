@@ -38,6 +38,7 @@ import { AdminToastProvider } from "./ui/toast";
 const nav = [
   { href: "/admin", label: "Tổng quan", icon: LayoutDashboard, exact: true },
   { href: "/admin/orders", label: "Đơn hàng", icon: ShoppingBag },
+  { href: "/admin/cua-hang", label: "Cửa hàng", icon: Store },
   { href: "/admin/thanh-toan", label: "Thanh toán", icon: Wallet },
   { href: "/admin/van-chuyen", label: "Vận chuyển", icon: Truck },
   { href: "/admin/hoa-don", label: "Hoá đơn", icon: Receipt },

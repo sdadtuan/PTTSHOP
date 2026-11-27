@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { isUnset, visibleParagraphs } from "@/content/company";
 import { publicCopy } from "@/lib/public-brand";
 import { policyBySlug } from "@/content/policies";
+import { getShopProfile } from "@/lib/shop/load";
+import { policyParagraphs } from "@/lib/shop/profile";
 import { getStorefrontPageBySlug } from "@/lib/storefront/pages";
 
 export async function policyMetadata(slug: string): Promise<Metadata> {
@@ -15,7 +17,12 @@ export async function PolicyDocument({ slug }: { slug: string }) {
   if (!fallback) notFound();
   const stored = await getStorefrontPageBySlug(slug);
   const title = publicCopy(stored?.title || fallback.title);
-  const body = visibleParagraphs(stored?.body?.length ? stored.body : fallback.body);
+  const profile = await getShopProfile();
+  const body = policyParagraphs(
+    slug,
+    visibleParagraphs(stored?.body?.length ? stored.body : fallback.body),
+    profile,
+  );
 
   return (
     <article className="mx-auto max-w-3xl px-4 py-12 md:px-6">

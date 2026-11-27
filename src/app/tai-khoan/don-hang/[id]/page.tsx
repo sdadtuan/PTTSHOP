@@ -91,8 +91,9 @@ export default async function OrderDetailPage({ params }: Props) {
           </div>
           <div className="flex justify-between">
             <span>Ship</span>
-            <span>{formatVnd(order.shippingFee)}</span>
+            <span>{order.shippingFee == null ? "Phí vận chuyển sẽ báo khi xác nhận đơn" : formatVnd(order.shippingFee)}</span>
           </div>
+          {order.shippingFee == null ? <p className="text-xs text-neutral-500">chưa gồm phí vận chuyển</p> : null}
           <div className="flex justify-between">
             <span>Giảm</span>
             <span>-{formatVnd(order.discount)}</span>

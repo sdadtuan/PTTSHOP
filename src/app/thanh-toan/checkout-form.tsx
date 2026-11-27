@@ -9,12 +9,13 @@ import { ConsentFields, consentsFromForm } from "@/components/legal/consent-fiel
 import { NOT_FOR_SALE_MESSAGE } from "@/lib/catalog-visibility";
 import { formatVnd } from "@/lib/format";
 import { codCeilingNotice } from "@/lib/payments/policy";
-import { DEFAULT_FALLBACK_FEE, DEFAULT_FREE_SHIP_THRESHOLD } from "@/lib/shipping/policy";
+import { SHIPPING_PENDING_COPY, TOTAL_EXCLUDES_SHIPPING_COPY } from "@/lib/shop/profile";
 import { shouldQuoteShipping } from "@/lib/shipping/quote-client";
 
 type PaymentOptions = {
   codEnabled: boolean;
   codMaxAmount: number;
+  bankVisible: boolean;
   bankReady: boolean;
   payosEnabled: boolean;
 };
@@ -32,8 +33,8 @@ export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOption
   const [wards, setWards] = useState<{ code: string; name: string }[]>([]);
   const [provinceCode, setProvinceCode] = useState("");
   const [wardCode, setWardCode] = useState("");
-  const [shipping, setShipping] = useState(subtotal >= DEFAULT_FREE_SHIP_THRESHOLD ? 0 : DEFAULT_FALLBACK_FEE);
-  const [freeFrom, setFreeFrom] = useState(DEFAULT_FREE_SHIP_THRESHOLD);
+  const [shipping, setShipping] = useState<number | null>(null);
+  const [freeFrom, setFreeFrom] = useState<number | null>(null);
   const [couponCode, setCouponCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [couponMsg, setCouponMsg] = useState("");
@@ -46,6 +47,7 @@ export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOption
         setOptions({
           codEnabled: Boolean(data.codEnabled),
           codMaxAmount: Number(data.codMaxAmount) || 0,
+          bankVisible: Boolean(data.bankVisible),
           bankReady: Boolean(data.bankReady),
           payosEnabled: Boolean(data.payosEnabled),
         });
@@ -77,13 +79,14 @@ export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOption
       .then((res) => res.json())
       .then((data) => {
         if (cancelled || requestedSubtotal !== subtotal) return;
-        if (typeof data.fee === "number") setShipping(data.fee);
-        if (typeof data.freeShipThreshold === "number") setFreeFrom(data.freeShipThreshold);
+        setShipping(typeof data.fee === "number" ? data.fee : null);
+        setFreeFrom(typeof data.freeShipThreshold === "number" ? data.freeShipThreshold : null);
       })
       .catch((err: unknown) => {
         if (cancelled || (err instanceof DOMException && err.name === "AbortError")) return;
         if (requestedSubtotal !== subtotal) return;
-        setShipping(requestedSubtotal >= DEFAULT_FREE_SHIP_THRESHOLD ? 0 : DEFAULT_FALLBACK_FEE);
+        setShipping(null);
+        setFreeFrom(null);
       });
     return () => {
       cancelled = true;
@@ -102,20 +105,25 @@ export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOption
     );
   }
 
-  const total = Math.max(0, subtotal + shipping - discount);
+  const total = Math.max(0, subtotal + (shipping ?? 0) - discount);
   const codAllowed = Boolean(options.codEnabled && total <= options.codMaxAmount);
+  const bankAllowed = Boolean(options.bankVisible);
   const payosAllowed = Boolean(options.payosEnabled);
   const codLimitNote = codCeilingNotice(total, options);
   const selected =
     paymentMethod === "PAYOS" && payosAllowed
       ? "PAYOS"
-      : paymentMethod === "BANK_TRANSFER"
+      : paymentMethod === "BANK_TRANSFER" && bankAllowed
         ? "BANK_TRANSFER"
         : paymentMethod === "COD" && codAllowed
           ? "COD"
           : codAllowed
             ? "COD"
-            : "BANK_TRANSFER";
+            : bankAllowed
+              ? "BANK_TRANSFER"
+              : payosAllowed
+                ? "PAYOS"
+                : "";
 
   async function applyCoupon() {
     setCouponMsg("");
@@ -265,15 +273,12 @@ export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOption
                 </label>
               ) : null}
               {codLimitNote ? <p className="text-sm text-neutral-600">{codLimitNote}</p> : null}
+              {bankAllowed ? (
               <label className="flex items-center gap-3 border border-neutral-200 p-3 text-sm">
                 <input type="radio" checked={selected === "BANK_TRANSFER"} onChange={() => setPaymentMethod("BANK_TRANSFER")} />
-                <span>
-                  {ck.paymentBank}
-                  {!options.bankReady ? (
-                    <span className="mt-1 block text-xs text-red-600">Tài khoản nhận tiền chưa được cấu hình. Đơn chuyển khoản sẽ chưa đặt được.</span>
-                  ) : null}
-                </span>
+                {ck.paymentBank}
               </label>
+              ) : null}
               {payosAllowed ? (
                 <label className="flex items-center gap-3 border border-neutral-200 p-3 text-sm">
                   <input type="radio" checked={selected === "PAYOS"} onChange={() => setPaymentMethod("PAYOS")} />
@@ -333,9 +338,10 @@ export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOption
             </div>
             <div className="flex justify-between">
               <span className="text-neutral-500">Ship</span>
-              <span>{shipping === 0 ? "Miễn phí" : formatVnd(shipping)}</span>
+              <span>{shipping == null ? SHIPPING_PENDING_COPY : shipping === 0 ? "Miễn phí" : formatVnd(shipping)}</span>
             </div>
-            <p className="text-xs text-neutral-500">Miễn phí vận chuyển từ {formatVnd(freeFrom)}.</p>
+            {shipping == null ? <p className="text-xs text-neutral-500">{TOTAL_EXCLUDES_SHIPPING_COPY}</p> : null}
+            {freeFrom != null ? <p className="text-xs text-neutral-500">Miễn phí vận chuyển từ {formatVnd(freeFrom)}.</p> : null}
             {discount > 0 ? (
               <div className="flex justify-between text-emerald-700">
                 <span>Giảm giá</span>

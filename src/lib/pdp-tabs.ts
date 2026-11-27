@@ -7,9 +7,7 @@ export const DEFAULT_THICKNESS = "Trung bình";
 
 export const DEFAULT_SHIPPING_BULLETS = [
   "Giao hàng toàn quốc 2–5 ngày làm việc",
-  "Miễn phí đổi size trong 30 ngày nếu còn tem/tag",
   "Hoàn tiền theo chính sách cửa hàng khi lỗi sản xuất",
-  "Thanh toán COD hoặc chuyển khoản an toàn",
 ];
 
 export const DEFAULT_SIZE_NOTE = "Form oversize — nếu thích mặc vừa, chọn nhỏ hơn 1 size.";

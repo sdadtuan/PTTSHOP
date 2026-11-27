@@ -9,6 +9,7 @@ export type PaymentConfig = {
   codMaxAmount: number;
   holdHours: number;
   codConfirmHours: number;
+  bankTransferEnabled: boolean;
   bankBin: string;
   bankName: string;
   bankAccountNumber: string;
@@ -42,7 +43,7 @@ export function paymentOptions(config: PaymentConfig, payosEnabled: boolean) {
   return {
     codEnabled: config.codEnabled,
     codMaxAmount: config.codMaxAmount,
-    bankVisible: true,
+    bankVisible: config.bankTransferEnabled && bankReady(config),
     bankReady: bankReady(config),
     payosEnabled,
     holdHours: config.holdHours,
@@ -65,16 +66,19 @@ export function checkoutMethodError(
     if (!payosEnabled) return "payOS chưa được cấu hình.";
     return null;
   }
-  if (!bankReady(config)) return "Chưa cấu hình tài khoản nhận tiền.";
+  if (!config.bankTransferEnabled || !bankReady(config)) return "Chưa cấu hình tài khoản nhận tiền.";
   return null;
 }
 
 /** Giải thích khi COD đang bật nhưng đơn vượt trần. Số tiền lấy từ cấu hình. */
 export function codCeilingNotice(
   total: number,
-  options: { codEnabled: boolean; codMaxAmount: number },
+  options: { codEnabled: boolean; codMaxAmount: number; bankVisible?: boolean },
 ) {
   if (!options.codEnabled || total <= options.codMaxAmount) return null;
+  if (options.bankVisible === false) {
+    return `Đơn hàng trên ${formatVnd(options.codMaxAmount)} vượt ngưỡng COD.`;
+  }
   return `Đơn hàng trên ${formatVnd(options.codMaxAmount)} chỉ hỗ trợ chuyển khoản ngân hàng.`;
 }
 
@@ -109,9 +113,10 @@ export function isCodConfirmOverdue(input: {
 
 export function quoteFromServerPrices(
   lines: { price: number; quantity: number }[],
-  shippingFee: number,
+  shippingFee: number | null,
   discount: number,
 ) {
   const subtotal = lines.reduce((sum, line) => sum + line.price * line.quantity, 0);
-  return { subtotal, total: Math.max(0, subtotal + shippingFee - discount) };
+  const fee = shippingFee ?? 0;
+  return { subtotal, total: Math.max(0, subtotal + fee - discount) };
 }

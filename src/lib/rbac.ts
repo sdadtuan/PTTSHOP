@@ -195,6 +195,7 @@ const PAGES: Array<{ prefix: string; scope: Scope }> = [
   { prefix: "/admin/products", scope: "products.read" },
   { prefix: "/admin/nhap-san-pham", scope: "shipping.read" },
   { prefix: "/admin/import", scope: "shipping.read" },
+  { prefix: "/admin/cua-hang", scope: "settings.read" },
   { prefix: "/admin/thanh-toan", scope: "settings.read" },
   { prefix: "/admin/thong-bao", scope: "settings.read" },
   { prefix: "/admin/giao-dien", scope: "products.read" },
@@ -279,6 +280,7 @@ export function scopeForApi(pathname: string, method: string): Scope | Scope[] |
     return write ? ["products.write", "products.content"] : "products.read";
   }
   if (
+    pathname.startsWith("/api/admin/shop-profile") ||
     pathname.startsWith("/api/admin/payment-settings") ||
     pathname.startsWith("/api/admin/emails") ||
     pathname.startsWith("/api/admin/crm")

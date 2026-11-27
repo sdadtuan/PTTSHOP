@@ -35,7 +35,7 @@ export function isSafeMediaUrl(value: string): boolean {
 
 /**
  * Plain-text CMS fields are rendered by React (always escaped), so this is defense in depth:
- * removes HTML tags and control characters but keeps normal characters like "Free ship > 500k".
+ * removes HTML tags and control characters but keeps normal characters like "Size > M".
  */
 export function sanitizePlainText(input: string, max = 2000): string {
   return input

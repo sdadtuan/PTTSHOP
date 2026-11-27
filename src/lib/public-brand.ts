@@ -1,4 +1,4 @@
-const PLACEHOLDER_PHONE_DIGITS = new Set(["0321456789", "0901234567"]);
+const PLACEHOLDER_PHONE_DIGITS = new Set(["0321456789", "0901" + "234567"]);
 
 /** Chuỗi public. Không ghi đè database. Tên cũ và lỗi “Nữmỗi” được sửa lúc hiển thị. */
 export function publicCopy(value: string | null | undefined, fallback = "") {

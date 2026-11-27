@@ -43,7 +43,7 @@ type OrderDetail = {
   note: string | null;
   couponCode: string | null;
   subtotal: number;
-  shippingFee: number;
+  shippingFee: number | null;
   discount: number;
   total: number;
   userId: string | null;
@@ -676,8 +676,9 @@ export function OrderDetailClient({ orderId }: { orderId: string }) {
           ) : null}
           <div className="flex justify-between">
             <dt className="text-[var(--admin-text-muted)]">Phí vận chuyển</dt>
-            <dd>{formatVnd(order.shippingFee)}</dd>
+            <dd>{order.shippingFee == null ? "Phí vận chuyển sẽ báo khi xác nhận đơn" : formatVnd(order.shippingFee)}</dd>
           </div>
+          {order.shippingFee == null ? <p className="text-xs text-[var(--admin-text-muted)]">Tổng chưa gồm phí vận chuyển.</p> : null}
           <div className="flex justify-between border-t border-[var(--admin-border)] pt-2 text-base font-semibold">
             <dt>Tổng cộng</dt>
             <dd>{formatVnd(order.total)}</dd>

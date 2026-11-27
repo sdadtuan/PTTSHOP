@@ -24,6 +24,7 @@ const bank = {
   bankAccountNumber: "0000000000",
   bankAccountName: "CONG TY TEST",
   bankBranch: "",
+  bankTransferEnabled: true,
 };
 
 describe("TC QR", () => {
@@ -51,8 +52,8 @@ describe("COD ceiling and bank visibility", () => {
   it("blocks COD above the server ceiling and still lists bank transfer", () => {
     expect(checkoutMethodError("COD", 5_000_001, bank, false)).toMatch(/ngưỡng/);
     expect(checkoutMethodError("COD", 5_000_000, bank, false)).toBeNull();
-    const hidden = paymentOptions({ ...bank, bankAccountNumber: "" }, false);
-    expect(hidden.bankVisible).toBe(true);
+    const hidden = paymentOptions({ ...bank, bankAccountNumber: "", bankTransferEnabled: false }, false);
+    expect(hidden.bankVisible).toBe(false);
     expect(hidden.bankReady).toBe(false);
     expect(checkoutMethodError("BANK_TRANSFER", 1000, { ...bank, bankAccountNumber: "" }, false)).toMatch(/cấu hình/);
     expect(JSON.stringify(hidden)).not.toContain("0000000000");

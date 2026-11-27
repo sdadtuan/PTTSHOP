@@ -1,4 +1,3 @@
-export const DEFAULT_RETURN_WINDOW_DAYS = 7;
 export const DEFAULT_DUAL_APPROVAL_THRESHOLD = 2_000_000;
 
 export function shippingFeePayer(reason: string) {

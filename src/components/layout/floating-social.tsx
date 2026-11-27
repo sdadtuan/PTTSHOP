@@ -2,7 +2,9 @@
 
 import { MessageCircle, Phone } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { useShopProfile } from "@/components/cms/shop-profile-context";
 import { useStorefrontLayout } from "@/components/cms/storefront-layout-context";
+import { visibleFloatingItems } from "@/lib/shop/profile";
 import { defaultSectionContent, type FloatingContactContent } from "@/lib/cms/types";
 import { cn } from "@/lib/utils";
 import { visibleHref } from "@/lib/public-brand";
@@ -40,11 +42,13 @@ const STYLE: Record<string, string> = {
 export function FloatingSocial() {
   const pathname = usePathname();
   const { floatingContact } = useStorefrontLayout();
+  const shop = useShopProfile();
   if (pathname?.startsWith("/admin")) return null;
 
   const isDemoV2 = pathname?.startsWith("/demo-v2");
-  const items = (floatingContact.items.length ? floatingContact.items : defaults).filter(
-    (item) => visibleHref(item.href),
+  const items = visibleFloatingItems(
+    (floatingContact.items.length ? floatingContact.items : defaults).filter((item) => visibleHref(item.href) || item.preset === "zalo" || item.preset === "phone"),
+    shop,
   );
   if (items.length === 0) return null;
 

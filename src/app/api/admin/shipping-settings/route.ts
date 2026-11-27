@@ -7,8 +7,8 @@ import { ghnEnv } from "@/lib/shipping/ghn";
 import { getShippingConfig } from "@/lib/shipping/service";
 
 const putSchema = z.object({
-  freeShipThreshold: z.number().int().positive().max(100_000_000),
-  fallbackFee: z.number().int().min(0).max(10_000_000),
+  freeShipThreshold: z.number().int().positive().max(100_000_000).nullable(),
+  fallbackFee: z.number().int().min(0).max(10_000_000).nullable(),
   intraProvinceFee: z.number().int().min(0).max(10_000_000).nullable(),
   interProvinceFee: z.number().int().min(0).max(10_000_000).nullable(),
   parcelWeightGrams: z.number().int().positive().max(50_000),

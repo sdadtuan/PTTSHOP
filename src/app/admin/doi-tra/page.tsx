@@ -5,13 +5,13 @@ import { AdminButton, AdminCard, AdminPageHeader } from "@/components/admin/ui";
 
 type RequestRow = { id: string; status: string; type: string; reason: string; shippingFeePayer: string; order: { orderNumber: string } };
 type RefundRow = { id: string; status: string; amount: number; refundMethod: string; orderId: string };
-type Settings = { returnWindowDays: number; excludedCategoryIds: string[]; dualApprovalThreshold: number };
+type Settings = { returnWindowDays: number | null; excludedCategoryIds: string[]; dualApprovalThreshold: number };
 
 export default function AdminReturnsPage() {
   const [requests, setRequests] = useState<RequestRow[]>([]);
   const [refunds, setRefunds] = useState<RefundRow[]>([]);
   const [summary, setSummary] = useState({ waiting: 0, second: 0, refunded: 0 });
-  const [settings, setSettings] = useState<Settings>({ returnWindowDays: 7, excludedCategoryIds: [], dualApprovalThreshold: 2_000_000 });
+  const [settings, setSettings] = useState<Settings>({ returnWindowDays: null, excludedCategoryIds: [], dualApprovalThreshold: 2_000_000 });
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
 
@@ -41,7 +41,7 @@ export default function AdminReturnsPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "settings",
-        returnWindowDays: Number(settings.returnWindowDays),
+        returnWindowDays: settings.returnWindowDays,
         dualApprovalThreshold: Number(settings.dualApprovalThreshold),
         excludedCategoryIds: settings.excludedCategoryIds,
       }),
@@ -123,7 +123,7 @@ export default function AdminReturnsPage() {
         <h2 className="text-sm font-semibold">Cài đặt đổi trả</h2>
         <form className="mt-3 grid gap-3 sm:grid-cols-2" onSubmit={(e) => void save(e)}>
           <label className="text-sm">Số ngày được đổi trả
-            <input type="number" value={settings.returnWindowDays} onChange={(e) => setSettings({ ...settings, returnWindowDays: Number(e.target.value) })} className="mt-1 w-full rounded border px-2 py-2" />
+            <input type="number" value={settings.returnWindowDays ?? ""} onChange={(e) => setSettings({ ...settings, returnWindowDays: e.target.value === "" ? null : Number(e.target.value) })} className="mt-1 w-full rounded border px-2 py-2" />
           </label>
           <label className="text-sm">Ngưỡng duyệt 2 cấp (đ)
             <input type="number" value={settings.dualApprovalThreshold} onChange={(e) => setSettings({ ...settings, dualApprovalThreshold: Number(e.target.value) })} className="mt-1 w-full rounded border px-2 py-2" />
