@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
   title: "Liên hệ",
@@ -7,3 +8,7 @@ export const metadata: Metadata = {
   openGraph: { title: "Liên hệ", url: "/lien-he", type: "website" },
   twitter: { card: "summary", title: "Liên hệ" },
 };
+
+export default function ContactSectionLayout({ children }: { children: ReactNode }) {
+  return children;
+}
