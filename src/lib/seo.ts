@@ -20,13 +20,55 @@ export function jsonLdScript(data: unknown) {
   return JSON.stringify(data).replace(/</g, "\\u003c");
 }
 
-export function organizationJsonLd(input: { name: string; url: string }) {
-  return {
+export function organizationJsonLd(input: {
+  name: string;
+  url: string;
+  telephone?: string | null;
+  email?: string | null;
+  address?: string | null;
+}) {
+  const data: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: input.name,
     url: input.url,
   };
+  if (input.telephone) data.telephone = input.telephone;
+  if (input.email) data.email = input.email;
+  if (input.address) {
+    data.address = { "@type": "PostalAddress", streetAddress: input.address };
+  }
+  return data;
+}
+
+export function websiteJsonLd(input: { name: string; url: string }) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: input.name,
+    url: input.url,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${input.url}/san-pham?q={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
+  };
+}
+
+/** q hoặc từ hai điều kiện lọc trở lên thì không index, canonical về trang danh sách. */
+export function listingRobots(params: {
+  q?: string;
+  color?: string;
+  size?: string;
+  priceMin?: string;
+  priceMax?: string;
+  sale?: string;
+}) {
+  const filters = [params.color, params.size, params.priceMin, params.priceMax, params.sale].filter(Boolean);
+  if (params.q?.trim() || filters.length > 1) {
+    return { index: false as const, canonical: "/san-pham" };
+  }
+  return { index: true as const, canonical: null };
 }
 
 export function productJsonLd(input: {
