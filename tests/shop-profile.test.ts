@@ -31,6 +31,7 @@ const emptyProfile = {
   codEnabled: true,
   bankTransferEnabled: false,
   bankVisible: false,
+  lowStockThreshold: null,
 };
 
 const bank = {

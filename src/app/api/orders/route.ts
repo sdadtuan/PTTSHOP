@@ -25,6 +25,7 @@ import { orderBuyerId } from "@/lib/order-buyer";
 import { nextOrderNumber } from "@/lib/order-number";
 import { poFile } from "@/lib/dropship/orders";
 import { planCheckoutLines } from "@/lib/dropship/service";
+import { claimWarehouseStock } from "@/lib/inventory/claim";
 import { quoteCheckout } from "@/lib/shipping/service";
 import { hashReceiptToken, RECEIPT_COOKIE } from "@/lib/order-receipt-token";
 import { checkoutItemSchema, checkoutPhoneSchema } from "@/lib/checkout/order-input";
@@ -171,12 +172,13 @@ export async function POST(req: Request) {
     const order = await prisma.$transaction(async (tx) => {
       for (const { variant, plan } of lines) {
         if (plan.warehouseQty > 0) {
-          const updated = await tx.productVariant.updateMany({
-            where: { id: variant.id, stock: { gte: plan.warehouseQty } },
-            data: { stock: { decrement: plan.warehouseQty } },
-          });
-          if (updated.count === 0) {
-            throw new ApiError(`Không đủ tồn kho: ${variant.product.name} (${variant.size})`, 400);
+          try {
+            await claimWarehouseStock(tx, variant.id, plan.warehouseQty);
+          } catch (error) {
+            if (error instanceof ApiError) {
+              throw new ApiError(`Không đủ tồn kho: ${variant.product.name} (${variant.size})`, 400);
+            }
+            throw error;
           }
         }
         if (plan.supplierQty > 0 && plan.supplierId) {

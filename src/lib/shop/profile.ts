@@ -16,6 +16,7 @@ export type ShopProfile = {
   codEnabled: boolean;
   bankTransferEnabled: boolean;
   bankVisible: boolean;
+  lowStockThreshold: number | null;
 };
 
 export type ShopFacts = {

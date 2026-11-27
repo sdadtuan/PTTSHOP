@@ -410,6 +410,8 @@ model SiteSettings {
   contactHours    String?
   /// Link Zalo. Null hoặc rỗng thì không hiện nút.
   zaloUrl         String?
+  /// Hiện "Còn N" khi tồn bán được <= ngưỡng. Null = không hiện số.
+  lowStockThreshold Int?
   socialInstagram String?
   socialFacebook  String?
   socialTiktok    String?

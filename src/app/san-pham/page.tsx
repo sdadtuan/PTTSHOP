@@ -1,6 +1,9 @@
 import Link from "next/link";
+import { ListingFilters } from "@/components/catalog/listing-filters";
 import { ProductCard } from "@/components/product/product-card";
+import { hasSellableMatch, listingFacets, variantMatchesListing, type ListingVariant } from "@/lib/catalog/listing";
 import { publicVariants } from "@/lib/catalog-visibility";
+import { sellableTotals } from "@/lib/dropship/service";
 import { prisma } from "@/lib/prisma";
 import { buildProductWhere, sortProductsByPrice } from "@/lib/products-query";
 import { recordSearchEvent } from "@/lib/search/events";
@@ -70,19 +73,20 @@ export default async function ProductsPage({
   ) as ProductSort;
 
   const money = (value?: string) => (value && /^\d+$/.test(value) ? Number(value) : undefined);
-  const useSearch = Boolean(params.q?.trim() || params.color || params.size || params.priceMin || params.priceMax || params.sale === "1");
-  const searched = useSearch
+  const listingFilters = {
+    color: params.color,
+    size: params.size,
+    priceMin: money(params.priceMin),
+    priceMax: money(params.priceMax),
+    onSale: params.sale === "1",
+  };
+  const searched = params.q?.trim()
     ? await searchCatalog({
         q: params.q,
         filters: {
           category: params.category,
           gender: params.gender,
-          color: params.color,
-          size: params.size,
-          priceMin: money(params.priceMin),
-          priceMax: money(params.priceMax),
           isNew: params.new === "1",
-          onSale: params.sale === "1",
           collection: params.collection,
         },
       }).catch(() => null)
@@ -92,7 +96,7 @@ export default async function ProductsPage({
     prisma.collection.findMany({ orderBy: { name: "asc" } }),
     searched
       ? Promise.resolve(searched.products)
-      : useSearch
+      : params.q?.trim()
         ? Promise.resolve([])
         : prisma.product.findMany({
           where: buildProductWhere({
@@ -108,14 +112,29 @@ export default async function ProductsPage({
           },
         }),
   ]);
-  const all = listed;
-  const near = searched && searched.total === 0 && params.q?.trim() ? await nearSuggestions(params.q).catch(() => []) : [];
+  const variantIds = listed.flatMap((product) => product.variants.map((variant) => variant.id));
+  const stockMap = await sellableTotals(prisma, variantIds);
+  const withStock = listed.map((product) => ({
+    ...product,
+    variants: product.variants.map((variant) => ({
+      ...variant,
+      stock: stockMap.get(variant.id) ?? 0,
+    })),
+  }));
+  const facets = listingFacets(withStock, listingFilters);
+  const all = withStock
+    .map((product) => ({
+      ...product,
+      variants: product.variants.filter((variant) => variantMatchesListing(variant as ListingVariant, listingFilters)),
+    }))
+    .filter((product) => hasSellableMatch(product.variants, {}));
+  const near = all.length === 0 && params.q?.trim() ? await nearSuggestions(params.q).catch(() => []) : [];
   if (params.q?.trim()) {
     await recordSearchEvent({
       kind: "results",
       query: params.q,
       parsed: searched?.parsedFilters,
-      resultCount: searched?.total ?? 0,
+      resultCount: all.length,
     });
   }
 
@@ -130,6 +149,11 @@ export default async function ProductsPage({
     collection: params.collection,
     new: params.new,
     q: params.q,
+    color: params.color,
+    size: params.size,
+    priceMin: params.priceMin,
+    priceMax: params.priceMax,
+    sale: params.sale,
     sort,
   };
 
@@ -173,9 +197,27 @@ export default async function ProductsPage({
         </div>
       </div>
 
+      <ListingFilters
+        values={{
+          q: params.q,
+          sort,
+          category: params.category,
+          gender: params.gender,
+          collection: params.collection,
+          new: params.new,
+          color: params.color,
+          size: params.size,
+          priceMin: params.priceMin,
+          priceMax: params.priceMax,
+          sale: params.sale,
+        }}
+        colors={facets.colors}
+        sizes={facets.sizes}
+      />
+
       <div className="mb-8 flex flex-wrap gap-2">
         <FilterChip
-          href="/san-pham"
+          href={buildQuery({ q: params.q, sort })}
           active={
             !params.category &&
             !params.gender &&
@@ -188,26 +230,26 @@ export default async function ProductsPage({
         {categories.map((c) => (
           <FilterChip
             key={c.id}
-            href={buildQuery({ category: c.slug, sort })}
+            href={buildQuery({ ...baseParams, category: c.slug, gender: undefined, collection: undefined, new: undefined, page: undefined })}
             active={params.category === c.slug}
           >
             {c.name}
           </FilterChip>
         ))}
         <FilterChip
-          href={buildQuery({ gender: "MALE", sort })}
+          href={buildQuery({ ...baseParams, gender: "MALE", category: undefined, collection: undefined, new: undefined, page: undefined })}
           active={params.gender === "MALE"}
         >
           {ui.filterMen}
         </FilterChip>
         <FilterChip
-          href={buildQuery({ gender: "FEMALE", sort })}
+          href={buildQuery({ ...baseParams, gender: "FEMALE", category: undefined, collection: undefined, new: undefined, page: undefined })}
           active={params.gender === "FEMALE"}
         >
           {ui.filterWomen}
         </FilterChip>
         <FilterChip
-          href={buildQuery({ new: "1", sort })}
+          href={buildQuery({ ...baseParams, new: "1", category: undefined, gender: undefined, collection: undefined, page: undefined })}
           active={params.new === "1"}
         >
           {ui.filterNew}
@@ -215,7 +257,7 @@ export default async function ProductsPage({
         {collections.map((c) => (
           <FilterChip
             key={c.id}
-            href={buildQuery({ collection: c.slug, sort })}
+            href={buildQuery({ ...baseParams, collection: c.slug, category: undefined, gender: undefined, new: undefined, page: undefined })}
             active={params.collection === c.slug}
           >
             {c.name}

@@ -108,7 +108,7 @@ export async function searchCatalog(input: { q?: string; filters?: SearchFilters
     },
     include: {
       images: { where: { isHidden: false }, orderBy: { sortOrder: "asc" }, take: 1 },
-      variants: { select: { color: true, size: true, price: true, compareAt: true, colorHex: true } },
+      variants: { select: { id: true, color: true, size: true, price: true, compareAt: true, colorHex: true } },
       category: { select: { name: true, slug: true } },
     },
   });
