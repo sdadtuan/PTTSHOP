@@ -2,8 +2,8 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { foldKey, foldVi } from "@/lib/search/fold";
 import { parseSearchQuery, suggestionPhrase, type ParsedSearch } from "@/lib/search/parse";
+import { FUZZY_MIN, rankSearchHits } from "@/lib/search/rank";
 
-const FUZZY_MIN = 0.3;
 const NEAR_MIN = 0.25;
 
 export type SearchFilters = {
@@ -70,19 +70,15 @@ async function textMatchIds(keywords: string[], fuzzy: string) {
     fuzzy.length >= 4
       ? Prisma.sql`word_similarity(${fuzzy}, COALESCE(p."searchText", '')) > ${FUZZY_MIN}`
       : Prisma.sql`FALSE`;
-  const rows = await prisma.$queryRaw<{ id: string }[]>(Prisma.sql`
-    SELECT p.id
+  const rows = await prisma.$queryRaw<{ id: string; score: number }[]>(Prisma.sql`
+    SELECT p.id, word_similarity(${fuzzy}, COALESCE(p."searchText", '')) AS score
     FROM "Product" p
     WHERE p."saleStatus" = 'SELLING'
       AND p."isDemo" = FALSE
       AND (${likeSql} OR ${fuzzySql})
-    ORDER BY GREATEST(
-      similarity(COALESCE(p."searchText", ''), ${fuzzy}),
-      word_similarity(${fuzzy}, COALESCE(p."searchText", ''))
-    ) DESC
     LIMIT 100
   `);
-  return rows.map((row) => row.id);
+  return rows.map((row) => ({ id: row.id, score: Number(row.score) }));
 }
 
 export async function searchCatalog(input: { q?: string; filters?: SearchFilters; limit?: number }) {
@@ -93,15 +89,16 @@ export async function searchCatalog(input: { q?: string; filters?: SearchFilters
     filters.gender === "MALE" || filters.gender === "FEMALE" || filters.gender === "UNISEX"
       ? filters.gender
       : undefined;
-  let ids: string[] | null = null;
+  let textHits: { id: string; score: number }[] | null = null;
   if (filters.keywords.length) {
-    ids = await textMatchIds(filters.keywords, parsed.normalized);
+    textHits = await textMatchIds(filters.keywords, parsed.normalized);
   }
-  const products = await prisma.product.findMany({
+  const fuzzy = new Map((textHits ?? []).map((hit) => [hit.id, hit.score]));
+  const products = textHits && textHits.length === 0 ? [] : await prisma.product.findMany({
     where: {
       saleStatus: "SELLING",
       isDemo: false,
-      ...(ids ? { id: { in: ids } } : {}),
+      ...(textHits ? { id: { in: textHits.map((hit) => hit.id) } } : {}),
       ...(filters.category ? { category: { slug: filters.category } } : {}),
       ...(gender === "MALE" ? { gender: { in: ["MALE", "UNISEX"] } } : {}),
       ...(gender === "FEMALE" ? { gender: { in: ["FEMALE", "UNISEX"] } } : {}),
@@ -115,16 +112,31 @@ export async function searchCatalog(input: { q?: string; filters?: SearchFilters
       category: { select: { name: true, slug: true } },
     },
   });
-  const order = new Map((ids ?? products.map((product) => product.id)).map((id, index) => [id, index]));
   const matched = products
     .map((product) => {
       const variants = product.variants.filter((variant) => variantMatches(variant, filters));
       return { product, variants };
     })
-    .filter((row) => row.variants.length > 0)
-    .sort((a, b) => (order.get(a.product.id) ?? 0) - (order.get(b.product.id) ?? 0));
-
-  const rows = matched.map(({ product, variants }) => ({ ...product, variants }));
+    .filter((row) => row.variants.length > 0);
+  const ranked = rankSearchHits(
+    input.q || "",
+    matched.map(({ product }) => ({
+      id: product.id,
+      name: product.name,
+      categoryName: product.category?.name,
+      categorySlug: product.category?.slug,
+      gender: product.gender,
+      colors: product.variants.map((variant) => variant.color),
+      sizes: product.variants.map((variant) => variant.size),
+      createdAt: product.createdAt,
+      fuzzy: fuzzy.get(product.id) ?? 0,
+    })),
+  );
+  const byId = new Map(matched.map((row) => [row.product.id, row]));
+  const rows = ranked.map((hit) => {
+    const row = byId.get(hit.id)!;
+    return { ...row.product, variants: row.variants };
+  });
   const items = rows.map((product) => ({
     id: product.id,
     name: product.name,

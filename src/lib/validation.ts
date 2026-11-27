@@ -19,6 +19,7 @@ export const paginationSchema = z.object({
 });
 
 export const productSortSchema = z.enum([
+  "relevance",
   "newest",
   "price_asc",
   "price_desc",

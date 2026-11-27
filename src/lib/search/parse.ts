@@ -162,6 +162,15 @@ export function parseSearchQuery(input: string): ParsedSearch {
   return parsed;
 }
 
+/** Từ của câu dùng để chấm liên quan: gồm tên danh mục, màu, giới tính và từ khóa. Bỏ toán tử giá, size, hàng mới, sale. */
+export function relevanceTokens(input: string): string[] {
+  const parsed = parseSearchQuery(input);
+  const categoryTokens = CATEGORIES.find((category) => category.slug === parsed.category)?.tokens ?? [];
+  const gender = parsed.gender === "MALE" ? "nam" : parsed.gender === "FEMALE" ? "nu" : "";
+  const tokens = [...categoryTokens, gender, parsed.color ?? "", ...parsed.keywords].filter(Boolean);
+  return [...new Set(tokens)];
+}
+
 export function searchPath(raw: string, parsed: ParsedSearch) {
   const params = new URLSearchParams();
   const q = clipQuery(raw);

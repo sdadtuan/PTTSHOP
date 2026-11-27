@@ -15,6 +15,7 @@ export function productOrderBy(
       return { name: "asc" };
     case "bestseller":
       return { isBestSeller: "desc" };
+    case "relevance":
     case "newest":
     default:
       return { createdAt: "desc" };
@@ -45,6 +46,8 @@ export function sortProductsByPrice<
       return copy.sort(
         (a, b) => Number(b.isBestSeller) - Number(a.isBestSeller),
       );
+    case "relevance":
+      return copy;
     case "newest":
     default:
       return copy.sort(

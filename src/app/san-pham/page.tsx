@@ -33,6 +33,7 @@ const genderLabels: Record<string, string> = {
 };
 
 const sortOptions: { value: ProductSort; label: string }[] = [
+  { value: "relevance", label: "Liên quan" },
   { value: "newest", label: "Mới nhất" },
   { value: "price_asc", label: "Giá tăng" },
   { value: "price_desc", label: "Giá giảm" },
@@ -58,9 +59,15 @@ export default async function ProductsPage({
   const ui = (await getStorefrontUi()).products;
   const page = Math.max(1, Number(params.page) || 1);
   const pageSize = 12;
-  const sort = (sortOptions.some((s) => s.value === params.sort)
-    ? params.sort
-    : "newest") as ProductSort;
+  const hasQuery = Boolean(params.q?.trim());
+  const visibleSorts = hasQuery ? sortOptions : sortOptions.filter((option) => option.value !== "relevance");
+  const sort = (
+    visibleSorts.some((option) => option.value === params.sort)
+      ? params.sort
+      : hasQuery
+        ? "relevance"
+        : "newest"
+  ) as ProductSort;
 
   const money = (value?: string) => (value && /^\d+$/.test(value) ? Number(value) : undefined);
   const useSearch = Boolean(params.q?.trim() || params.color || params.size || params.priceMin || params.priceMax || params.sale === "1");
@@ -148,7 +155,7 @@ export default async function ProductsPage({
         </div>
         <div className="flex flex-wrap items-center gap-2 text-sm text-neutral-600">
           <span>{ui.sortLabel}</span>
-          {sortOptions.map((o) => (
+          {visibleSorts.map((o) => (
             <Link
               key={o.value}
               href={buildQuery({ ...baseParams, sort: o.value, page: "1" })}
