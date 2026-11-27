@@ -7,7 +7,8 @@ import { formatVnd } from "@/lib/format";
 import { orderReceipt } from "@/lib/order-receipt";
 import { canShowReceipt, RECEIPT_COOKIE } from "@/lib/order-receipt-token";
 import { transferView } from "@/lib/payments/instructions";
-import { getPaymentConfig } from "@/lib/payments/store";
+import { gatewaySecrets, vietqrContent, visibleGateways } from "@/lib/payments/gateways";
+import { getGatewayFlags, getPaymentConfig } from "@/lib/payments/store";
 import { prisma } from "@/lib/prisma";
 import { displayBrandName } from "@/lib/public-brand";
 import { getStorefrontUi } from "@/lib/storefront/ui-copy";
@@ -46,6 +47,22 @@ export default async function OrderSuccessPage({ searchParams }: Props) {
       })
     : null;
   const qrPng = transfer ? await QRCode.toDataURL(transfer.qrPayload, { margin: 1, width: 280 }) : "";
+  const vietqrConfig = row && allowed && row.paymentMethod === "VIETQR" ? await getPaymentConfig() : null;
+  const vietqrReady = Boolean(
+    vietqrConfig &&
+      vietqrConfig.bankBin &&
+      vietqrConfig.bankAccountNumber &&
+      visibleGateways(await getGatewayFlags(), gatewaySecrets()).vietqr,
+  );
+  const vietqrPayload = vietqrReady && row && vietqrConfig
+    ? vietqrContent({
+        amount: row.total,
+        orderNumber: row.orderNumber,
+        bin: vietqrConfig.bankBin,
+        account: vietqrConfig.bankAccountNumber,
+      })
+    : "";
+  const vietqrPng = vietqrPayload ? await QRCode.toDataURL(vietqrPayload, { margin: 1, width: 280 }) : "";
   const payosQr = row && allowed && row.paymentMethod === "PAYOS" && row.payosQr
     ? await QRCode.toDataURL(row.payosQr, { margin: 1, width: 280 })
     : "";
@@ -91,6 +108,15 @@ export default async function OrderSuccessPage({ searchParams }: Props) {
       <p className="mt-2 text-center text-sm text-neutral-500">{ui.body}</p>
 
       {transfer ? <PaymentInstructions view={transfer} qrPng={qrPng} /> : null}
+      {vietqrPng && row ? (
+        <div className="mt-8 text-center">
+          {/* QR dựng từ số tiền và mã đơn. Không phải chuỗi EMV Napas. */}
+          <img src={vietqrPng} alt="Mã QR VietQR" width={280} height={280} className="mx-auto" />
+          <p className="mt-3 text-sm text-neutral-700">
+            Chuyển {formatVnd(row.total)}. Nội dung chuyển khoản: {row.orderNumber}.
+          </p>
+        </div>
+      ) : null}
       {payosQr && row?.paymentDueAt ? (
         <PaymentInstructions
           view={{
