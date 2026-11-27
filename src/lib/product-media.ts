@@ -25,6 +25,11 @@ export function primaryImage<T extends MediaLike>(list: T[], color?: string | nu
   return (color ? photos.find((m) => m.color === color) : undefined) ?? photos[0];
 }
 
+/** Ảnh dòng giỏ: đúng màu nếu có, không thì ảnh đầu còn hiện. Ảnh ẩn không được chọn. */
+export function cartLineImage(list: MediaLike[], color?: string | null): string {
+  return primaryImage(list, color)?.url ?? "";
+}
+
 /**
  * Storefront gallery order for a selected colour. EVERY visible image/video is
  * returned (nothing is dropped), ordered: videos first (unchanged PDP behaviour,

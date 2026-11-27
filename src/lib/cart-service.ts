@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/api";
 import { NOT_FOR_SALE_MESSAGE, variantIsForSale } from "@/lib/catalog-visibility";
 import { sellableTotals } from "@/lib/dropship/service";
+import { cartLineImage } from "@/lib/product-media";
 
 export async function getCartForActor(opts: {
   userId?: string | null;
@@ -53,10 +54,9 @@ export const cartInclude = {
           product: {
             include: {
               images: {
-  where: { type: { not: "video" }, isHidden: false },
-  orderBy: { sortOrder: "asc" as const },
-  take: 1,
-},
+                where: { isHidden: false },
+                orderBy: { sortOrder: "asc" as const },
+              },
             },
           },
         },
@@ -93,7 +93,7 @@ export function serializeCart(
     size: i.variant.size,
     price: i.variant.price,
     compareAt: i.variant.compareAt,
-    image: i.variant.product.images[0]?.url ?? "",
+    image: cartLineImage(i.variant.product.images, i.variant.color),
     quantity: i.quantity,
     stock: i.variant.stock,
     forSale: variantIsForSale(i.variant.product),

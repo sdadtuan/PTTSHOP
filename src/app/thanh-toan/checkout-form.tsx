@@ -4,12 +4,15 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/cart/cart-context";
+import { FreeshipBar } from "@/components/cart/freeship-bar";
+import { StorefrontImage } from "@/components/product/storefront-image";
 import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
 import { ConsentFields, consentsFromForm } from "@/components/legal/consent-fields";
 import { NOT_FOR_SALE_MESSAGE } from "@/lib/catalog-visibility";
 import { formatVnd } from "@/lib/format";
 import { codCeilingNotice } from "@/lib/payments/policy";
 import { SHIPPING_PENDING_COPY, TOTAL_EXCLUDES_SHIPPING_COPY } from "@/lib/shop/profile";
+import { normalizeVnPhone } from "@/lib/phone";
 import { shouldQuoteShipping } from "@/lib/shipping/quote-client";
 
 type PaymentOptions = {
@@ -152,9 +155,15 @@ export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOption
     setError("");
 
     const form = new FormData(e.currentTarget);
+    const phone = normalizeVnPhone(String(form.get("phone") || ""));
+    if (!phone) {
+      setLoading(false);
+      setError("Số điện thoại không hợp lệ");
+      return;
+    }
     const payload = {
       customerName: String(form.get("name") || ""),
-      customerPhone: String(form.get("phone") || ""),
+      customerPhone: phone,
       customerEmail: String(form.get("email") || ""),
       address: String(form.get("address") || ""),
       provinceCode: String(form.get("provinceCode") || ""),
@@ -205,7 +214,7 @@ export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOption
           <h2 className="font-semibold">{ck.shippingSectionTitle}</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label={ck.fieldName} name="name" required />
-            <Field label={ck.fieldPhone} name="phone" required />
+            <Field label={ck.fieldPhone} name="phone" required inputMode="tel" autoComplete="tel" />
           </div>
           <Field label={ck.fieldEmail} name="email" type="email" />
           <Field label="Số nhà, đường" name="address" required />
@@ -295,15 +304,22 @@ export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOption
           </h2>
           <ul className="mt-4 space-y-3 text-sm">
             {items.map((i) => (
-              <li key={i.variantId} className="flex justify-between gap-3">
-                <span className="text-neutral-600">
-                  {i.name} × {i.quantity}
-                  <span className="block text-xs text-neutral-400">
-                    {i.color} / {i.size}
+              <li key={i.variantId} className="flex items-center justify-between gap-3">
+                <span className="flex min-w-0 items-center gap-3 text-neutral-600">
+                  <span className="relative h-14 w-12 shrink-0 overflow-hidden bg-neutral-100">
+                    {i.image ? (
+                      <StorefrontImage src={i.image} alt="" fill className="object-cover" sizes="48px" />
+                    ) : null}
                   </span>
-                  {i.forSale === false ? (
-                    <span className="block text-xs text-red-600">{NOT_FOR_SALE_MESSAGE}</span>
-                  ) : null}
+                  <span className="min-w-0">
+                    {i.name} × {i.quantity}
+                    <span className="block text-xs text-neutral-400">
+                      {i.color} / {i.size}
+                    </span>
+                    {i.forSale === false ? (
+                      <span className="block text-xs text-red-600">{NOT_FOR_SALE_MESSAGE}</span>
+                    ) : null}
+                  </span>
                 </span>
                 <span className="font-medium">
                   {i.forSale === false ? "—" : formatVnd(i.price * i.quantity)}
@@ -341,7 +357,7 @@ export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOption
               <span>{shipping == null ? SHIPPING_PENDING_COPY : shipping === 0 ? "Miễn phí" : formatVnd(shipping)}</span>
             </div>
             {shipping == null ? <p className="text-xs text-neutral-500">{TOTAL_EXCLUDES_SHIPPING_COPY}</p> : null}
-            {freeFrom != null ? <p className="text-xs text-neutral-500">Miễn phí vận chuyển từ {formatVnd(freeFrom)}.</p> : null}
+            <FreeshipBar subtotal={subtotal} threshold={freeFrom} />
             {discount > 0 ? (
               <div className="flex justify-between text-emerald-700">
                 <span>Giảm giá</span>
@@ -383,11 +399,15 @@ function Field({
   name,
   type = "text",
   required,
+  inputMode,
+  autoComplete,
 }: {
   label: string;
   name: string;
   type?: string;
   required?: boolean;
+  inputMode?: "tel" | "email" | "text";
+  autoComplete?: string;
 }) {
   return (
     <label className="block text-sm">
@@ -396,6 +416,8 @@ function Field({
         name={name}
         type={type}
         required={required}
+        inputMode={inputMode}
+        autoComplete={autoComplete}
         className="w-full rounded border border-neutral-200 px-3 py-2.5 outline-none focus:border-neutral-900"
       />
     </label>

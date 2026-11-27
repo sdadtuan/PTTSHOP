@@ -9,6 +9,7 @@ import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
 import { NOT_FOR_SALE_MESSAGE } from "@/lib/catalog-visibility";
 import { formatVnd } from "@/lib/format";
 import { displayBrandName } from "@/lib/public-brand";
+import { FreeshipBar } from "@/components/cart/freeship-bar";
 import { SHIPPING_PENDING_COPY, TOTAL_EXCLUDES_SHIPPING_COPY } from "@/lib/shop/profile";
 import { shouldQuoteShipping } from "@/lib/shipping/quote-client";
 
@@ -173,11 +174,7 @@ export default function CartPage() {
             </div>
           </dl>
           {shipping == null ? <p className="mt-3 text-xs text-neutral-500">{TOTAL_EXCLUDES_SHIPPING_COPY}</p> : null}
-          {freeFrom != null ? (
-          <p className="mt-3 text-xs text-neutral-500">
-            Miễn phí vận chuyển từ {formatVnd(freeFrom)}.
-          </p>
-          ) : null}
+          <FreeshipBar subtotal={subtotal} threshold={freeFrom} />
           {payable.length === 0 ? (
             <span className="mt-6 flex w-full items-center justify-center rounded bg-neutral-200 py-3 text-sm font-semibold text-neutral-500">
               {c.checkoutCta}
