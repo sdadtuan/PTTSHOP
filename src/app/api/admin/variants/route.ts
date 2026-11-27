@@ -3,6 +3,7 @@ import { handleApiError, jsonOk } from "@/lib/api";
 import { recordAudit } from "@/lib/admin-audit";
 import { assertScope, enforceAdmin } from "@/lib/rbac-access";
 import { prisma } from "@/lib/prisma";
+import { refreshProductSearchText } from "@/lib/search/text";
 
 const patchSchema = z.object({
   id: z.string().min(1),
@@ -24,6 +25,7 @@ export async function PATCH(req: Request) {
       where: { id },
       data,
     });
+    await refreshProductSearchText(prisma, variant.productId);
     await recordAudit({ access: session.access, actorId: session.user.id, actorEmail: session.user.email, action: "VARIANT_PRICE_STOCK", entityType: "ProductVariant", entityId: id, before, after: data, req });
     return jsonOk({ variant });
   } catch (err) {

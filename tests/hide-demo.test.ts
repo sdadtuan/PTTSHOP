@@ -16,12 +16,7 @@ describe("demo catalog stays off the storefront", () => {
     const where = buildProductWhere({ q: "demo" });
     expect(where.isDemo).toBe(false);
     expect(where.saleStatus).toBe("SELLING");
-    expect(where.OR).toEqual([
-      { name: { contains: "demo", mode: "insensitive" } },
-      { slug: { contains: "demo", mode: "insensitive" } },
-      { description: { contains: "demo", mode: "insensitive" } },
-      { category: { name: { contains: "demo", mode: "insensitive" } } },
-    ]);
+    expect(where.searchText).toEqual({ contains: "demo" });
   });
 
   it("sitemap drops demo rows even if a query forgot the flag", () => {

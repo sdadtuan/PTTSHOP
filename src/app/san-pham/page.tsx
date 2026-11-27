@@ -3,6 +3,8 @@ import { ProductCard } from "@/components/product/product-card";
 import { publicVariants } from "@/lib/catalog-visibility";
 import { prisma } from "@/lib/prisma";
 import { buildProductWhere, sortProductsByPrice } from "@/lib/products-query";
+import { recordSearchEvent } from "@/lib/search/events";
+import { nearSuggestions, searchCatalog } from "@/lib/search/query";
 import { cn } from "@/lib/utils";
 import type { ProductSort } from "@/lib/validation";
 import { getStorefrontUi } from "@/lib/storefront/ui-copy";
@@ -14,6 +16,11 @@ type SearchParams = Promise<{
   gender?: string;
   collection?: string;
   new?: string;
+  sale?: string;
+  color?: string;
+  size?: string;
+  priceMin?: string;
+  priceMax?: string;
   q?: string;
   sort?: string;
   page?: string;
@@ -55,24 +62,55 @@ export default async function ProductsPage({
     ? params.sort
     : "newest") as ProductSort;
 
-  const [categories, collections, all] = await Promise.all([
+  const money = (value?: string) => (value && /^\d+$/.test(value) ? Number(value) : undefined);
+  const useSearch = Boolean(params.q?.trim() || params.color || params.size || params.priceMin || params.priceMax || params.sale === "1");
+  const searched = useSearch
+    ? await searchCatalog({
+        q: params.q,
+        filters: {
+          category: params.category,
+          gender: params.gender,
+          color: params.color,
+          size: params.size,
+          priceMin: money(params.priceMin),
+          priceMax: money(params.priceMax),
+          isNew: params.new === "1",
+          onSale: params.sale === "1",
+          collection: params.collection,
+        },
+      }).catch(() => null)
+    : null;
+  const [categories, collections, listed] = await Promise.all([
     prisma.category.findMany({ orderBy: { sortOrder: "asc" } }),
     prisma.collection.findMany({ orderBy: { name: "asc" } }),
-    prisma.product.findMany({
-      where: buildProductWhere({
-        category: params.category,
-        gender: params.gender,
-        collection: params.collection,
-        q: params.q,
-        isNew: params.new === "1",
-      }),
-      include: {
-        images: { where: { isHidden: false }, orderBy: { sortOrder: "asc" } },
-        variants: publicVariants(),
-        category: true,
-      },
-    }),
+    searched
+      ? Promise.resolve(searched.products)
+      : useSearch
+        ? Promise.resolve([])
+        : prisma.product.findMany({
+          where: buildProductWhere({
+            category: params.category,
+            gender: params.gender,
+            collection: params.collection,
+            isNew: params.new === "1",
+          }),
+          include: {
+            images: { where: { isHidden: false }, orderBy: { sortOrder: "asc" } },
+            variants: publicVariants(),
+            category: true,
+          },
+        }),
   ]);
+  const all = listed;
+  const near = searched && searched.total === 0 && params.q?.trim() ? await nearSuggestions(params.q).catch(() => []) : [];
+  if (params.q?.trim()) {
+    await recordSearchEvent({
+      kind: "results",
+      query: params.q,
+      parsed: searched?.parsedFilters,
+      resultCount: searched?.total ?? 0,
+    });
+  }
 
   const sorted = sortProductsByPrice(all, sort);
   const total = sorted.length;
@@ -181,6 +219,22 @@ export default async function ProductsPage({
       {products.length === 0 ? (
         <div className="py-16 text-center">
           <p className="text-neutral-500">{ui.emptyMessage}</p>
+          {near.length > 0 ? (
+            <div className="mt-6">
+              <p className="text-sm text-neutral-600">Gợi ý gần nghĩa:</p>
+              <div className="mt-3 flex flex-wrap justify-center gap-2">
+                {near.map((item) => (
+                  <Link
+                    key={item.slug}
+                    href={`/san-pham/${item.slug}`}
+                    className="rounded-full border border-neutral-200 px-4 py-2 text-sm text-neutral-700 hover:border-neutral-400"
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ) : null}
           {params.q?.trim() && categories.length > 0 ? (
             <div className="mt-6">
               <p className="text-sm text-neutral-600">Thử một danh mục:</p>

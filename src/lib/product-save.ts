@@ -8,6 +8,7 @@ import { slugify, uniqueSlug } from "@/lib/slug";
 import { productIsDemo } from "@/lib/demo-product";
 import { isAllowedNewMediaUrl, isAllowedProductMediaUrl, isLegacyUnsplashUrl } from "@/lib/product-media-url";
 import { rememberSlugRedirect } from "@/lib/slug-redirect";
+import { refreshProductSearchText } from "@/lib/search/text";
 
 /**
  * Full product save (basic info + all media + all colour/size variants) in one
@@ -296,6 +297,7 @@ export async function saveProductFull(
       },
     });
 
+    await refreshProductSearchText(tx, productId);
     return { productId, keptVariantIds: kept };
   }, { timeout: 30000, maxWait: 10000 });
 }
