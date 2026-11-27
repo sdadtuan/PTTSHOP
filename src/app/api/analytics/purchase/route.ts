@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     const body = bodySchema.parse(await req.json());
     const header = req.headers.get("cookie");
     if (!consentGranted(header)) {
-      return jsonOk({ ga4: false, meta: false, eventId: body.orderNumber, transactionId: body.orderNumber });
+      return jsonOk({ ga4: false, meta: false, tiktok: false, eventId: body.orderNumber, transactionId: body.orderNumber });
     }
     const receipt = cookieValue(header, RECEIPT_COOKIE);
     const cookieOrder = receipt.split(".")[0];
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
       select: { orderNumber: true, receiptTokenHash: true, total: true },
     });
     if (!order || cookieOrder !== order.orderNumber || !canShowReceipt(order.receiptTokenHash, [token])) {
-      return jsonOk({ ga4: false, meta: false, eventId: body.orderNumber, transactionId: body.orderNumber });
+      return jsonOk({ ga4: false, meta: false, tiktok: false, eventId: body.orderNumber, transactionId: body.orderNumber });
     }
     const claimed = await claimPurchase(prisma, order.orderNumber);
     return jsonOk({

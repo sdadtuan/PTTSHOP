@@ -21,6 +21,10 @@ type FormState = {
   bankAccountName: string;
   bankBranch: string;
   bankAccountMasked: string;
+  ga4MeasurementId: string;
+  metaPixelId: string;
+  tiktokPixelId: string;
+  clarityProjectId: string;
 };
 
 const empty: FormState = {
@@ -41,6 +45,10 @@ const empty: FormState = {
   bankAccountName: "",
   bankBranch: "",
   bankAccountMasked: "",
+  ga4MeasurementId: "",
+  metaPixelId: "",
+  tiktokPixelId: "",
+  clarityProjectId: "",
 };
 
 function moneyOrNull(value: string) {
@@ -75,6 +83,10 @@ export default function AdminShopPage() {
           bankAccountName: data.bankAccountName || "",
           bankBranch: data.bankBranch || "",
           bankAccountMasked: data.bankAccountMasked || "",
+          ga4MeasurementId: data.ga4MeasurementId || "",
+          metaPixelId: data.metaPixelId || "",
+          tiktokPixelId: data.tiktokPixelId || "",
+          clarityProjectId: data.clarityProjectId || "",
         });
       })
       .catch(() => toast("Không tải được cấu hình cửa hàng."))
@@ -104,6 +116,10 @@ export default function AdminShopPage() {
         keepBankAccount: !form.bankAccountNumber && Boolean(form.bankAccountMasked),
         bankAccountName: form.bankAccountName,
         bankBranch: form.bankBranch,
+        ga4MeasurementId: form.ga4MeasurementId,
+        metaPixelId: form.metaPixelId,
+        tiktokPixelId: form.tiktokPixelId,
+        clarityProjectId: form.clarityProjectId,
       }),
     });
     const data = await res.json();
@@ -137,6 +153,10 @@ export default function AdminShopPage() {
         <AdminInput label="Phí vận chuyển dự phòng (đ)" type="number" min={0} value={form.fallbackFee} onChange={(e) => setForm({ ...form, fallbackFee: e.target.value })} hint="Để trống thì giỏ ghi phí sẽ báo khi xác nhận đơn." />
         <AdminInput label="Số ngày đổi trả" type="number" min={0} value={form.returnWindowDays} onChange={(e) => setForm({ ...form, returnWindowDays: e.target.value })} hint="Để trống thì không ghi số ngày." />
         <AdminInput label="Ngưỡng còn ít hàng" type="number" min={1} value={form.lowStockThreshold} onChange={(e) => setForm({ ...form, lowStockThreshold: e.target.value })} hint="Để trống thì không hiện “Còn N” trên trang sản phẩm." />
+        <AdminInput label="GA4 measurement ID" value={form.ga4MeasurementId} onChange={(e) => setForm({ ...form, ga4MeasurementId: e.target.value })} hint="Để trống thì không tải GA4." />
+        <AdminInput label="Meta pixel ID" value={form.metaPixelId} onChange={(e) => setForm({ ...form, metaPixelId: e.target.value })} hint="Để trống thì không tải Meta." />
+        <AdminInput label="TikTok pixel ID" value={form.tiktokPixelId} onChange={(e) => setForm({ ...form, tiktokPixelId: e.target.value })} hint="Để trống thì không tải TikTok." />
+        <AdminInput label="Clarity project ID" value={form.clarityProjectId} onChange={(e) => setForm({ ...form, clarityProjectId: e.target.value })} hint="Để trống thì không tải Clarity." />
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={form.codEnabled} onChange={(e) => setForm({ ...form, codEnabled: e.target.checked })} />
           Bật thanh toán COD

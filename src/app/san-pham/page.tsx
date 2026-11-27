@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ListingFilters } from "@/components/catalog/listing-filters";
+import { AnalyticsOnce } from "@/components/legal/measurement";
 import { ProductCard } from "@/components/product/product-card";
 import { hasSellableMatch, listingFacets, variantMatchesListing, type ListingVariant } from "@/lib/catalog/listing";
 import { publicVariants } from "@/lib/catalog-visibility";
@@ -12,6 +13,7 @@ import { cn } from "@/lib/utils";
 import type { ProductSort } from "@/lib/validation";
 import { getStorefrontUi } from "@/lib/storefront/ui-copy";
 import { listingRobots } from "@/lib/seo";
+import { searchEventTerm } from "@/lib/analytics/ids";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -193,6 +195,9 @@ export default async function ProductsPage({
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 md:px-6 md:py-14">
+      {params.q?.trim() && searchEventTerm(params.q) ? (
+        <AnalyticsOnce name="search" params={{ search_term: searchEventTerm(params.q) || "" }} />
+      ) : null}
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="type-title text-3xl font-bold md:text-4xl">

@@ -2,6 +2,7 @@
 
 import { useShopProfile } from "@/components/cms/shop-profile-context";
 import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
+import { trackStoreEvent } from "@/components/legal/measurement";
 import { contactRows } from "@/lib/shop/profile";
 
 export default function ContactPage() {
@@ -49,6 +50,7 @@ export default function ContactPage() {
         className="mt-8 grid gap-3 border border-neutral-100 bg-white p-6"
         onSubmit={(e) => {
           e.preventDefault();
+          void trackStoreEvent("generate_lead", {});
           alert(ui.demoSubmitAlert);
         }}
       >

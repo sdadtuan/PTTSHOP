@@ -12,7 +12,11 @@ import { getShopProfile } from "@/lib/shop/load";
 export async function GET(req?: Request) {
   try {
     await enforceAdmin(req);
-    const [profile, payment] = await Promise.all([getShopProfile(), getPaymentConfig()]);
+    const [profile, payment, site] = await Promise.all([
+      getShopProfile(),
+      getPaymentConfig(),
+      prisma.siteSettings.findUnique({ where: { id: "default" } }),
+    ]);
     return jsonOk({
       hotline: profile.hotline ?? "",
       email: profile.email ?? "",
@@ -32,6 +36,10 @@ export async function GET(req?: Request) {
       bankBranch: payment.bankBranch,
       bankAccountMasked: payment.bankAccountNumber ? maskAccount(payment.bankAccountNumber) : "",
       hasBankAccount: Boolean(payment.bankAccountNumber),
+      ga4MeasurementId: site?.ga4MeasurementId ?? "",
+      metaPixelId: site?.metaPixelId ?? "",
+      tiktokPixelId: site?.tiktokPixelId ?? "",
+      clarityProjectId: site?.clarityProjectId ?? "",
     });
   } catch (err) {
     return handleApiError(err);
@@ -74,6 +82,10 @@ export async function PUT(req: Request) {
           contactHours: body.hours,
           zaloUrl: body.zaloUrl,
           ...(body.lowStockThreshold !== undefined ? { lowStockThreshold: body.lowStockThreshold } : {}),
+          ...(body.ga4MeasurementId !== undefined ? { ga4MeasurementId: body.ga4MeasurementId } : {}),
+          ...(body.metaPixelId !== undefined ? { metaPixelId: body.metaPixelId } : {}),
+          ...(body.tiktokPixelId !== undefined ? { tiktokPixelId: body.tiktokPixelId } : {}),
+          ...(body.clarityProjectId !== undefined ? { clarityProjectId: body.clarityProjectId } : {}),
         },
         update: {
           hotline: body.hotline,
@@ -83,6 +95,10 @@ export async function PUT(req: Request) {
           contactHours: body.hours,
           zaloUrl: body.zaloUrl,
           ...(body.lowStockThreshold !== undefined ? { lowStockThreshold: body.lowStockThreshold } : {}),
+          ...(body.ga4MeasurementId !== undefined ? { ga4MeasurementId: body.ga4MeasurementId } : {}),
+          ...(body.metaPixelId !== undefined ? { metaPixelId: body.metaPixelId } : {}),
+          ...(body.tiktokPixelId !== undefined ? { tiktokPixelId: body.tiktokPixelId } : {}),
+          ...(body.clarityProjectId !== undefined ? { clarityProjectId: body.clarityProjectId } : {}),
         },
       }),
       prisma.shippingSettings.upsert({
