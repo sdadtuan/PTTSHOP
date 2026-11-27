@@ -6,6 +6,7 @@ import path from "path";
 import type { PrismaClient } from "@prisma/client";
 import { ApiError } from "@/lib/api";
 import { productIsDemo } from "@/lib/demo-product";
+import { refreshProductSearchText } from "@/lib/search/text";
 import type { ImportIssue, ImportProduct } from "@/lib/catalog-import";
 import { validateCatalogImage } from "@/lib/upload-validate";
 
@@ -299,6 +300,7 @@ export async function commitCatalogImport(
             }),
           },
         });
+        await refreshProductSearchText(tx, row.id);
       }
     }, { timeout: 30000 });
     return { summary: plan.summary };

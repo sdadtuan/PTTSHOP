@@ -4,6 +4,7 @@ import { enforceAdmin } from "@/lib/rbac-access";
 import { prisma } from "@/lib/prisma";
 import { deleteCategoryIfEmpty, uniqueCategorySlug } from "@/lib/category-admin";
 import { isValidSlug, slugify } from "@/lib/slug";
+import { refreshCategorySearchText } from "@/lib/search/text";
 
 export async function GET(req?: Request) {
   try {
@@ -72,7 +73,11 @@ export async function PATCH(req: Request) {
       if (clash) return jsonError("Slug đã được danh mục khác dùng", 409);
       data.slug = slug;
     }
+    const before = await prisma.category.findUnique({ where: { id }, select: { name: true, slug: true } });
     const category = await prisma.category.update({ where: { id }, data });
+    if (before && (before.name !== category.name || before.slug !== category.slug)) {
+      await refreshCategorySearchText(prisma, category.id);
+    }
     return jsonOk({ category });
   } catch (err) {
     return handleApiError(err);

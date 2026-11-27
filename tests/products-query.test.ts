@@ -7,15 +7,10 @@ describe("buildProductWhere", () => {
     expect(where.saleStatus).toBe("SELLING");
     expect(where.isDemo).toBe(false);
     expect(where.category).toEqual({ slug: "ao-thun" });
-    expect(where.OR).toEqual([
-      { name: { contains: "áo thun", mode: "insensitive" } },
-      { slug: { contains: "áo thun", mode: "insensitive" } },
-      { description: { contains: "áo thun", mode: "insensitive" } },
-      { category: { name: { contains: "áo thun", mode: "insensitive" } } },
-    ]);
+    expect(where.searchText).toEqual({ contains: "ao thun" });
   });
 
   it("ignores a blank query", () => {
-    expect(buildProductWhere({ q: "   " }).OR).toBeUndefined();
+    expect(buildProductWhere({ q: "   " }).searchText).toBeUndefined();
   });
 });

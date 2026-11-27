@@ -9,6 +9,8 @@ import { useSiteBrand } from "@/components/cms/site-brand-context";
 import { useStorefrontLayout } from "@/components/cms/storefront-layout-context";
 import { cn } from "@/lib/utils";
 import { displayBrandName, publicNavLabel } from "@/lib/public-brand";
+import { SearchBox } from "@/components/layout/search-box";
+import { parseSearchQuery, searchPath } from "@/lib/search/parse";
 
 export function Header() {
   const pathname = usePathname();
@@ -134,28 +136,21 @@ export function Header() {
             className="mx-auto flex max-w-7xl gap-2 px-4 py-3 md:px-6"
             onSubmit={(event) => {
               event.preventDefault();
-              setSearchOpen(false);
-              const params = new URLSearchParams(
-                pathname === "/san-pham" ? window.location.search : "",
-              );
-              params.delete("page");
-              const term = q.trim();
-              if (term) params.set("q", term);
-              else params.delete("q");
-              const next = params.toString();
-              router.push(next ? `/san-pham?${next}` : "/san-pham");
             }}
           >
-            <input
-              name="q"
+            <SearchBox
               value={q}
-              onChange={(e) => setQ(e.target.value)}
+              onChange={setQ}
               placeholder={searchPlaceholder}
-              className="min-w-0 flex-1 rounded-full border border-neutral-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-neutral-900"
-              autoFocus
+              onSubmit={() => setSearchOpen(false)}
             />
             <button
-              type="submit"
+              type="button"
+              onClick={() => {
+                const parsed = parseSearchQuery(q);
+                setSearchOpen(false);
+                router.push(q.trim() ? searchPath(q, parsed) : "/san-pham");
+              }}
               className="rounded-full bg-neutral-900 px-5 py-2.5 text-sm font-semibold text-white"
             >
               Tìm

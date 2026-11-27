@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import type { ProductSort } from "@/lib/validation";
 import { publicCatalogWhere } from "@/lib/catalog-visibility";
+import { foldKey } from "@/lib/search/fold";
 
 export function productOrderBy(
   sort: ProductSort,
@@ -14,6 +15,7 @@ export function productOrderBy(
       return { name: "asc" };
     case "bestseller":
       return { isBestSeller: "desc" };
+    case "relevance":
     case "newest":
     default:
       return { createdAt: "desc" };
@@ -44,6 +46,8 @@ export function sortProductsByPrice<
       return copy.sort(
         (a, b) => Number(b.isBestSeller) - Number(a.isBestSeller),
       );
+    case "relevance":
+      return copy;
     case "newest":
     default:
       return copy.sort(
@@ -68,14 +72,7 @@ export function buildProductWhere(params: {
   if (params.collection) {
     where.collections = { some: { collection: { slug: params.collection } } };
   }
-  const term = params.q?.trim();
-  if (term) {
-    where.OR = [
-      { name: { contains: term, mode: "insensitive" } },
-      { slug: { contains: term, mode: "insensitive" } },
-      { description: { contains: term, mode: "insensitive" } },
-      { category: { name: { contains: term, mode: "insensitive" } } },
-    ];
-  }
+  const term = foldKey(params.q || "");
+  if (term) where.searchText = { contains: term };
   return where;
 }
