@@ -41,6 +41,7 @@ export async function cleanDb(prisma: PrismaClient) {
   await prisma.shippingWebhookEvent.deleteMany();
   await prisma.crmSyncJob.deleteMany();
   await prisma.emailOutbox.deleteMany();
+  await prisma.notificationLog.deleteMany();
   await prisma.paymentTransaction.deleteMany();
   await prisma.orderItem.deleteMany();
   await prisma.order.deleteMany();

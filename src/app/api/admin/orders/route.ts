@@ -12,6 +12,7 @@ import { autoIssueIfReady } from "@/lib/invoices/service";
 import { reviewPaymentConfirm } from "@/lib/payments/confirm";
 import { holdEnforceFrom, releaseExpiredUnpaid } from "@/lib/payments/hold";
 import { prisma } from "@/lib/prisma";
+import { recordOrderNotice } from "@/lib/notify/order-notice";
 
 export async function GET(req: Request) {
   try {
@@ -147,6 +148,16 @@ export async function PATCH(req: Request) {
         customerName: order.customerName,
         status: ORDER_STATUS_LABELS[order.status],
       });
+      try {
+        await recordOrderNotice(prisma, {
+          orderId: order.id,
+          status: order.status,
+          phone: order.customerPhone,
+          email: order.customerEmail,
+        });
+      } catch {
+        // ZNS lỗi không chặn đổi trạng thái.
+      }
     }
 
     return jsonOk({ order });
