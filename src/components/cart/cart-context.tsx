@@ -33,7 +33,10 @@ type CartContextValue = {
   subtotal: number;
   loading: boolean;
   refresh: () => Promise<void>;
-  addItem: (item: Omit<CartLine, "quantity">, quantity?: number) => void;
+  addItem: (
+    item: Omit<CartLine, "quantity">,
+    quantity?: number,
+  ) => Promise<{ ok: true } | { ok: false; error: string }>;
   removeItem: (variantId: string) => void;
   updateQuantity: (variantId: string, quantity: number) => void;
   clear: () => void;
@@ -134,12 +137,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
             return [...prev, { ...item, quantity }];
           });
         });
-        void fetch("/api/cart", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "same-origin",
-          body: JSON.stringify({ variantId: item.variantId, quantity }),
-        }).then(() => refresh());
+        return (async () => {
+          try {
+            const res = await fetch("/api/cart", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "same-origin",
+              body: JSON.stringify({ variantId: item.variantId, quantity }),
+            });
+            const data = (await res.json().catch(() => null)) as { error?: unknown } | null;
+            await refresh();
+            if (!res.ok) {
+              const error = typeof data?.error === "string" ? data.error : "Không thêm được vào giỏ";
+              return { ok: false as const, error };
+            }
+            return { ok: true as const };
+          } catch {
+            await refresh();
+            return { ok: false as const, error: "Không thêm được vào giỏ" };
+          }
+        })();
       },
       removeItem: (variantId) => {
         setItems((prev) => prev.filter((p) => p.variantId !== variantId));

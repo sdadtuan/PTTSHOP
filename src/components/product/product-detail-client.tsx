@@ -80,7 +80,7 @@ export function ProductDetailClient({ product, shippingPolicyJson }: Props) {
   }, [product.images, color]);
 
   return (
-    <>
+    <div className="pb-[calc(4.75rem+env(safe-area-inset-bottom))] lg:pb-0">
       <div className="grid gap-10 lg:grid-cols-2 lg:gap-14">
         <ProductGallery
           images={product.images}
@@ -216,7 +216,7 @@ export function ProductDetailClient({ product, shippingPolicyJson }: Props) {
           </div>
         </div>
       </section>
-    </>
+    </div>
   );
 }
 

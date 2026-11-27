@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Heart,
   Minus,
@@ -21,7 +22,7 @@ import { useShopProfile } from "@/components/cms/shop-profile-context";
 import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
 import { purchaseBadges } from "@/lib/shop/profile";
 import { formatStockTemplate } from "@/lib/storefront/ui-copy-types";
-import { colorOutOfStock, pickSizeForColor } from "@/lib/variant-stock";
+import { colorOutOfStock, resolveSizeChoice } from "@/lib/variant-stock";
 
 type Variant = {
   id: string;
@@ -68,8 +69,16 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
   const pdp = useStorefrontUi().pdp;
   const badges = purchaseBadges(useShopProfile());
   const { addItem } = useCart();
+  const router = useRouter();
   const { status } = useSession();
   const [wishSaved, setWishSaved] = useState(false);
+  const sizeGroupRef = useRef<HTMLDivElement>(null);
+  const inlineCtaRef = useRef<HTMLDivElement>(null);
+  const posting = useRef(false);
+  const [postingMode, setPostingMode] = useState<null | "add" | "buy">(null);
+  const [choiceError, setChoiceError] = useState("");
+  const [cartError, setCartError] = useState("");
+  const [showSticky, setShowSticky] = useState(false);
   const colors = useMemo(() => {
     const map = new Map<string, { name: string; hex: string | null; bg: string }>();
     for (const v of product.variants) {
@@ -90,21 +99,25 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
         .sort((a, b) => sizeRank(a.size) - sizeRank(b.size)),
     [product.variants, color],
   );
-  const [size, setSize] = useState(() => pickSizeForColor(product.variants, color, ""));
+  const [size, setSize] = useState(() => resolveSizeChoice(product.variants, color, ""));
   const variantKey = product.variants.map((variant) => variant.id).join(",");
   const sizeKey = `${color}|${variantKey}`;
   const [trackedSizeKey, setTrackedSizeKey] = useState(sizeKey);
   if (trackedSizeKey !== sizeKey) {
     setTrackedSizeKey(sizeKey);
-    setSize((current) => pickSizeForColor(product.variants, color, current));
+    setSize((current) => resolveSizeChoice(product.variants, color, current));
   }
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const [showChart, setShowChart] = useState(false);
 
-  const selected =
-    product.variants.find((v) => v.color === color && v.size === size) ??
-    sizesForColor[0];
+  const selected = size
+    ? (product.variants.find((v) => v.color === color && v.size === size) ?? null)
+    : null;
+  const soldOut =
+    sizesForColor.length === 0 ||
+    sizesForColor.every((variant) => variant.stock <= 0) ||
+    (selected != null && selected.stock <= 0);
 
   const percent = selected
     ? discountPercent(selected.price, selected.compareAt)
@@ -112,9 +125,23 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
 
   const imageForCart = primaryImage(product.images, color)?.url || "";
 
-  function handleAdd() {
-    if (!selected) return;
-    addItem(
+  function promptSize() {
+    setChoiceError("Vui lòng chọn size");
+    sizeGroupRef.current?.scrollIntoView({ block: "center" });
+    sizeGroupRef.current?.focus();
+  }
+
+  async function submit(mode: "add" | "buy") {
+    if (posting.current || soldOut) return;
+    if (!selected) {
+      promptSize();
+      return;
+    }
+    posting.current = true;
+    setPostingMode(mode);
+    setCartError("");
+    setChoiceError("");
+    const result = await addItem(
       {
         variantId: selected.id,
         productId: product.id,
@@ -128,9 +155,39 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
       },
       qty,
     );
+    posting.current = false;
+    setPostingMode(null);
+    if (!result.ok) {
+      setCartError(result.error);
+      return;
+    }
+    if (mode === "buy") {
+      router.push("/thanh-toan");
+      return;
+    }
     setAdded(true);
-    setTimeout(() => setAdded(false), 1800);
+    window.setTimeout(() => setAdded(false), 1800);
   }
+
+  useEffect(() => {
+    const root = document.querySelector("[data-storefront-scroller]");
+    if (!(root instanceof HTMLElement)) return;
+    const update = () => {
+      const target = inlineCtaRef.current;
+      if (!target) return;
+      const rootRect = root.getBoundingClientRect();
+      const rect = target.getBoundingClientRect();
+      setShowSticky(rect.bottom <= rootRect.top + 1);
+    };
+    const frame = window.requestAnimationFrame(update);
+    root.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      root.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, []);
 
   async function handleWish() {
     if (!selected) return;
@@ -317,7 +374,14 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
           </div>
           )
         ) : null}
-        <div className="flex flex-wrap gap-2">
+        <div
+          ref={sizeGroupRef}
+          tabIndex={-1}
+          id="chon-size"
+          data-testid="pdp-size-group"
+          aria-invalid={choiceError ? true : undefined}
+          className="flex flex-wrap gap-2 outline-none"
+        >
           {sizesForColor.map((v) => (
             <button
               key={v.id}
@@ -345,6 +409,11 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
             </button>
           ))}
         </div>
+        {choiceError ? (
+          <p className="mt-2 text-sm text-red-600" role="alert">
+            {choiceError}
+          </p>
+        ) : null}
       </div>
 
       <p className="-mt-3 text-xs text-neutral-500" data-testid="pdp-stock">
@@ -363,7 +432,7 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
           : pdp.stockNone}
       </p>
 
-      <div className="flex items-center gap-3">
+      <div ref={inlineCtaRef} className="flex flex-wrap items-center gap-3">
         <div className="flex items-center rounded border border-neutral-200 bg-white">
           <button
             type="button"
@@ -386,12 +455,21 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
 
         <button
           type="button"
-          onClick={handleAdd}
-          disabled={!selected || selected.stock <= 0}
-          className="flex flex-1 items-center justify-center gap-2 rounded bg-neutral-900 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-[var(--accent)] disabled:opacity-50"
+          onClick={() => void submit("add")}
+          disabled={soldOut || postingMode !== null}
+          className="flex min-w-[9rem] flex-1 items-center justify-center gap-2 rounded bg-neutral-900 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-[var(--accent)] disabled:opacity-50"
         >
           <ShoppingBag className="h-4 w-4" />
           {added ? pdp.addedToCart : pdp.addToCart}
+        </button>
+        <button
+          type="button"
+          onClick={() => void submit("buy")}
+          disabled={soldOut || postingMode !== null}
+          data-testid="pdp-buy-now"
+          className="flex min-w-[9rem] flex-1 items-center justify-center rounded border border-neutral-900 bg-white px-5 py-3.5 text-sm font-semibold text-neutral-900 transition hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:opacity-50"
+        >
+          {postingMode === "buy" ? "Đang xử lý" : "Mua ngay"}
         </button>
 
         <button
@@ -406,6 +484,11 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
           <Heart className={cn("h-5 w-5", wishSaved && "fill-current")} />
         </button>
       </div>
+      {cartError ? (
+        <p className="-mt-3 text-sm text-red-600" role="alert">
+          {cartError}
+        </p>
+      ) : null}
 
       <div className="flex flex-wrap justify-center gap-3 border-t border-neutral-100 pt-5 text-center text-[11px] text-neutral-500 sm:text-xs">
         {badges.map((label) => (
@@ -414,6 +497,47 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
             {label}
           </div>
         ))}
+      </div>
+
+      <div
+        className={cn(
+          "fixed inset-x-0 z-30 border-t border-neutral-200 bg-white px-4 pt-2 lg:hidden",
+          showSticky ? "visible" : "invisible pointer-events-none",
+        )}
+        style={{
+          bottom: "var(--ptt-cookie-offset, 0px)",
+          paddingBottom:
+            "max(0.5rem, calc(env(safe-area-inset-bottom) - var(--ptt-cookie-offset, 0px)))",
+        }}
+        aria-hidden={showSticky ? undefined : true}
+        aria-label="Thao tác mua hàng"
+        data-testid="pdp-sticky-cta"
+      >
+        <p className="truncate text-xs text-neutral-500">
+          {selected ? `${selected.color} · ${selected.size}` : "Chưa chọn size"}
+          <span className="ml-2 font-semibold text-neutral-900">
+            {selected ? formatVnd(selected.price) : "—"}
+          </span>
+        </p>
+        <div className="mt-2 flex gap-2">
+          <button
+            type="button"
+            onClick={() => void submit("add")}
+            disabled={soldOut || postingMode !== null}
+            className="flex-1 rounded bg-neutral-900 px-3 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+          >
+            {pdp.addToCart}
+          </button>
+          <button
+            type="button"
+            onClick={() => void submit("buy")}
+            disabled={soldOut || postingMode !== null}
+            data-testid="pdp-sticky-buy"
+            className="flex-1 rounded border border-neutral-900 bg-white px-3 py-2.5 text-sm font-semibold text-neutral-900 disabled:opacity-50"
+          >
+            {postingMode === "buy" ? "Đang xử lý" : "Mua ngay"}
+          </button>
+        </div>
       </div>
     </div>
   );

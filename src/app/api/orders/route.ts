@@ -27,11 +27,12 @@ import { poFile } from "@/lib/dropship/orders";
 import { planCheckoutLines } from "@/lib/dropship/service";
 import { quoteCheckout } from "@/lib/shipping/service";
 import { hashReceiptToken, RECEIPT_COOKIE } from "@/lib/order-receipt-token";
-import { emailSchema, phoneSchema } from "@/lib/validation";
+import { checkoutItemSchema, checkoutPhoneSchema } from "@/lib/checkout/order-input";
+import { emailSchema } from "@/lib/validation";
 
 const bodySchema = z.object({
   customerName: z.string().trim().min(2).max(80),
-  customerPhone: phoneSchema,
+  customerPhone: checkoutPhoneSchema,
   customerEmail: emailSchema.optional().or(z.literal("")),
   address: z.string().trim().min(5).max(200),
   provinceCode: z.string().trim().min(2).max(2),
@@ -51,14 +52,7 @@ const bodySchema = z.object({
       }),
     )
     .default([]),
-  items: z
-    .array(
-      z.object({
-        variantId: z.string().min(1),
-        quantity: z.number().int().positive().max(99),
-      }),
-    )
-    .min(1),
+  items: z.array(checkoutItemSchema).min(1),
 });
 
 function orderNumber() {

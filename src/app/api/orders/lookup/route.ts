@@ -4,6 +4,7 @@ import { transferView } from "@/lib/payments/instructions";
 import { getPaymentConfig } from "@/lib/payments/store";
 import { prisma } from "@/lib/prisma";
 import { publicShipments } from "@/lib/shipping/service";
+import { phonesMatch } from "@/lib/phone";
 import { phoneSchema } from "@/lib/validation";
 
 const bodySchema = z.object({
@@ -18,7 +19,7 @@ export async function POST(req: Request) {
       where: { orderNumber: body.orderNumber },
       include: { shipments: { orderBy: { createdAt: "asc" } } },
     });
-    if (!order || order.customerPhone.replace(/\s/g, "") !== body.phone.replace(/\s/g, "")) {
+    if (!order || !phonesMatch(order.customerPhone, body.phone)) {
       return jsonError("Không tìm thấy đơn khớp số điện thoại.", 404);
     }
     const transfer =
