@@ -5,8 +5,8 @@ import type { NextConfig } from "next";
 // và không giữ giá/tồn lâu. Trang cá nhân giữ no-store.
 const PUBLIC_HTML_CACHE = "private, no-cache, max-age=0";
 const PRIVATE_HTML_CACHE = "private, no-cache, no-store, max-age=0, must-revalidate";
-// 180 ngày. Không preload: chưa chứng minh mọi subdomain chỉ có HTTPS.
-const HSTS = "max-age=15552000";
+// HSTS chỉ do nginx gửi (max-age=15552000) trên HTTPS, kể cả /media.
+// App không gửi thêm, kẻo trình duyệt nhận hai header Strict-Transport-Security.
 
 const PUBLIC_PAGES = [
   "/",
@@ -54,11 +54,6 @@ const nextConfig: NextConfig = {
         source,
         headers: [{ key: "Cache-Control", value: PRIVATE_HTML_CACHE }],
       })),
-      {
-        source: "/:path*",
-        has: [{ type: "header" as const, key: "x-forwarded-proto", value: "https" }],
-        headers: [{ key: "Strict-Transport-Security", value: HSTS }],
-      },
     ];
   },
   images: {

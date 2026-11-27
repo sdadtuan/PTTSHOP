@@ -15,7 +15,7 @@
             video/webm webm;
         }
         default_type application/octet-stream;
-        # 180 ngày, không preload. Chỉ có hiệu lực sau nginx -t && reload (chưa làm ở batch này).
+        # 180 ngày, không preload. Đây là header HSTS duy nhất: app Next không gửi thêm.
         add_header Strict-Transport-Security "max-age=15552000" always;
         add_header X-Frame-Options "SAMEORIGIN" always;
         add_header X-Content-Type-Options "nosniff" always;
