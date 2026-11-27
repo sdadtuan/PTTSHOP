@@ -25,6 +25,7 @@ import { lowStockCount } from "@/lib/catalog/listing";
 import { formatStockTemplate } from "@/lib/storefront/ui-copy-types";
 import { colorOutOfStock, resolveSizeChoice } from "@/lib/variant-stock";
 import { useAssignedVariant } from "@/components/experiments/experiment-provider";
+import { trackStoreEvent } from "@/components/legal/measurement";
 import { buyNowLabel, stickyVisible } from "@/lib/experiments/assign";
 
 type Variant = {
