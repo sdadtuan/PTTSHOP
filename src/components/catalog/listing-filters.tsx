@@ -23,7 +23,7 @@ export function ListingFilters({
 }) {
   const hidden = (["q", "sort", "category", "gender", "collection", "new"] as const).filter((key) => values[key]);
   return (
-    <details className="mb-6 rounded-lg border border-neutral-200 bg-white md:contents">
+    <details open className="mb-6 rounded-lg border border-neutral-200 bg-white md:contents">
       <summary className="cursor-pointer px-4 py-3 text-sm font-medium md:hidden">Bộ lọc</summary>
       <form action="/san-pham" className="grid gap-3 p-4 md:mb-6 md:grid-cols-6 md:rounded-lg md:border md:border-neutral-200 md:bg-white">
         {hidden.map((key) => (
