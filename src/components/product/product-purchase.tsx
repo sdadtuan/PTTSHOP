@@ -170,19 +170,23 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
   }
 
   useEffect(() => {
-    const target = inlineCtaRef.current;
     const root = document.querySelector("[data-storefront-scroller]");
-    if (!target || !(root instanceof HTMLElement)) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry) return;
-        const rootTop = entry.rootBounds?.top ?? 0;
-        setShowSticky(!entry.isIntersecting && entry.boundingClientRect.top < rootTop);
-      },
-      { root, threshold: 0 },
-    );
-    observer.observe(target);
-    return () => observer.disconnect();
+    if (!(root instanceof HTMLElement)) return;
+    const update = () => {
+      const target = inlineCtaRef.current;
+      if (!target) return;
+      const rootRect = root.getBoundingClientRect();
+      const rect = target.getBoundingClientRect();
+      setShowSticky(rect.bottom <= rootRect.top + 1);
+    };
+    const frame = window.requestAnimationFrame(update);
+    root.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      root.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
   }, []);
 
   async function handleWish() {
