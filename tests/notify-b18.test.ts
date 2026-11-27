@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { maskEmail, maskPhone, reminderDecision } from "@/lib/notify/policy";
+import { maskEmail, maskPhone, reminderDecision, reminderLimits } from "@/lib/notify/policy";
 
 const ready = {
   enabled: true,
@@ -26,5 +26,11 @@ describe("nhắc giỏ và ZNS", () => {
     expect(reminderDecision({ ...ready, inStock: false })).toBe("skip_stock");
     expect(reminderDecision({ ...ready, sentCount: 2 })).toBe("skip_cap");
     expect(reminderDecision(ready)).toBe("dry_run");
+  });
+
+  it("để trống số giờ hoặc số lần thì không chạy", () => {
+    expect(reminderLimits("", null)).toEqual({ reminderAfterHours: null, reminderMaxTimes: null });
+    expect(reminderLimits(0, 2).reminderAfterHours).toBeNull();
+    expect(reminderLimits(2, 3)).toEqual({ reminderAfterHours: 2, reminderMaxTimes: 3 });
   });
 });

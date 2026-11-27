@@ -61,7 +61,7 @@ export default async function OrderSuccessPage({ searchParams }: Props) {
         bin: vietqrConfig.bankBin,
         account: vietqrConfig.bankAccountNumber,
       })
-    : "";
+    : null;
   const vietqrPng = vietqrPayload ? await QRCode.toDataURL(vietqrPayload, { margin: 1, width: 280 }) : "";
   const payosQr = row && allowed && row.paymentMethod === "PAYOS" && row.payosQr
     ? await QRCode.toDataURL(row.payosQr, { margin: 1, width: 280 })
@@ -110,7 +110,7 @@ export default async function OrderSuccessPage({ searchParams }: Props) {
       {transfer ? <PaymentInstructions view={transfer} qrPng={qrPng} /> : null}
       {vietqrPng && row ? (
         <div className="mt-8 text-center">
-          {/* QR dựng từ số tiền và mã đơn. Không phải chuỗi EMV Napas. */}
+          {/* EMV Napas 247: số tiền ở tag 54, nội dung đối soát ở tag 62-08. */}
           <img src={vietqrPng} alt="Mã QR VietQR" width={280} height={280} className="mx-auto" />
           <p className="mt-3 text-sm text-neutral-700">
             Chuyển {formatVnd(row.total)}. Nội dung chuyển khoản: {row.orderNumber}.

@@ -21,6 +21,12 @@ export type ReminderInput = {
   inStock: boolean;
 };
 
+export function reminderLimits(hours: unknown, times: unknown) {
+  const afterHours = typeof hours === "number" && Number.isInteger(hours) && hours > 0 ? hours : null;
+  const maxTimes = typeof times === "number" && Number.isInteger(times) && times > 0 ? times : null;
+  return { reminderAfterHours: afterHours, reminderMaxTimes: maxTimes };
+}
+
 export function reminderDecision(input: ReminderInput) {
   if (!input.enabled || input.afterHours == null || input.maxTimes == null) return "skip_disabled" as const;
   if (!input.marketingOptIn) return "skip_no_consent" as const;
