@@ -23,6 +23,14 @@ export function blankSecret(value: string | undefined) {
   return text ? text : null;
 }
 
+export function gatewaySecrets(): GatewaySecrets {
+  return {
+    vietqr: blankSecret(process.env.VIETQR_SECRET),
+    momo: blankSecret(process.env.MOMO_SECRET),
+    zalopay: blankSecret(process.env.ZALOPAY_SECRET),
+  };
+}
+
 export function visibleGateways(flags: GatewayFlags, secrets: GatewaySecrets) {
   return {
     vietqr: flags.vietqrEnabled && flags.vietqrMerchantId.trim().length > 0 && Boolean(secrets.vietqr),
