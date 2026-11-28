@@ -205,6 +205,7 @@ const PAGES: Array<{ prefix: string; scope: Scope }> = [
   { prefix: "/admin/nhac-gio", scope: "settings.read" },
   { prefix: "/admin/tro-ly", scope: "settings.read" },
   { prefix: "/admin/diem", scope: "settings.read" },
+  { prefix: "/admin/doanh-thu", scope: "dashboard.read" },
   { prefix: "/admin/giao-dien", scope: "products.read" },
   { prefix: "/admin/noi-dung", scope: "products.read" },
   { prefix: "/admin/banners", scope: "products.read" },
@@ -302,7 +303,7 @@ export function scopeForApi(pathname: string, method: string): Scope | Scope[] |
     return write ? "settings.write" : "settings.read";
   }
   if (pathname.startsWith("/api/admin/customers")) return "orders.read";
-  if (pathname.startsWith("/api/admin/stats")) return "dashboard.read";
+  if (pathname.startsWith("/api/admin/stats") || pathname.startsWith("/api/admin/revenue")) return "dashboard.read";
   if (pathname.startsWith("/api/admin/data-requests")) return "staff.read";
   return write ? "staff.write" : "staff.read";
 }

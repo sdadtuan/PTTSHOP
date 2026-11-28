@@ -28,6 +28,7 @@ import {
   RotateCcw,
   Bell,
   BadgeDollarSign,
+  Banknote,
   ScrollText,
   Plug,
   FlaskConical,
@@ -40,6 +41,7 @@ import { AdminToastProvider } from "./ui/toast";
 
 const nav = [
   { href: "/admin", label: "Tổng quan", icon: LayoutDashboard, exact: true },
+  { href: "/admin/doanh-thu", label: "Doanh thu", icon: Banknote },
   { href: "/admin/orders", label: "Đơn hàng", icon: ShoppingBag },
   { href: "/admin/cua-hang", label: "Cửa hàng", icon: Store },
   { href: "/admin/thanh-toan", label: "Thanh toán", icon: Wallet },
