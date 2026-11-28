@@ -1,7 +1,8 @@
 import { CheckoutForm } from "@/app/thanh-toan/checkout-form";
 import { payosEnv } from "@/lib/payments/payos";
+import { gatewaySecrets, visibleGateways } from "@/lib/payments/gateways";
 import { paymentOptions } from "@/lib/payments/policy";
-import { getPaymentConfig } from "@/lib/payments/store";
+import { getGatewayFlags, getPaymentConfig } from "@/lib/payments/store";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +17,9 @@ export const metadata: Metadata = {
 };
 
 export default async function CheckoutPage() {
-  const options = paymentOptions(await getPaymentConfig(), payosEnv().enabled);
+  const [config, flags] = await Promise.all([getPaymentConfig(), getGatewayFlags()]);
+  const options = paymentOptions(config, payosEnv().enabled);
+  const gateways = visibleGateways(flags, gatewaySecrets());
   return (
     <CheckoutForm
       initialOptions={{
@@ -25,6 +28,9 @@ export default async function CheckoutPage() {
         bankVisible: options.bankVisible,
         bankReady: options.bankReady,
         payosEnabled: options.payosEnabled,
+        vietqr: gateways.vietqr,
+        momo: gateways.momo,
+        zalopay: gateways.zalopay,
       }}
     />
   );

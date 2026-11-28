@@ -36,7 +36,7 @@ export async function releaseExpiredUnpaid(
   const due = await db.order.findMany({
     where: {
       paymentStatus: "UNPAID",
-      paymentMethod: { in: ["BANK_TRANSFER", "PAYOS"] },
+      paymentMethod: { in: ["BANK_TRANSFER", "PAYOS", "VIETQR", "MOMO", "ZALOPAY"] },
       status: { in: ["PENDING", "CONFIRMED"] },
       paymentDueAt: { lt: now },
       createdAt: { gt: enforceFrom },

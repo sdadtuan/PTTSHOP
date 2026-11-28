@@ -17,7 +17,8 @@ import { holdEnforceFrom, releaseExpiredUnpaid } from "@/lib/payments/hold";
 import { transferEmailLogText, transferEmailText, transferView } from "@/lib/payments/instructions";
 import { createPayosLink, payosEnv } from "@/lib/payments/payos";
 import { checkoutMethodError, quoteFromServerPrices } from "@/lib/payments/policy";
-import { getPaymentConfig } from "@/lib/payments/store";
+import { gatewaySecrets, visibleGateways } from "@/lib/payments/gateways";
+import { getPaymentConfig, getGatewayFlags } from "@/lib/payments/store";
 import { prisma } from "@/lib/prisma";
 import { NOT_FOR_SALE_MESSAGE, variantIsForSale } from "@/lib/catalog-visibility";
 import { checkoutConsentPlan, clientIp, recordConsents } from "@/lib/consent";
@@ -39,7 +40,7 @@ const bodySchema = z.object({
   provinceCode: z.string().trim().min(2).max(2),
   wardCode: z.string().trim().min(5).max(5),
   note: z.string().max(500).optional(),
-  paymentMethod: z.enum(["COD", "BANK_TRANSFER", "PAYOS"]),
+  paymentMethod: z.enum(["COD", "BANK_TRANSFER", "PAYOS", "VIETQR", "MOMO", "ZALOPAY"]),
   couponCode: z.string().trim().max(40).optional().or(z.literal("")),
   invoiceCompanyName: z.string().trim().max(160).optional().or(z.literal("")),
   invoiceTaxCode: z.string().trim().max(14).optional().or(z.literal("")),
@@ -143,6 +144,12 @@ export async function POST(req: Request) {
     const total = priced.total;
     const paymentConfig = await getPaymentConfig();
     const payos = payosEnv();
+    const gateway = data.paymentMethod.toLowerCase();
+    if (gateway === "vietqr" || gateway === "momo" || gateway === "zalopay") {
+      const flags = await getGatewayFlags();
+      const visible = visibleGateways(flags, gatewaySecrets());
+      if (!visible[gateway]) throw new ApiError("Cổng thanh toán chưa được cấu hình.", 400);
+    }
     const methodError = checkoutMethodError(data.paymentMethod, total, paymentConfig, payos.enabled);
     if (methodError) throw new ApiError(methodError, 400);
     const invoice = invoiceFields(data);
