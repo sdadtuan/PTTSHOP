@@ -258,9 +258,10 @@ export async function applyShippingWebhook(
         await tx.shippingWebhookEvent.create({
           data: { eventId: event.eventId, provider: "GHN", shipmentId: shipment?.id || null },
         });
-        if (!shipment || !next) return { duplicate: false, ignored: true, deliveredOrderId: null as string | null };
+        if (!shipment || !next) return { duplicate: false, ignored: true, deliveredOrderId: null as string | null, shippedOrderId: null as string | null };
         await tx.shipment.update({ where: { id: shipment.id }, data: { status: next, trackingCode: shipment.trackingCode || event.orderCode } });
         let deliveredOrderId: string | null = null;
+        let shippedOrderId: string | null = null;
         if (shipment.orderId) {
           const order = await tx.order.findUnique({ where: { id: shipment.orderId } });
           const siblings = await tx.shipment.findMany({ where: { orderId: shipment.orderId } });
@@ -269,17 +270,25 @@ export async function applyShippingWebhook(
           if (order && orderNext) {
             await tx.order.update({ where: { id: order.id }, data: { status: orderNext } });
             if (orderNext === "COMPLETED") deliveredOrderId = order.id;
+            if (orderNext === "SHIPPING") shippedOrderId = order.id;
           }
         }
-        return { duplicate: false, ignored: false, deliveredOrderId };
+        return { duplicate: false, ignored: false, deliveredOrderId, shippedOrderId };
       }),
     );
-    if (result.deliveredOrderId) {
-      await autoIssueIfReady(db, result.deliveredOrderId, "DELIVERED");
+    const { shippedOrderId, ...publicResult } = result;
+    if (publicResult.deliveredOrderId) {
+      await autoIssueIfReady(db, publicResult.deliveredOrderId, "DELIVERED");
       const { syncOrderLoyalty } = await import("@/lib/loyalty-sync");
-      await syncOrderLoyalty(result.deliveredOrderId);
+      await syncOrderLoyalty(publicResult.deliveredOrderId);
+      const { syncShopOrder } = await import("@/lib/ops/crm-order");
+      await syncShopOrder(publicResult.deliveredOrderId, "delivered");
     }
-    return { status: 200, body: { ok: true, ...result } };
+    if (shippedOrderId) {
+      const { syncShopOrder } = await import("@/lib/ops/crm-order");
+      await syncShopOrder(shippedOrderId, "shipped");
+    }
+    return { status: 200, body: { ok: true, ...publicResult } };
   } catch (err) {
     if (err instanceof ShipmentTransitionError) {
       return { status: 409, body: { error: err.message } };

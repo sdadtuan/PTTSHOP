@@ -16,6 +16,8 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     const result = await cancelOrder(prisma, { orderId: id, reason: body.reason, actorId: session.user.id });
     const { syncOrderLoyalty } = await import("@/lib/loyalty-sync");
     await syncOrderLoyalty(id);
+    const { syncShopOrder } = await import("@/lib/ops/crm-order");
+    await syncShopOrder(id, "cancelled");
     await recordAudit({ access: session.access, actorId: session.user.id, actorEmail: session.user.email, action: "CANCEL_ORDER", entityType: "Order", entityId: id, before, after: { status: "CANCELLED", reason: body.reason }, req });
     return jsonOk(result);
   } catch (err) {

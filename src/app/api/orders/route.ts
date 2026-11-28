@@ -491,6 +491,9 @@ export async function POST(req: Request) {
       qrPng,
     });
 
+    const { syncShopOrder } = await import("@/lib/ops/crm-order");
+    await syncShopOrder(order.id, "created");
+
     const jar = await cookies();
     jar.set(RECEIPT_COOKIE, `${order.orderNumber}.${receiptToken}`, {
       httpOnly: true,
