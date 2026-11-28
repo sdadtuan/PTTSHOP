@@ -49,7 +49,10 @@ describe("sqlite value conversion", () => {
 
   it("copies JSON text without parsing and hashes null separately from an empty string", () => {
     expect(sqliteJsonText(jsonRaw)).toBe(jsonRaw);
-    expect(jsonTextFields()).toHaveLength(20);
+    expect(jsonTextFields()).toEqual(
+      expect.arrayContaining([{ model: "ChatMessage", field: "citationsJson" }]),
+    );
+    expect(jsonTextFields()).toHaveLength(21);
     expect(columnHash([{ id: "a", value: null }])).not.toBe(columnHash([{ id: "a", value: "" }]));
   });
 

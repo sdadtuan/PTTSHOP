@@ -15,6 +15,10 @@ export function resetTestDb() {
 }
 
 export async function cleanDb(prisma: PrismaClient) {
+  await prisma.chatMessage.deleteMany();
+  await prisma.chatSession.deleteMany();
+  await prisma.chatUsageDay.deleteMany();
+  await prisma.chatSettings.deleteMany();
   await prisma.analyticsEvent.deleteMany();
   await prisma.slugRedirect.deleteMany();
   await prisma.supplierDebit.deleteMany();
