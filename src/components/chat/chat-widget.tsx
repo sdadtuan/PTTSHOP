@@ -27,7 +27,11 @@ export function ChatWidget({ productId }: { productId?: string }) {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, message, contextProductId: productId }),
+        body: JSON.stringify({
+          ...(sessionId ? { sessionId } : {}),
+          message,
+          ...(productId ? { contextProductId: productId } : {}),
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Không gửi được");

@@ -8,9 +8,9 @@ import { phonesMatch } from "@/lib/phone";
 import { getShopProfile } from "@/lib/shop/load";
 
 const bodySchema = z.object({
-  sessionId: z.string().min(8).max(80).optional(),
+  sessionId: z.string().min(8).max(80).nullish(),
   message: z.string().trim().min(1).max(500),
-  contextProductId: z.string().max(80).optional(),
+  contextProductId: z.string().max(80).nullish(),
 });
 
 function chartOf(raw: string | null) {
