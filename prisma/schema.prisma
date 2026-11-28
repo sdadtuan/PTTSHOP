@@ -156,6 +156,8 @@ model Product {
   variants     ProductVariant[]
   collections  ProductCollection[]
   reviews      Review[]
+  relationsFrom ProductRelation[] @relation("RelationFrom")
+  relationsTo   ProductRelation[] @relation("RelationTo")
   isFeatured   Boolean             @default(false)
   isNew        Boolean             @default(false)
   isBestSeller Boolean             @default(false)
@@ -179,6 +181,25 @@ model Product {
   updatedAt    DateTime            @updatedAt
 
   @@index([searchText(ops: raw("gin_trgm_ops"))], type: Gin, map: "Product_searchText_trgm")
+}
+
+/// Merchandising tay. Ưu tiên hơn đơn mua cùng và hàng mới.
+model ProductRelation {
+  id        String  @id @default(cuid())
+  productId String
+  relatedId String
+  position  Int     @default(0)
+  product   Product @relation("RelationFrom", fields: [productId], references: [id], onDelete: Cascade)
+  related   Product @relation("RelationTo", fields: [relatedId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, relatedId])
+  @@index([productId])
+}
+
+/// Null = không ghi chữ "bán chạy". Không có tỷ lệ mặc định.
+model RecommendationSettings {
+  id                  String @id @default("default")
+  bestsellerMinOrders Int?
 }
 
 model ProductImage {

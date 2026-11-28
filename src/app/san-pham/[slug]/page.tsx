@@ -1,8 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ProductCard } from "@/components/product/product-card";
 import { ProductDetailClient } from "@/components/product/product-detail-client";
+import { RecommendationBlock } from "@/components/recommendations/block";
 import { ProductReviews } from "@/components/product/product-reviews";
 import { AnalyticsOnce } from "@/components/legal/measurement";
 import { publicCatalogWhere, publicVariants } from "@/lib/catalog-visibility";
@@ -117,23 +117,6 @@ export default async function ProductDetailPage({ params }: Props) {
     select: { shippingPolicyJson: true },
   });
 
-  const related = await prisma.product.findMany({
-    where: {
-      ...publicCatalogWhere,
-      id: { not: product.id },
-      OR: [
-        { slug: { contains: "hoodie", mode: "insensitive" } },
-        { category: { slug: "hoodie" } },
-      ],
-    },
-    include: {
-      images: { where: { isHidden: false }, orderBy: { sortOrder: "asc" } },
-      variants: publicVariants(),
-    },
-    take: 4,
-    orderBy: { updatedAt: "desc" },
-  });
-
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 md:px-6 md:py-12">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(structured) }} />
@@ -170,23 +153,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
       <ProductReviews productId={product.id} />
 
-      {related.length > 0 ? (
-        <section className="mt-16">
-          <div className="mb-6 flex items-end justify-between">
-            <h2 className="type-title text-2xl font-extrabold">
-              Có Thể Bạn Cũng Thích
-            </h2>
-            <Link href="/san-pham" className="text-sm text-[var(--accent)]">
-              Xem tất cả
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
-            {related.map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </div>
-        </section>
-      ) : null}
+      <RecommendationBlock placement="pdp" productId={product.id} />
     </div>
   );
 }

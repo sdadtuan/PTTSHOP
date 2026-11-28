@@ -6,6 +6,7 @@ import { signOut, useSession } from "next-auth/react";
 import {
   LayoutDashboard,
   Package,
+  Sparkles,
   FolderTree,
   ShoppingBag,
   Users,
@@ -56,6 +57,7 @@ const nav = [
   { href: "/admin/tich-hop", label: "Tích hợp", icon: Plug },
   { href: "/admin/nhat-ky", label: "Nhật ký", icon: ScrollText },
   { href: "/admin/products", label: "Sản phẩm", icon: Package },
+  { href: "/admin/goi-y", label: "Gợi ý", icon: Sparkles },
   { href: "/admin/nhap-san-pham", label: "Nhập sản phẩm", icon: Package },
   {
     href: "/admin/giao-dien",
