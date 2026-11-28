@@ -60,6 +60,7 @@ model User {
   addresses     Address[]
   roleAssignments UserRoleAssignment[]
   twoFactor     AdminTwoFactor?
+  loyalty       LoyaltyAccount?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 }
@@ -283,6 +284,60 @@ model BundleItem {
   @@index([productId])
 }
 
+/// Điểm. Tắt mặc định. Không có tỷ lệ, hạng hay thưởng sẵn.
+model LoyaltySettings {
+  id                String  @id @default("default")
+  enabled           Boolean @default(false)
+  pointsPerAmount   Int?
+  amountVnd         Int?
+  /// COMPLETED | PAID. Null = không tích.
+  earnOn            String?
+  expireDays        Int?
+  redeemCapPerOrder Int?
+  redeemVndPerPoint Int?
+  referralPointsEach Int?
+}
+
+model LoyaltyAccount {
+  id           String          @id @default(cuid())
+  userId       String          @unique
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referralCode String          @unique
+  entries      LoyaltyLedger[]
+  createdAt    DateTime        @default(now())
+}
+
+model LoyaltyLedger {
+  id             String         @id @default(cuid())
+  accountId      String
+  account        LoyaltyAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  orderId        String?
+  delta          Int
+  reason         String
+  idempotencyKey String         @unique
+  expiresAt      DateTime?
+  createdAt      DateTime       @default(now())
+
+  @@index([accountId])
+  @@index([orderId])
+}
+
+model LoyaltyTier {
+  id        String  @id @default(cuid())
+  name      String
+  minPoints Int
+  benefit   String?
+  position  Int     @default(0)
+}
+
+model Referral {
+  id             String   @id @default(cuid())
+  referrerUserId String
+  referredUserId String   @unique
+  orderId        String?  @unique
+  createdAt      DateTime @default(now())
+}
+
 model LookItem {
   id        String  @id @default(cuid())
   lookId    String
@@ -417,6 +472,10 @@ model Order {
   discount        Int            @default(0)
   /// Phần giảm của combo, đã nằm trong discount. 0 = không có combo.
   bundleDiscount  Int            @default(0)
+  /// Điểm đã đổi trên đơn này, đã nằm trong discount. 0 = không đổi điểm.
+  loyaltyDiscount Int            @default(0)
+  /// Mã giới thiệu khách gửi. Null = không có. Chỉ xét khi điểm đang bật.
+  referralCode    String?
   total           Int
   receiptTokenHash String?
   paymentConfirmedAt DateTime?

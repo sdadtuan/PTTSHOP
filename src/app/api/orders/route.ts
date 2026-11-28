@@ -28,6 +28,8 @@ import { poFile } from "@/lib/dropship/orders";
 import { planCheckoutLines, sellableTotals } from "@/lib/dropship/service";
 import { claimWarehouseStock } from "@/lib/inventory/claim";
 import { merchandiseAfterBundle, settleBundles } from "@/lib/bundles";
+import { ledgerBalance, redeemQuote } from "@/lib/loyalty";
+import { loadLoyaltyRule } from "@/lib/loyalty-sync";
 import { bundleSettings } from "@/lib/bundles-public";
 import { quoteCheckout } from "@/lib/shipping/service";
 import { hashReceiptToken, RECEIPT_COOKIE } from "@/lib/order-receipt-token";
@@ -44,6 +46,8 @@ const bodySchema = z.object({
   note: z.string().max(500).optional(),
   paymentMethod: z.enum(["COD", "BANK_TRANSFER", "PAYOS", "VIETQR", "MOMO", "ZALOPAY"]),
   couponCode: z.string().trim().max(40).optional().or(z.literal("")),
+  loyaltyPoints: z.number().int().min(0).max(100_000).optional(),
+  referralCode: z.string().trim().max(40).optional().or(z.literal("")),
   invoiceCompanyName: z.string().trim().max(160).optional().or(z.literal("")),
   invoiceTaxCode: z.string().trim().max(14).optional().or(z.literal("")),
   invoiceAddress: z.string().trim().max(200).optional().or(z.literal("")),
@@ -189,7 +193,28 @@ export async function POST(req: Request) {
       couponId = coupon.id;
     }
 
-    const priced = quoteFromServerPrices(catalogLines, shippingFee, discount + bundleDiscount);
+    let loyaltyDiscount = 0;
+    let loyaltyPoints = 0;
+    const loyaltyRule = await loadLoyaltyRule();
+    const goodsAfterCoupon = Math.max(0, merchandiseAfterBundle(subtotalPreview, bundleDiscount) - discount);
+    if (data.loyaltyPoints && loyaltyRule.enabled) {
+      if (!session?.user?.id) throw new ApiError("Đăng nhập để dùng điểm.", 400);
+      const account = await prisma.loyaltyAccount.findUnique({
+        where: { userId: session.user.id },
+        include: { entries: true },
+      });
+      const quote = redeemQuote({
+        rule: loyaltyRule,
+        balance: ledgerBalance(account?.entries || []),
+        requested: data.loyaltyPoints,
+        goodsTotal: goodsAfterCoupon,
+      });
+      if (quote.error) throw new ApiError(quote.error, 400);
+      loyaltyDiscount = quote.discount;
+      loyaltyPoints = quote.points;
+    }
+
+    const priced = quoteFromServerPrices(catalogLines, shippingFee, discount + bundleDiscount + loyaltyDiscount);
     const subtotal = priced.subtotal;
     const total = priced.total;
     const paymentConfig = await getPaymentConfig();
@@ -276,8 +301,10 @@ export async function POST(req: Request) {
           couponCode,
           subtotal,
           shippingFee,
-          discount: discount + bundleDiscount,
+          discount: discount + bundleDiscount + loyaltyDiscount,
           bundleDiscount,
+          loyaltyDiscount,
+          referralCode: loyaltyRule.enabled && data.referralCode ? data.referralCode : null,
           total,
           paymentDueAt,
           payosOrderCode,
@@ -302,6 +329,24 @@ export async function POST(req: Request) {
         },
         include: { items: true },
       });
+      if (loyaltyPoints > 0 && session?.user?.id) {
+        const account = await tx.loyaltyAccount.findUnique({
+          where: { userId: session.user.id },
+          include: { entries: true },
+        });
+        if (!account || ledgerBalance(account.entries) < loyaltyPoints) {
+          throw new ApiError("Không đủ điểm.", 400);
+        }
+        await tx.loyaltyLedger.create({
+          data: {
+            accountId: account.id,
+            orderId: created.id,
+            delta: -loyaltyPoints,
+            reason: "REDEEM",
+            idempotencyKey: `redeem:${created.id}`,
+          },
+        });
+      }
 
       const warehouseLines = created.items.filter((item) => item.quantity - item.supplierQty > 0);
       const supplierGroups = new Map<string, typeof created.items>();

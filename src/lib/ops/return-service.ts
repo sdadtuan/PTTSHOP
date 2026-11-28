@@ -139,5 +139,7 @@ export async function completeRefund(db: Db, input: { refundId: string; referenc
   });
   await db.refundApprovalLog.create({ data: { refundId: refund.id, actorId: input.actorId, action: "COMPLETED", note: input.reference } });
   const suggestInvoice = refund.order.invoices.some((row) => row.type === "ORIGINAL" && row.status === "ISSUED");
+  const { syncOrderLoyalty } = await import("@/lib/loyalty-sync");
+  await syncOrderLoyalty(refund.orderId);
   return { refund: saved, suggestInvoiceAdjustment: suggestInvoice };
 }
