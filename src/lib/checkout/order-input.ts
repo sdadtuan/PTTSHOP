@@ -14,4 +14,5 @@ export const checkoutPhoneSchema = z.string().transform((value, ctx) => {
 export const checkoutItemSchema = z.object({
   variantId: z.string().min(1),
   quantity: z.number().int().positive().max(99),
+  bundleId: z.string().trim().min(1).max(80).nullish(),
 });

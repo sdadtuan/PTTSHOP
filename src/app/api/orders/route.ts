@@ -25,8 +25,10 @@ import { checkoutConsentPlan, clientIp, recordConsents } from "@/lib/consent";
 import { orderBuyerId } from "@/lib/order-buyer";
 import { nextOrderNumber } from "@/lib/order-number";
 import { poFile } from "@/lib/dropship/orders";
-import { planCheckoutLines } from "@/lib/dropship/service";
+import { planCheckoutLines, sellableTotals } from "@/lib/dropship/service";
 import { claimWarehouseStock } from "@/lib/inventory/claim";
+import { merchandiseAfterBundle, settleBundles } from "@/lib/bundles";
+import { bundleSettings } from "@/lib/bundles-public";
 import { quoteCheckout } from "@/lib/shipping/service";
 import { hashReceiptToken, RECEIPT_COOKIE } from "@/lib/order-receipt-token";
 import { checkoutItemSchema, checkoutPhoneSchema } from "@/lib/checkout/order-input";
@@ -118,11 +120,58 @@ export async function POST(req: Request) {
       quantity: line.item.quantity,
     }));
     const subtotalPreview = catalogLines.reduce((sum, line) => sum + line.price * line.quantity, 0);
+    const bundleIds = [...new Set(data.items.map((item) => item.bundleId).filter((id): id is string => Boolean(id)))];
+    const settings = await bundleSettings();
+    const bundleRows = bundleIds.length
+      ? await prisma.bundle.findMany({
+          where: { id: { in: bundleIds } },
+          include: { items: { include: { product: { include: { variants: { select: { id: true } } } } } } },
+        })
+      : [];
+    const submittedProducts = new Set(lines.map((line) => line.variant.productId));
+    const missingProducts = bundleRows.flatMap((bundle) =>
+      bundle.items.map((item) => item.product).filter((product) => !submittedProducts.has(product.id)),
+    );
+    const missingStock = await sellableTotals(
+      prisma,
+      missingProducts.flatMap((product) => product.variants.map((variant) => variant.id)),
+    );
+    const unavailableProductIds = missingProducts
+      .filter((product) => product.variants.every((variant) => (missingStock.get(variant.id) ?? 0) <= 0))
+      .map((product) => product.id);
+    const settled = settleBundles({
+      lines: lines.map((line) => ({
+        variantId: line.variant.id,
+        productId: line.variant.productId,
+        unitPrice: line.variant.price,
+        quantity: line.item.quantity,
+        bundleId: line.item.bundleId || null,
+      })),
+      bundles: bundleRows.map((bundle) => ({
+        id: bundle.id,
+        title: bundle.title,
+        isPublished: bundle.isPublished,
+        startsAt: bundle.startsAt,
+        endsAt: bundle.endsAt,
+        priceMode: bundle.priceMode,
+        priceVnd: bundle.priceVnd,
+        percentOff: bundle.percentOff,
+        productIds: bundle.items.map((item) => item.productId),
+      })),
+      now: new Date(),
+      couponRequested: Boolean(data.couponCode),
+      stackCoupon: settings.stackCoupon,
+      outOfStockMode: settings.outOfStockMode,
+      unavailableProductIds,
+    });
+    if (settled.error) throw new ApiError(settled.error, 400);
+    const bundleDiscount = settled.discount;
+    const goodsForShipping = merchandiseAfterBundle(subtotalPreview, bundleDiscount);
     const place = resolveAddress(data.provinceCode, data.wardCode);
     if (!place) throw new ApiError("Tỉnh hoặc phường/xã không hợp lệ.", 400);
     const shippingQuote = await quoteCheckout({
       db: prisma,
-      subtotal: subtotalPreview,
+      subtotal: goodsForShipping,
       provinceCode: data.provinceCode,
       wardCode: data.wardCode,
     });
@@ -133,13 +182,14 @@ export async function POST(req: Request) {
     let couponId: string | null = null;
 
     if (data.couponCode) {
-      const coupon = await findValidCoupon(prisma, data.couponCode, subtotalPreview);
-      discount = computeCouponDiscount(coupon, subtotalPreview);
+      const couponBase = merchandiseAfterBundle(subtotalPreview, bundleDiscount);
+      const coupon = await findValidCoupon(prisma, data.couponCode, couponBase);
+      discount = computeCouponDiscount(coupon, couponBase);
       couponCode = coupon.code;
       couponId = coupon.id;
     }
 
-    const priced = quoteFromServerPrices(catalogLines, shippingFee, discount);
+    const priced = quoteFromServerPrices(catalogLines, shippingFee, discount + bundleDiscount);
     const subtotal = priced.subtotal;
     const total = priced.total;
     const paymentConfig = await getPaymentConfig();
@@ -226,7 +276,8 @@ export async function POST(req: Request) {
           couponCode,
           subtotal,
           shippingFee,
-          discount,
+          discount: discount + bundleDiscount,
+          bundleDiscount,
           total,
           paymentDueAt,
           payosOrderCode,
@@ -245,6 +296,7 @@ export async function POST(req: Request) {
               quantity: item.quantity,
               supplierQty: plan.supplierQty,
               supplierId: plan.supplierId,
+              bundleId: item.bundleId || null,
             })),
           },
         },

@@ -17,6 +17,8 @@ export function CartPage() {
   const { items, updateQuantity, removeItem, loading } = useCart();
   const payable = items.filter((item) => item.forSale !== false);
   const subtotal = payable.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const bundleDiscount = payable.reduce((sum, item) => sum + (item.bundleDiscountShare || 0), 0);
+  const goods = Math.max(0, subtotal - bundleDiscount);
   const c = useStorefrontUi().cart;
   const [shipping, setShipping] = useState<number | null>(null);
   const [freeFrom, setFreeFrom] = useState<number | null>(null);
@@ -25,17 +27,17 @@ export function CartPage() {
     if (!shouldQuoteShipping({ loading, itemCount: payable.length })) return;
     const controller = new AbortController();
     let cancelled = false;
-    const requestedSubtotal = subtotal;
+    const requestedSubtotal = goods;
     void fetch(`/api/shipping/quote?subtotal=${requestedSubtotal}`, { signal: controller.signal })
       .then((res) => res.json())
       .then((data) => {
-        if (cancelled || requestedSubtotal !== subtotal) return;
+        if (cancelled || requestedSubtotal !== goods) return;
         setShipping(typeof data.fee === "number" ? data.fee : null);
         setFreeFrom(typeof data.freeShipThreshold === "number" ? data.freeShipThreshold : null);
       })
       .catch((err: unknown) => {
         if (cancelled || (err instanceof DOMException && err.name === "AbortError")) return;
-        if (requestedSubtotal !== subtotal) return;
+        if (requestedSubtotal !== goods) return;
         setShipping(null);
         setFreeFrom(null);
       });
@@ -43,7 +45,7 @@ export function CartPage() {
       cancelled = true;
       controller.abort();
     };
-  }, [loading, payable.length, subtotal]);
+  }, [loading, payable.length, goods]);
 
   if (loading) {
     return (
@@ -73,7 +75,7 @@ export function CartPage() {
     );
   }
 
-  const total = subtotal + (shipping ?? 0);
+  const total = goods + (shipping ?? 0);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 md:px-6 md:py-14">
@@ -107,6 +109,7 @@ export function CartPage() {
                     </Link>
                     <p className="mt-1 text-sm text-neutral-500">
                       {item.color} · Size {item.size}
+                      {item.bundleId ? " · Combo" : ""}
                     </p>
                   </div>
                   <button
@@ -126,9 +129,11 @@ export function CartPage() {
                       <button
                         type="button"
                         className="px-2 py-1.5"
-                        onClick={() =>
-                          updateQuantity(item.variantId, item.quantity - 1)
-                        }
+                        onClick={() => {
+                          const next = item.quantity - 1;
+                          const group = item.bundleId ? payable.filter((row) => row.bundleId === item.bundleId) : [item];
+                          for (const row of group) updateQuantity(row.variantId, next);
+                        }}
                       >
                         <Minus className="h-3.5 w-3.5" />
                       </button>
@@ -138,9 +143,11 @@ export function CartPage() {
                       <button
                         type="button"
                         className="px-2 py-1.5"
-                        onClick={() =>
-                          updateQuantity(item.variantId, item.quantity + 1)
-                        }
+                        onClick={() => {
+                          const next = item.quantity + 1;
+                          const group = item.bundleId ? payable.filter((row) => row.bundleId === item.bundleId) : [item];
+                          for (const row of group) updateQuantity(row.variantId, next);
+                        }}
                       >
                         <Plus className="h-3.5 w-3.5" />
                       </button>
@@ -164,6 +171,12 @@ export function CartPage() {
               <dt className="text-neutral-500">{c.subtotalLabel}</dt>
               <dd>{formatVnd(subtotal)}</dd>
             </div>
+            {bundleDiscount > 0 ? (
+              <div className="flex justify-between">
+                <dt className="text-neutral-500">Giảm combo</dt>
+                <dd>-{formatVnd(bundleDiscount)}</dd>
+              </div>
+            ) : null}
             <div className="flex justify-between">
               <dt className="text-neutral-500">{c.shippingLabel}</dt>
               <dd>{shipping == null ? SHIPPING_PENDING_COPY : shipping === 0 ? c.shippingFree : formatVnd(shipping)}</dd>
@@ -174,7 +187,7 @@ export function CartPage() {
             </div>
           </dl>
           {shipping == null ? <p className="mt-3 text-xs text-neutral-500">{TOTAL_EXCLUDES_SHIPPING_COPY}</p> : null}
-          <FreeshipBar subtotal={subtotal} threshold={freeFrom} />
+          <FreeshipBar subtotal={goods} threshold={freeFrom} />
           {payable.length === 0 ? (
             <span className="mt-6 flex w-full items-center justify-center rounded bg-neutral-200 py-3 text-sm font-semibold text-neutral-500">
               {c.checkoutCta}

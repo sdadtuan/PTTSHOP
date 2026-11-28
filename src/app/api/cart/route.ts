@@ -65,29 +65,36 @@ export async function PATCH(req: Request) {
       sessionId: userId ? null : sessionId,
     });
 
+    const current = cart.items.find((item) => item.variantId === body.variantId);
+    const group = current?.bundleId
+      ? cart.items.filter((item) => item.bundleId === current.bundleId)
+      : [current].filter((item) => item != null);
     if (body.quantity === 0) {
       await prisma.cartItem.deleteMany({
-        where: { cartId: cart.id, variantId: body.variantId },
+        where: {
+          cartId: cart.id,
+          ...(current?.bundleId ? { bundleId: current.bundleId } : { variantId: body.variantId }),
+        },
       });
     } else {
-      const variant = await prisma.productVariant.findUnique({
-        where: { id: body.variantId },
-      });
-      if (!variant) return jsonError("Biến thể không tồn tại", 404);
-      const available = (await sellableTotals(prisma, [variant.id])).get(variant.id) ?? 0;
-      if (body.quantity > available) {
-        return jsonError(`Chỉ còn ${available} sản phẩm`, 400);
+      const ids = group.length ? group.map((item) => item.variantId) : [body.variantId];
+      const totals = await sellableTotals(prisma, ids);
+      for (const id of ids) {
+        const left = totals.get(id) ?? 0;
+        if (body.quantity > left) return jsonError(`Chỉ còn ${left} sản phẩm`, 400);
       }
-      await prisma.cartItem.upsert({
-        where: {
-          cartId_variantId: { cartId: cart.id, variantId: body.variantId },
-        },
-        create: {
-          cartId: cart.id,
-          variantId: body.variantId,
-          quantity: body.quantity,
-        },
-        update: { quantity: body.quantity },
+      await prisma.$transaction(async (tx) => {
+        if (group.length === 0) {
+          await tx.cartItem.upsert({
+            where: { cartId_variantId: { cartId: cart.id, variantId: body.variantId } },
+            create: { cartId: cart.id, variantId: body.variantId, quantity: body.quantity },
+            update: { quantity: body.quantity },
+          });
+          return;
+        }
+        for (const item of group) {
+          await tx.cartItem.update({ where: { id: item.id }, data: { quantity: body.quantity } });
+        }
       });
     }
 
@@ -119,8 +126,12 @@ export async function DELETE(req: Request) {
     if (body.clear) {
       await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
     } else if (body.variantId) {
+      const current = cart.items.find((item) => item.variantId === body.variantId);
       await prisma.cartItem.deleteMany({
-        where: { cartId: cart.id, variantId: body.variantId },
+        where: {
+          cartId: cart.id,
+          ...(current?.bundleId ? { bundleId: current.bundleId } : { variantId: body.variantId }),
+        },
       });
     } else {
       return jsonError("Thiếu variantId hoặc clear", 400);

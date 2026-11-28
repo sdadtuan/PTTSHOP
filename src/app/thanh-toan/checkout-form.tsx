@@ -31,6 +31,9 @@ export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOption
   const { items, clear, loading: cartLoading } = useCart();
   const payable = items.filter((item) => item.forSale !== false);
   const subtotal = payable.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const bundleDiscount = payable.reduce((sum, item) => sum + (item.bundleDiscountShare || 0), 0);
+  const blocksCoupon = payable.some((item) => item.bundleBlocksCoupon);
+  const goods = Math.max(0, subtotal - bundleDiscount);
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -81,20 +84,20 @@ export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOption
     if (!shouldQuoteShipping({ loading: cartLoading, itemCount: payable.length })) return;
     const controller = new AbortController();
     let cancelled = false;
-    const requestedSubtotal = subtotal;
+    const requestedSubtotal = goods;
     const params = new URLSearchParams({ subtotal: String(requestedSubtotal) });
     if (provinceCode) params.set("provinceCode", provinceCode);
     if (wardCode) params.set("wardCode", wardCode);
     void fetch(`/api/shipping/quote?${params}`, { signal: controller.signal })
       .then((res) => res.json())
       .then((data) => {
-        if (cancelled || requestedSubtotal !== subtotal) return;
+        if (cancelled || requestedSubtotal !== goods) return;
         setShipping(typeof data.fee === "number" ? data.fee : null);
         setFreeFrom(typeof data.freeShipThreshold === "number" ? data.freeShipThreshold : null);
       })
       .catch((err: unknown) => {
         if (cancelled || (err instanceof DOMException && err.name === "AbortError")) return;
-        if (requestedSubtotal !== subtotal) return;
+        if (requestedSubtotal !== goods) return;
         setShipping(null);
         setFreeFrom(null);
       });
@@ -102,7 +105,7 @@ export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOption
       cancelled = true;
       controller.abort();
     };
-  }, [cartLoading, payable.length, subtotal, provinceCode, wardCode]);
+  }, [cartLoading, payable.length, goods, provinceCode, wardCode]);
 
   const beganCheckout = useRef(false);
   useEffect(() => {
@@ -127,7 +130,7 @@ export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOption
     );
   }
 
-  const total = Math.max(0, subtotal + (shipping ?? 0) - discount);
+  const total = Math.max(0, goods + (shipping ?? 0) - (blocksCoupon ? 0 : discount));
   const codAllowed = Boolean(options.codEnabled && total <= options.codMaxAmount);
   const bankAllowed = Boolean(options.bankVisible);
   const payosAllowed = Boolean(options.payosEnabled);
@@ -160,11 +163,16 @@ export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOption
                             : "";
 
   async function applyCoupon() {
+    if (blocksCoupon) {
+      setDiscount(0);
+      setCouponMsg("Mã giảm không cộng với giá combo.");
+      return;
+    }
     setCouponMsg("");
     const res = await fetch("/api/coupons/validate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code: couponCode, subtotal }),
+      body: JSON.stringify({ code: couponCode, subtotal: goods }),
     });
     const data = await res.json();
     if (!res.ok || !data.valid) {
@@ -205,11 +213,12 @@ export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOption
       invoiceTaxCode: String(form.get("invoiceTaxCode") || ""),
       invoiceAddress: String(form.get("invoiceAddress") || ""),
       invoiceEmail: String(form.get("invoiceEmail") || ""),
-      couponCode: couponCode || undefined,
+      couponCode: blocksCoupon ? undefined : couponCode || undefined,
       consents: consentsFromForm(form),
       items: payable.map((i) => ({
         variantId: i.variantId,
         quantity: i.quantity,
+        bundleId: i.bundleId || undefined,
       })),
     };
 
@@ -406,8 +415,14 @@ export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOption
               <span>{shipping == null ? SHIPPING_PENDING_COPY : shipping === 0 ? "Miễn phí" : formatVnd(shipping)}</span>
             </div>
             {shipping == null ? <p className="text-xs text-neutral-500">{TOTAL_EXCLUDES_SHIPPING_COPY}</p> : null}
-            <FreeshipBar subtotal={subtotal} threshold={freeFrom} />
-            {discount > 0 ? (
+            <FreeshipBar subtotal={goods} threshold={freeFrom} />
+            {bundleDiscount > 0 ? (
+              <div className="flex justify-between text-emerald-700">
+                <span>Giảm combo</span>
+                <span>-{formatVnd(bundleDiscount)}</span>
+              </div>
+            ) : null}
+            {discount > 0 && !blocksCoupon ? (
               <div className="flex justify-between text-emerald-700">
                 <span>Giảm giá</span>
                 <span>-{formatVnd(discount)}</span>
