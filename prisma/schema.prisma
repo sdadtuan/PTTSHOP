@@ -347,8 +347,21 @@ model Review {
   avatarUrl   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  media     ReviewMedia[]
 
-  @@unique([userId, productId])
+  @@unique([orderId, productId])
+}
+
+model ReviewMedia {
+  id        String   @id @default(cuid())
+  reviewId  String
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  url       String
+  mime      String
+  kind      String
+  createdAt DateTime @default(now())
+
+  @@index([reviewId])
 }
 
 model OrderItem {

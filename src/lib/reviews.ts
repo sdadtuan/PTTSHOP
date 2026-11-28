@@ -112,7 +112,7 @@ export async function listPublishedReviews(
     publishedTotal += row._count.rating;
     weighted += row.rating * row._count.rating;
   }
-  const average = publishedTotal > 0 ? Math.round((weighted / publishedTotal) * 10) / 10 : 0;
+  const average = publishedTotal > 0 ? Math.round((weighted / publishedTotal) * 10) / 10 : null;
 
   return {
     page,

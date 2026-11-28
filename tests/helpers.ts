@@ -23,6 +23,7 @@ export async function cleanDb(prisma: PrismaClient) {
   await prisma.supplierSku.deleteMany();
   await prisma.supplier.deleteMany();
   await prisma.consent.deleteMany();
+  await prisma.reviewMedia.deleteMany();
   await prisma.review.deleteMany();
   await prisma.refundApprovalLog.deleteMany();
   await prisma.refundRequest.deleteMany();

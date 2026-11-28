@@ -16,6 +16,7 @@ export function ProductReviews({ productId }: { productId: string }) {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [error, setError] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function load() {
@@ -27,7 +28,16 @@ export function ProductReviews({ productId }: { productId: string }) {
   }
 
   useEffect(() => {
-    void load();
+    const controller = new AbortController();
+    fetch(`/api/reviews?productId=${productId}`, { signal: controller.signal })
+      .then(async (res) => {
+        if (!res.ok) return;
+        const data = await res.json();
+        setReviews(data.reviews || []);
+        setEligibleOrderId(data.eligibleOrderId || null);
+      })
+      .catch(() => {});
+    return () => controller.abort();
   }, [productId]);
 
   async function onSubmit(e: FormEvent) {
@@ -48,7 +58,18 @@ export function ProductReviews({ productId }: { productId: string }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Không gửi được đánh giá");
+      if (file && data.review?.id) {
+        const body = new FormData();
+        body.set("reviewId", data.review.id);
+        body.set("file", file);
+        const media = await fetch("/api/reviews/media", { method: "POST", body });
+        if (!media.ok) {
+          const mediaBody = await media.json().catch(() => ({}));
+          throw new Error(mediaBody.error || "Đánh giá đã gửi, file chưa được nhận");
+        }
+      }
       setComment("");
+      setFile(null);
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Lỗi");
@@ -87,6 +108,16 @@ export function ProductReviews({ productId }: { productId: string }) {
             placeholder="Nhận xét của bạn"
             className="w-full rounded border border-neutral-200 px-3 py-2 text-sm"
           />
+          <label className="block text-sm text-neutral-600">
+            Ảnh hoặc video (không bắt buộc)
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
+              className="mt-1 block w-full text-sm"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            />
+          </label>
+          <p className="text-xs text-neutral-500">Đánh giá chỉ hiện sau khi PTT Shop duyệt.</p>
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
           <button
             type="submit"

@@ -22,16 +22,10 @@ export async function GET(req: Request) {
     const session = await getOptionalSession();
     let eligibleOrderId: string | null = null;
     if (session?.user?.id) {
-      const existing = await prisma.review.findUnique({
-        where: {
-          userId_productId: {
-            userId: session.user.id,
-            productId,
-          },
-        },
-      });
-      if (!existing) {
-        eligibleOrderId = await latestReviewableOrderId(prisma, session.user.id, productId);
+      const orderId = await latestReviewableOrderId(prisma, session.user.id, productId);
+      if (orderId) {
+        const existing = await prisma.review.findFirst({ where: { orderId, productId } });
+        if (!existing) eligibleOrderId = orderId;
       }
     }
 
@@ -70,6 +64,11 @@ export async function POST(req: Request) {
     if (!allowed) {
       return jsonError("Chỉ đánh giá khi đơn đã giao hoặc đã hoàn tất", 403);
     }
+    const duplicate = await prisma.review.findFirst({
+      where: { orderId: body.orderId, productId: body.productId },
+      select: { id: true },
+    });
+    if (duplicate) return jsonError("Đơn này đã có đánh giá cho sản phẩm", 409);
 
     const review = await prisma.$transaction(async (tx) => {
       const created = await tx.review.create({

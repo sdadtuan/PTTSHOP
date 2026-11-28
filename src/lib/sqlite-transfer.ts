@@ -423,8 +423,9 @@ export async function runVerify(): Promise<Compared> {
     const samples: string[] = [];
     let sampleSeen = 0;
     for (const model of models()) {
-      const columns = presentTables.has(model.name) ? tableColumns(db, model.name) : new Set<string>();
-      const sqliteRows = presentTables.has(model.name) ? readRows(db, model.name).map((row) => convertRow(model, row, columns)) : [];
+      if (!presentTables.has(model.name)) continue;
+      const columns = tableColumns(db, model.name);
+      const sqliteRows = readRows(db, model.name).map((row) => convertRow(model, row, columns));
       const postgresRows = await delegate(prisma, model.name).findMany();
       pushCheck(report, sqliteRows.length === postgresRows.length, `Số dòng ${model.name} sqlite=${sqliteRows.length} postgres=${postgresRows.length}`);
       const postgresById = new Map(postgresRows.map((row) => [idKey(model, row), row]));

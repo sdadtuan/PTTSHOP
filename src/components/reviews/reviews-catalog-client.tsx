@@ -20,7 +20,7 @@ type CatalogData = {
   page: number;
   totalPages: number;
   total: number;
-  summary: { average: number; total: number; starCounts: Record<number, number> };
+  summary: { average: number | null; total: number; starCounts: Record<number, number> };
   reviews: CatalogReview[];
 };
 
@@ -89,8 +89,14 @@ export function ReviewsCatalogClient({
       <div className="mt-10 grid gap-8 lg:grid-cols-[280px_1fr]">
         <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
           <div className="border border-neutral-100 bg-white p-5">
-            <p className="text-4xl font-bold text-neutral-900">{s.average || "—"}</p>
-            <StarRating rating={s.average || 0} size="md" className="mt-1" />
+            {s.total > 0 && s.average != null ? (
+              <>
+                <p className="text-4xl font-bold text-neutral-900">{s.average.toFixed(1)}</p>
+                <StarRating rating={s.average} size="md" className="mt-1" />
+              </>
+            ) : (
+              <p className="text-lg font-semibold text-neutral-700">Chưa có đánh giá.</p>
+            )}
             <p className="mt-2 text-sm text-neutral-500">{s.total} đánh giá công khai</p>
             <ul className="mt-4 space-y-1.5 text-sm">
               {[5, 4, 3, 2, 1].map((star) => {

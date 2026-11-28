@@ -116,15 +116,11 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           <SiteBrandProvider settings={settings}>
             <StorefrontLayoutProvider value={layoutCms}>
               <CartProvider>
+                <Measurement ids={measurementIds} />
                 <StorefrontFrame
                   header={<Header />}
                   banner={<CookieBanner />}
-                  extras={
-                    <>
-                      <Measurement ids={measurementIds} />
-                      <FloatingSocial />
-                    </>
-                  }
+                  extras={<FloatingSocial />}
                 >
                   <main className="min-w-0 flex-1">{children}</main>
                   <Footer />

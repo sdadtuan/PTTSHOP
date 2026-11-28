@@ -3,7 +3,7 @@ import { ListingFilters } from "@/components/catalog/listing-filters";
 import { AnalyticsOnce } from "@/components/legal/measurement";
 import { ProductCard } from "@/components/product/product-card";
 import { hasSellableMatch, listingFacets, variantMatchesListing, type ListingVariant } from "@/lib/catalog/listing";
-import { publicVariants } from "@/lib/catalog-visibility";
+import { publicCatalogWhere, publicVariants } from "@/lib/catalog-visibility";
 import { sellableTotals } from "@/lib/dropship/service";
 import { prisma } from "@/lib/prisma";
 import { buildProductWhere, sortProductsByPrice } from "@/lib/products-query";
@@ -79,13 +79,24 @@ export async function generateMetadata({
       : "Danh sách sản phẩm đang bán tại PTT Shop.";
   const canonical = robots.canonical
     || (params.category ? `/san-pham?category=${params.category}` : "/san-pham");
+  const cover = await prisma.productImage.findFirst({
+    where: { isHidden: false, type: "image", product: publicCatalogWhere },
+    orderBy: { sortOrder: "asc" },
+    select: { url: true, alt: true },
+  });
   return {
     title,
     description,
     alternates: { canonical },
     robots: { index: robots.index, follow: true },
-    openGraph: { title, description, url: canonical, type: "website" },
-    twitter: { card: "summary", title, description },
+    openGraph: {
+      title,
+      description,
+      url: canonical,
+      type: "website",
+      images: cover ? [{ url: cover.url, alt: cover.alt || title }] : undefined,
+    },
+    twitter: { card: "summary", title, description, images: cover ? [cover.url] : undefined },
   };
 }
 
