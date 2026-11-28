@@ -12,6 +12,7 @@ import {
   type SiteSettingsData,
 } from "@/lib/cms/types";
 import { lookbookNav } from "@/lib/looks";
+import { quizIsOpen, quizNav } from "@/lib/quiz";
 import { prisma } from "@/lib/prisma";
 import { getStorefrontUi } from "@/lib/storefront/ui-copy";
 
@@ -72,19 +73,32 @@ async function publishedLookCount() {
   }
 }
 
+async function quizOpen() {
+  try {
+    const [settings, activeQuestions] = await Promise.all([
+      prisma.quizSettings.findUnique({ where: { id: "default" } }),
+      prisma.quizQuestion.count({ where: { isActive: true } }),
+    ]);
+    return quizIsOpen({ enabled: settings?.enabled === true, activeQuestions });
+  } catch {
+    return false;
+  }
+}
+
 export async function getStorefrontLayoutForRequest(): Promise<StorefrontLayoutSnapshot> {
   try {
-    const [data, ui, looks] = await Promise.all([
+    const [data, ui, looks, quiz] = await Promise.all([
       viewForMode(await resolveHomepageMode()),
       getStorefrontUi("published"),
       publishedLookCount(),
+      quizOpen(),
     ]);
     const navigation = (data.sections.navigation?.content ??
       defaultSectionContent("navigation")) as NavigationContent;
     return {
       settings: data.settings,
       ui,
-      navigation: { ...navigation, primaryNav: lookbookNav(navigation.primaryNav, looks) },
+      navigation: { ...navigation, primaryNav: quizNav(lookbookNav(navigation.primaryNav, looks), quiz) },
       footerLinks: (data.sections.footer_links?.content ??
         defaultSectionContent("footer_links")) as FooterLinksContent,
       floatingContact: (data.sections.floating_contact?.content ??
