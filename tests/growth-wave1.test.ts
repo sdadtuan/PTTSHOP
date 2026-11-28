@@ -8,8 +8,6 @@ import { recomputeProductRating } from "@/lib/reviews";
 import { resolveSlugRedirect } from "@/lib/slug-redirect";
 import {
   CONSENT_DEFAULT_SCRIPT,
-  GA4_MEASUREMENT_ID,
-  META_PIXEL_ID,
   claimPurchase,
   purchaseParams,
   trackerScriptUrls,
@@ -65,14 +63,12 @@ describe("đo lường và schema", () => {
   it("keeps consent default denied and does not load GTM", () => {
     expect(CONSENT_DEFAULT_SCRIPT).toContain("analytics_storage:'denied'");
     expect(CONSENT_DEFAULT_SCRIPT).toContain("ad_storage:'denied'");
-    expect(CONSENT_DEFAULT_SCRIPT).not.toContain(GA4_MEASUREMENT_ID);
-    expect(CONSENT_DEFAULT_SCRIPT).not.toContain(META_PIXEL_ID);
     expect(CONSENT_DEFAULT_SCRIPT).not.toContain("GTM-PQX685KW");
-    const urls = trackerScriptUrls();
-    expect(urls.some((url) => url.includes(`id=${GA4_MEASUREMENT_ID}`))).toBe(true);
-    expect(urls.some((url) => url.includes("fbevents.js"))).toBe(true);
-    expect(urls.some((url) => url.includes("GTM-PQX685KW"))).toBe(false);
-    expect(urls.some((url) => url.includes("gtm.js?id="))).toBe(false);
+    const ids = { ga4: "G-TEST1234", meta: "1234567890123", tiktok: null, clarity: null };
+    expect(trackerScriptUrls(ids).some((url) => url.includes("id=G-TEST1234"))).toBe(true);
+    expect(trackerScriptUrls(ids).some((url) => url.includes("fbevents.js"))).toBe(true);
+    expect(trackerScriptUrls({ ga4: null, meta: null, tiktok: null, clarity: null })).toEqual([]);
+    expect(trackerScriptUrls(ids).some((url) => url.includes("GTM-PQX685KW"))).toBe(false);
   });
 
   it("uses the order number as transaction_id and event_id", () => {
@@ -119,10 +115,10 @@ describe("đo lường và schema", () => {
   it("claims purchase once per channel", async () => {
     const first = await claimPurchase(prisma, "PTT-ONCE");
     const second = await claimPurchase(prisma, "PTT-ONCE");
-    expect(first).toEqual({ ga4: true, meta: true });
-    expect(second).toEqual({ ga4: false, meta: false });
+    expect(first).toEqual({ ga4: true, meta: true, tiktok: true });
+    expect(second).toEqual({ ga4: false, meta: false, tiktok: false });
     const rows = await prisma.analyticsEvent.findMany({ where: { orderNumber: "PTT-ONCE" } });
-    expect(rows).toHaveLength(2);
+    expect(rows).toHaveLength(3);
     expect(rows.every((row) => row.eventId === "PTT-ONCE")).toBe(true);
   });
 
@@ -166,6 +162,7 @@ describe("đo lường và schema", () => {
     const body = await allowed.json();
     expect(body.ga4).toBe(true);
     expect(body.meta).toBe(true);
+    expect(body.tiktok).toBe(true);
     expect(body.transactionId).toBe(order.orderNumber);
     expect(body.eventId).toBe(order.orderNumber);
     const again = await claimPurchaseRoute(
@@ -179,7 +176,7 @@ describe("đo lường và schema", () => {
       }),
     );
     expect((await again.json()).ga4).toBe(false);
-    expect(await prisma.analyticsEvent.count({ where: { orderNumber: order.orderNumber } })).toBe(2);
+    expect(await prisma.analyticsEvent.count({ where: { orderNumber: order.orderNumber } })).toBe(3);
   });
 });
 

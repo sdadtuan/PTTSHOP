@@ -30,6 +30,11 @@ const optionalDays = z.preprocess(
   z.number({ error: "Số ngày phải là số nguyên không âm." }).int().min(0).max(60).nullable(),
 );
 
+const optionalMeasurementId = z.preprocess(
+  emptyToNull,
+  z.string().regex(/^[A-Za-z0-9_-]{4,40}$/, "ID đo lường không hợp lệ.").nullable(),
+).optional();
+
 export const shopProfileInputSchema = z.object({
   hotline: phoneField,
   email: emailField,
@@ -51,6 +56,10 @@ export const shopProfileInputSchema = z.object({
   keepBankAccount: z.boolean(),
   bankAccountName: z.string().trim().max(50),
   bankBranch: z.string().trim().max(80),
+  ga4MeasurementId: optionalMeasurementId,
+  metaPixelId: optionalMeasurementId,
+  tiktokPixelId: optionalMeasurementId,
+  clarityProjectId: optionalMeasurementId,
 });
 
 export type ShopProfileInput = z.infer<typeof shopProfileInputSchema>;

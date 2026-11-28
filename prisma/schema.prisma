@@ -412,6 +412,11 @@ model SiteSettings {
   zaloUrl         String?
   /// Hiện "Còn N" khi tồn bán được <= ngưỡng. Null = không hiện số.
   lowStockThreshold Int?
+  /// ID đo lường. Null = không tải script.
+  ga4MeasurementId  String?
+  metaPixelId       String?
+  tiktokPixelId     String?
+  clarityProjectId  String?
   socialInstagram String?
   socialFacebook  String?
   socialTiktok    String?

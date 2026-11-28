@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/cart/cart-context";
@@ -8,6 +8,7 @@ import { FreeshipBar } from "@/components/cart/freeship-bar";
 import { StorefrontImage } from "@/components/product/storefront-image";
 import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
 import { ConsentFields, consentsFromForm } from "@/components/legal/consent-fields";
+import { trackStoreEvent } from "@/components/legal/measurement";
 import { NOT_FOR_SALE_MESSAGE } from "@/lib/catalog-visibility";
 import { formatVnd } from "@/lib/format";
 import { codCeilingNotice } from "@/lib/payments/policy";
@@ -96,6 +97,18 @@ export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOption
       controller.abort();
     };
   }, [cartLoading, payable.length, subtotal, provinceCode, wardCode]);
+
+  const beganCheckout = useRef(false);
+  useEffect(() => {
+    if (beganCheckout.current || cartLoading || payable.length === 0) return;
+    beganCheckout.current = true;
+    void trackStoreEvent("begin_checkout", { value: subtotal });
+  }, [cartLoading, payable.length, subtotal]);
+
+  useEffect(() => {
+    if (!paymentMethod) return;
+    void trackStoreEvent("add_payment_info", { payment_type: paymentMethod });
+  }, [paymentMethod]);
 
   if (items.length === 0) {
     return (

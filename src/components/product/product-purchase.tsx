@@ -24,6 +24,7 @@ import { purchaseBadges } from "@/lib/shop/profile";
 import { lowStockCount } from "@/lib/catalog/listing";
 import { formatStockTemplate } from "@/lib/storefront/ui-copy-types";
 import { colorOutOfStock, resolveSizeChoice } from "@/lib/variant-stock";
+import { trackStoreEvent } from "@/components/legal/measurement";
 
 type Variant = {
   id: string;
@@ -167,6 +168,12 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
       setCartError(result.error);
       return;
     }
+    void trackStoreEvent("add_to_cart", {
+      item_id: selected.id,
+      item_name: product.name,
+      value: selected.price,
+      quantity: qty,
+    });
     if (mode === "buy") {
       router.push("/thanh-toan");
       return;

@@ -1,8 +1,7 @@
 import type { PrismaClient } from "@prisma/client";
+import { scriptsForConsent, type MeasurementIds } from "@/lib/analytics/ids";
 
 export const COOKIE_CHOICE = "pttshop_cookie";
-export const GA4_MEASUREMENT_ID = "G-69N0FCKD7P";
-export const META_PIXEL_ID = "1508219437865650";
 
 export const CONSENT_DEFAULT_SCRIPT =
   "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}" +
@@ -10,11 +9,8 @@ export const CONSENT_DEFAULT_SCRIPT =
   "ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied'," +
   "wait_for_update:500});";
 
-const GA4_SRC = `https://www.googletagmanager.com/gtag/js?id=${GA4_MEASUREMENT_ID}`;
-const META_SRC = "https://connect.facebook.net/en_US/fbevents.js";
-
-export function trackerScriptUrls() {
-  return [GA4_SRC, META_SRC];
+export function trackerScriptUrls(ids: MeasurementIds) {
+  return scriptsForConsent("all", ids);
 }
 
 export function optionalTrackingAllowed() {
@@ -40,8 +36,8 @@ type ClaimDb = Pick<PrismaClient, "analyticsEvent">;
 
 /** Inserts one row per channel. A second call for the same order returns false for that channel. */
 export async function claimPurchase(db: ClaimDb, orderNumber: string) {
-  const channels = ["ga4", "meta"] as const;
-  const claimed = { ga4: false, meta: false };
+  const channels = ["ga4", "meta", "tiktok"] as const;
+  const claimed = { ga4: false, meta: false, tiktok: false };
   for (const channel of channels) {
     const result = await db.analyticsEvent.createMany({
       data: {

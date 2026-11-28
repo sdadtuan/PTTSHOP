@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/product/product-card";
 import { ProductDetailClient } from "@/components/product/product-detail-client";
 import { ProductReviews } from "@/components/product/product-reviews";
+import { AnalyticsOnce } from "@/components/legal/measurement";
 import { publicCatalogWhere, publicVariants } from "@/lib/catalog-visibility";
 import { sellableTotals } from "@/lib/dropship/service";
 import { prisma } from "@/lib/prisma";
@@ -136,6 +137,10 @@ export default async function ProductDetailPage({ params }: Props) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 md:px-6 md:py-12">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(structured) }} />
+      <AnalyticsOnce
+        name="view_item"
+        params={{ item_id: product.id, item_name: product.name, value: prices.length ? Math.min(...prices) : 0 }}
+      />
       <nav className="mb-6 text-xs text-neutral-500 md:text-xs">
         <div className="-mx-1 flex flex-wrap items-center gap-x-0 gap-y-1 max-md:text-sm max-md:leading-relaxed max-md:py-0.5">
           <Link href="/" className="rounded px-1 py-1 hover:text-neutral-800 max-md:py-1.5">

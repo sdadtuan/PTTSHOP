@@ -7,6 +7,7 @@ import { signIn } from "next-auth/react";
 import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
 import { displayBrandName } from "@/lib/public-brand";
 import { ConsentFields, consentsFromForm } from "@/components/legal/consent-fields";
+import { trackStoreEvent } from "@/components/legal/measurement";
 
 export default function RegisterPage() {
   const a = useStorefrontUi().auth;
@@ -45,6 +46,7 @@ export default function RegisterPage() {
         router.push("/dang-nhap");
         return;
       }
+      void trackStoreEvent("sign_up", { method: "credentials" });
       router.push("/");
       router.refresh();
     } catch (err) {
