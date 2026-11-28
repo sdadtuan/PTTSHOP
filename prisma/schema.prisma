@@ -524,6 +524,14 @@ model PaymentSettings {
   bankBranch          String?
 }
 
+/// Thử nghiệm A/B. enabled=false thì mọi khách thấy control.
+model Experiment {
+  key            String  @id
+  enabled        Boolean @default(false)
+  variants       String
+  trafficPercent Int     @default(50)
+}
+
 model PaymentAuditLog {
   id        String   @id @default(cuid())
   orderId   String?

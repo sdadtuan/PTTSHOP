@@ -28,6 +28,7 @@ import {
   BadgeDollarSign,
   ScrollText,
   Plug,
+  FlaskConical,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { adminPermissionDenied } from "@/lib/rbac";
@@ -44,6 +45,7 @@ const nav = [
   { href: "/admin/hoa-don", label: "Hoá đơn", icon: Receipt },
   { href: "/admin/doi-tra", label: "Đổi trả & Hoàn tiền", icon: RotateCcw },
   { href: "/admin/thong-bao", label: "CRM & Thông báo", icon: Bell },
+  { href: "/admin/thi-nghiem", label: "Thử nghiệm", icon: FlaskConical },
   { href: "/admin/quy-tac-gia", label: "Quy tắc giá", icon: BadgeDollarSign },
   { href: "/admin/nha-cung-cap", label: "Nhà cung cấp", icon: Store },
   { href: "/admin/phan-quyen", label: "Phân quyền", icon: ShieldCheck },

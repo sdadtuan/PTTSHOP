@@ -24,7 +24,9 @@ import { purchaseBadges } from "@/lib/shop/profile";
 import { lowStockCount } from "@/lib/catalog/listing";
 import { formatStockTemplate } from "@/lib/storefront/ui-copy-types";
 import { colorOutOfStock, resolveSizeChoice } from "@/lib/variant-stock";
+import { useAssignedVariant } from "@/components/experiments/experiment-provider";
 import { trackStoreEvent } from "@/components/legal/measurement";
+import { buyNowLabel, stickyVisible } from "@/lib/experiments/assign";
 
 type Variant = {
   id: string;
@@ -71,6 +73,9 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
   const pdp = useStorefrontUi().pdp;
   const shop = useShopProfile();
   const badges = purchaseBadges(shop);
+  const buyVariant = useAssignedVariant("buy_now_copy");
+  const stickyVariant = useAssignedVariant("sticky_bar");
+  const buyLabel = buyNowLabel(buyVariant);
   const { addItem } = useCart();
   const router = useRouter();
   const { status } = useSession();
@@ -173,6 +178,8 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
       item_name: product.name,
       value: selected.price,
       quantity: qty,
+      experiment_buy: buyVariant,
+      experiment_sticky: stickyVariant,
     });
     if (mode === "buy") {
       router.push("/thanh-toan");
@@ -496,7 +503,7 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
           data-testid="pdp-buy-now"
           className="flex min-w-[9rem] flex-1 items-center justify-center rounded border border-neutral-900 bg-white px-5 py-3.5 text-sm font-semibold text-neutral-900 transition hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:opacity-50"
         >
-          {postingMode === "buy" ? "Đang xử lý" : "Mua ngay"}
+          {postingMode === "buy" ? "Đang xử lý" : buyLabel}
         </button>
 
         <button
@@ -529,14 +536,14 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
       <div
         className={cn(
           "fixed inset-x-0 z-30 border-t border-neutral-200 bg-white px-4 pt-2 lg:hidden",
-          showSticky ? "visible" : "invisible pointer-events-none",
+          showSticky && stickyVisible(stickyVariant, true) ? "visible" : "invisible pointer-events-none",
         )}
         style={{
           bottom: "var(--ptt-cookie-offset, 0px)",
           paddingBottom:
             "max(0.5rem, calc(env(safe-area-inset-bottom) - var(--ptt-cookie-offset, 0px)))",
         }}
-        aria-hidden={showSticky ? undefined : true}
+        aria-hidden={showSticky && stickyVisible(stickyVariant, true) ? undefined : true}
         aria-label="Thao tác mua hàng"
         data-testid="pdp-sticky-cta"
       >
@@ -562,7 +569,7 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
             data-testid="pdp-sticky-buy"
             className="flex-1 rounded border border-neutral-900 bg-white px-3 py-2.5 text-sm font-semibold text-neutral-900 disabled:opacity-50"
           >
-            {postingMode === "buy" ? "Đang xử lý" : "Mua ngay"}
+            {postingMode === "buy" ? "Đang xử lý" : buyLabel}
           </button>
         </div>
       </div>
