@@ -141,5 +141,7 @@ export async function completeRefund(db: Db, input: { refundId: string; referenc
   const suggestInvoice = refund.order.invoices.some((row) => row.type === "ORIGINAL" && row.status === "ISSUED");
   const { syncOrderLoyalty } = await import("@/lib/loyalty-sync");
   await syncOrderLoyalty(refund.orderId);
+  const { syncShopOrder } = await import("@/lib/ops/crm-order");
+  await syncShopOrder(refund.orderId, "refunded");
   return { refund: saved, suggestInvoiceAdjustment: suggestInvoice };
 }

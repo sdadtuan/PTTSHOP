@@ -112,6 +112,8 @@ export async function PATCH(req: Request) {
         });
         await autoIssueIfReady(prisma, paid.id, "PAID");
         await recordAudit({ access: session.access, actorId: session.user.id, actorEmail: session.user.email, action: "CONFIRM_PAID", entityType: "Order", entityId: paid.id, before: { paymentStatus: current.paymentStatus }, after: { paymentStatus: "PAID" }, req });
+        const { syncShopOrder } = await import("@/lib/ops/crm-order");
+        await syncShopOrder(paid.id, "paid");
         return jsonOk({ order: paid });
       } catch (err) {
         if (err instanceof Prisma.PrismaClientKnownRequestError) throw err;
@@ -140,6 +142,9 @@ export async function PATCH(req: Request) {
     if (order.status === "COMPLETED") await autoIssueIfReady(prisma, order.id, "DELIVERED");
     const { syncOrderLoyalty } = await import("@/lib/loyalty-sync");
     await syncOrderLoyalty(order.id);
+    const { syncShopOrder } = await import("@/lib/ops/crm-order");
+    if (order.status === "SHIPPING") await syncShopOrder(order.id, "shipped");
+    if (order.status === "COMPLETED") await syncShopOrder(order.id, "delivered");
     if (order.paymentStatus === "PAID") await autoIssueIfReady(prisma, order.id, "PAID");
 
     if (body.status) {

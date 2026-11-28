@@ -40,6 +40,8 @@ export async function POST(req: Request, ctx: { params: Promise<{ provider: stri
     });
     if (!result.ok && result.reason === "amount_mismatch") return jsonError("Số tiền không khớp đơn.", 409);
     if (!result.ok) return jsonError("Không tìm thấy đơn.", 404);
+    const { syncShopOrderByNumber } = await import("@/lib/ops/crm-order");
+    await syncShopOrderByNumber(body.orderNumber, "paid");
     return jsonOk({ ok: true, duplicate: result.duplicate });
   } catch (err) {
     return handleApiError(err);
