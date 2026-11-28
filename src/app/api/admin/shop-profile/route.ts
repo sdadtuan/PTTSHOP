@@ -22,6 +22,7 @@ export async function GET(req?: Request) {
       freeShipThreshold: profile.freeShipThreshold,
       fallbackFee: profile.fallbackFee,
       returnWindowDays: profile.returnWindowDays,
+      lowStockThreshold: profile.lowStockThreshold,
       codEnabled: profile.codEnabled,
       bankTransferEnabled: profile.bankTransferEnabled,
       bankVisible: profile.bankVisible,
@@ -72,6 +73,7 @@ export async function PUT(req: Request) {
           contactAddress: body.address,
           contactHours: body.hours,
           zaloUrl: body.zaloUrl,
+          ...(body.lowStockThreshold !== undefined ? { lowStockThreshold: body.lowStockThreshold } : {}),
         },
         update: {
           hotline: body.hotline,
@@ -80,6 +82,7 @@ export async function PUT(req: Request) {
           contactAddress: body.address,
           contactHours: body.hours,
           zaloUrl: body.zaloUrl,
+          ...(body.lowStockThreshold !== undefined ? { lowStockThreshold: body.lowStockThreshold } : {}),
         },
       }),
       prisma.shippingSettings.upsert({

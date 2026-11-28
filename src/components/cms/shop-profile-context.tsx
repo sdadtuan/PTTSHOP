@@ -15,6 +15,7 @@ const EMPTY_PROFILE: ShopProfile = {
   codEnabled: true,
   bankTransferEnabled: false,
   bankVisible: false,
+  lowStockThreshold: null,
 };
 
 const ShopProfileContext = createContext<ShopProfile>(EMPTY_PROFILE);

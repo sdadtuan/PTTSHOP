@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { useShopProfile } from "@/components/cms/shop-profile-context";
 import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
 import { purchaseBadges } from "@/lib/shop/profile";
+import { lowStockCount } from "@/lib/catalog/listing";
 import { formatStockTemplate } from "@/lib/storefront/ui-copy-types";
 import { colorOutOfStock, resolveSizeChoice } from "@/lib/variant-stock";
 
@@ -67,7 +68,8 @@ function sizeRank(size: string) {
 
 export function ProductPurchase({ product, color, onColorChange, sizeChart }: Props) {
   const pdp = useStorefrontUi().pdp;
-  const badges = purchaseBadges(useShopProfile());
+  const shop = useShopProfile();
+  const badges = purchaseBadges(shop);
   const { addItem } = useCart();
   const router = useRouter();
   const { status } = useSession();
@@ -113,6 +115,10 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
 
   const selected = size
     ? (product.variants.find((v) => v.color === color && v.size === size) ?? null)
+    : null;
+  const lowStock = selected ? lowStockCount(selected.stock, shop.lowStockThreshold) : null;
+  const alternative = selected && selected.stock <= 0
+    ? product.variants.find((variant) => variant.stock > 0) ?? null
     : null;
   const soldOut =
     sizesForColor.length === 0 ||
@@ -419,11 +425,13 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
       <p className="-mt-3 text-xs text-neutral-500" data-testid="pdp-stock">
         {selected
           ? selected.stock > 0
-            ? formatStockTemplate(pdp.stockAvailable, {
-                stock: selected.stock,
-                color: selected.color,
-                size: selected.size,
-              })
+            ? lowStock != null
+              ? formatStockTemplate(pdp.stockAvailable, {
+                  stock: lowStock,
+                  color: selected.color,
+                  size: selected.size,
+                })
+              : "Còn hàng"
             : formatStockTemplate(pdp.stockOut, {
                 stock: selected.stock,
                 color: selected.color,
@@ -431,6 +439,18 @@ export function ProductPurchase({ product, color, onColorChange, sizeChart }: Pr
               })
           : pdp.stockNone}
       </p>
+      {alternative ? (
+        <button
+          type="button"
+          className="text-sm text-neutral-800 underline"
+          onClick={() => {
+            onColorChange(alternative.color);
+            setSize(alternative.size);
+          }}
+        >
+          Còn hàng: {alternative.color} / {alternative.size}
+        </button>
+      ) : null}
 
       <div ref={inlineCtaRef} className="flex flex-wrap items-center gap-3">
         <div className="flex items-center rounded border border-neutral-200 bg-white">

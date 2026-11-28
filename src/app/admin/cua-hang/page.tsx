@@ -12,6 +12,7 @@ type FormState = {
   freeShipThreshold: string;
   fallbackFee: string;
   returnWindowDays: string;
+  lowStockThreshold: string;
   codEnabled: boolean;
   bankTransferEnabled: boolean;
   bankBin: string;
@@ -31,6 +32,7 @@ const empty: FormState = {
   freeShipThreshold: "",
   fallbackFee: "",
   returnWindowDays: "",
+  lowStockThreshold: "",
   codEnabled: true,
   bankTransferEnabled: false,
   bankBin: "",
@@ -65,6 +67,7 @@ export default function AdminShopPage() {
           freeShipThreshold: data.freeShipThreshold == null ? "" : String(data.freeShipThreshold),
           fallbackFee: data.fallbackFee == null ? "" : String(data.fallbackFee),
           returnWindowDays: data.returnWindowDays == null ? "" : String(data.returnWindowDays),
+          lowStockThreshold: data.lowStockThreshold == null ? "" : String(data.lowStockThreshold),
           codEnabled: data.codEnabled !== false,
           bankTransferEnabled: Boolean(data.bankTransferEnabled),
           bankBin: data.bankBin || "",
@@ -92,6 +95,7 @@ export default function AdminShopPage() {
         freeShipThreshold: moneyOrNull(form.freeShipThreshold),
         fallbackFee: moneyOrNull(form.fallbackFee),
         returnWindowDays: moneyOrNull(form.returnWindowDays),
+        lowStockThreshold: moneyOrNull(form.lowStockThreshold),
         codEnabled: form.codEnabled,
         bankTransferEnabled: form.bankTransferEnabled,
         bankBin: form.bankBin,
@@ -132,6 +136,7 @@ export default function AdminShopPage() {
         <AdminInput label="Ngưỡng freeship (đ)" type="number" min={0} value={form.freeShipThreshold} onChange={(e) => setForm({ ...form, freeShipThreshold: e.target.value })} hint="Để trống thì không hiện freeship." />
         <AdminInput label="Phí vận chuyển dự phòng (đ)" type="number" min={0} value={form.fallbackFee} onChange={(e) => setForm({ ...form, fallbackFee: e.target.value })} hint="Để trống thì giỏ ghi phí sẽ báo khi xác nhận đơn." />
         <AdminInput label="Số ngày đổi trả" type="number" min={0} value={form.returnWindowDays} onChange={(e) => setForm({ ...form, returnWindowDays: e.target.value })} hint="Để trống thì không ghi số ngày." />
+        <AdminInput label="Ngưỡng còn ít hàng" type="number" min={1} value={form.lowStockThreshold} onChange={(e) => setForm({ ...form, lowStockThreshold: e.target.value })} hint="Để trống thì không hiện “Còn N” trên trang sản phẩm." />
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={form.codEnabled} onChange={(e) => setForm({ ...form, codEnabled: e.target.checked })} />
           Bật thanh toán COD

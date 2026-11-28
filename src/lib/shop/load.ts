@@ -23,5 +23,6 @@ export async function getShopProfile(): Promise<ShopProfile> {
     codEnabled: payment.codEnabled,
     bankTransferEnabled: payment.bankTransferEnabled,
     bankVisible: payment.bankTransferEnabled && bankReady(payment),
+    lowStockThreshold: optionalPositive(site?.lowStockThreshold),
   };
 }

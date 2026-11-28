@@ -38,6 +38,10 @@ export const shopProfileInputSchema = z.object({
   zaloUrl: z.preprocess(emptyToNull, z.string().url("Link Zalo không hợp lệ.").nullable()),
   freeShipThreshold: optionalMoney,
   fallbackFee: optionalMoney,
+  lowStockThreshold: z.preprocess(
+    (value) => (value === "" || value == null || value === 0 ? null : value),
+    z.number({ error: "Ngưỡng tồn phải là số nguyên dương." }).int().positive().nullable(),
+  ).optional(),
   returnWindowDays: optionalDays,
   codEnabled: z.boolean(),
   bankTransferEnabled: z.boolean(),
