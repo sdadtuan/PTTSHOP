@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { includeInPublicSitemap } from "@/lib/demo-product";
 import { siteBaseUrl } from "@/lib/seo";
 
+export const dynamic = "force-dynamic";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = siteBaseUrl();
   const [products, looks] = await Promise.all([
