@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { formatVnd } from "@/lib/format";
 import { ORDER_STATUS_LABELS } from "@/lib/order-status";
+import { LoyaltyPanel } from "@/components/account/loyalty-panel";
 import { getStorefrontUi } from "@/lib/storefront/ui-copy";
 
 export const dynamic = "force-dynamic";
@@ -53,6 +54,8 @@ export default async function AccountPage() {
           <p className="mt-1 text-sm text-neutral-500">{acc.cardWishlistHint}</p>
         </Link>
       </div>
+
+      <LoyaltyPanel userId={session.user.id} />
 
       <section className="mt-10">
         <div className="mb-4 flex items-center justify-between">

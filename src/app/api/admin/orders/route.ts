@@ -138,6 +138,8 @@ export async function PATCH(req: Request) {
       data,
     });
     if (order.status === "COMPLETED") await autoIssueIfReady(prisma, order.id, "DELIVERED");
+    const { syncOrderLoyalty } = await import("@/lib/loyalty-sync");
+    await syncOrderLoyalty(order.id);
     if (order.paymentStatus === "PAID") await autoIssueIfReady(prisma, order.id, "PAID");
 
     if (body.status) {

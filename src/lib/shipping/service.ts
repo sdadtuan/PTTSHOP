@@ -274,7 +274,11 @@ export async function applyShippingWebhook(
         return { duplicate: false, ignored: false, deliveredOrderId };
       }),
     );
-    if (result.deliveredOrderId) await autoIssueIfReady(db, result.deliveredOrderId, "DELIVERED");
+    if (result.deliveredOrderId) {
+      await autoIssueIfReady(db, result.deliveredOrderId, "DELIVERED");
+      const { syncOrderLoyalty } = await import("@/lib/loyalty-sync");
+      await syncOrderLoyalty(result.deliveredOrderId);
+    }
     return { status: 200, body: { ok: true, ...result } };
   } catch (err) {
     if (err instanceof ShipmentTransitionError) {

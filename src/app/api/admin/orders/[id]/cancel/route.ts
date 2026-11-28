@@ -14,6 +14,8 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     const body = bodySchema.parse(await req.json());
     const before = await prisma.order.findUnique({ where: { id }, select: { status: true } });
     const result = await cancelOrder(prisma, { orderId: id, reason: body.reason, actorId: session.user.id });
+    const { syncOrderLoyalty } = await import("@/lib/loyalty-sync");
+    await syncOrderLoyalty(id);
     await recordAudit({ access: session.access, actorId: session.user.id, actorEmail: session.user.email, action: "CANCEL_ORDER", entityType: "Order", entityId: id, before, after: { status: "CANCELLED", reason: body.reason }, req });
     return jsonOk(result);
   } catch (err) {

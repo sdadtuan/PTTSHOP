@@ -7,6 +7,7 @@ import { useCart } from "@/components/cart/cart-context";
 import { FreeshipBar } from "@/components/cart/freeship-bar";
 import { StorefrontImage } from "@/components/product/storefront-image";
 import { useStorefrontUi } from "@/components/cms/storefront-layout-context";
+import { LoyaltyFields } from "@/components/checkout/loyalty-fields";
 import { ConsentFields, consentsFromForm } from "@/components/legal/consent-fields";
 import { trackStoreEvent } from "@/components/legal/measurement";
 import { NOT_FOR_SALE_MESSAGE } from "@/lib/catalog-visibility";
@@ -214,6 +215,8 @@ export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOption
       invoiceAddress: String(form.get("invoiceAddress") || ""),
       invoiceEmail: String(form.get("invoiceEmail") || ""),
       couponCode: blocksCoupon ? undefined : couponCode || undefined,
+      loyaltyPoints: Number(form.get("loyaltyPoints") || 0) || undefined,
+      referralCode: String(form.get("referralCode") || "") || undefined,
       consents: consentsFromForm(form),
       items: payable.map((i) => ({
         variantId: i.variantId,
@@ -436,6 +439,7 @@ export function CheckoutForm({ initialOptions }: { initialOptions: PaymentOption
           {error ? (
             <p className="mt-3 text-sm text-red-600">{error}</p>
           ) : null}
+          <LoyaltyFields />
           <div className="mt-4">
             <ConsentFields />
           </div>
