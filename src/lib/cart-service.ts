@@ -1,3 +1,5 @@
+import { settleBundles } from "@/lib/bundles";
+import { bundleSettings } from "@/lib/bundles-public";
 import { prisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/api";
 import { NOT_FOR_SALE_MESSAGE, variantIsForSale } from "@/lib/catalog-visibility";
@@ -71,9 +73,45 @@ export async function serializeCartForClient(
   const body = serializeCart(cart);
   if (!cart) return body;
   const totals = await sellableTotals(prisma, cart.items.map((item) => item.variantId));
+  const settings = await bundleSettings();
+  const bundleIds = [...new Set(cart.items.map((item) => item.bundleId).filter((id): id is string => Boolean(id)))];
+  const bundles = bundleIds.length
+    ? await prisma.bundle.findMany({ where: { id: { in: bundleIds } }, include: { items: { select: { productId: true } } } })
+    : [];
+  const settled = settleBundles({
+    lines: body.items.map((item) => ({
+      variantId: item.variantId,
+      productId: item.productId,
+      unitPrice: item.price,
+      quantity: item.quantity,
+      bundleId: item.bundleId ?? null,
+    })),
+    bundles: bundles.map((bundle) => ({
+      id: bundle.id,
+      title: bundle.title,
+      isPublished: bundle.isPublished,
+      startsAt: bundle.startsAt,
+      endsAt: bundle.endsAt,
+      priceMode: bundle.priceMode,
+      priceVnd: bundle.priceVnd,
+      percentOff: bundle.percentOff,
+      productIds: bundle.items.map((item) => item.productId),
+    })),
+    now: new Date(),
+    couponRequested: false,
+    stackCoupon: settings.stackCoupon,
+    outOfStockMode: settings.outOfStockMode,
+    unavailableProductIds: [],
+  });
   return {
     ...body,
-    items: body.items.map((item) => ({ ...item, stock: totals.get(item.variantId) ?? 0 })),
+    bundleError: settled.error,
+    items: body.items.map((item) => ({
+      ...item,
+      stock: totals.get(item.variantId) ?? 0,
+      bundleDiscountShare: settled.error ? 0 : settled.shares[item.variantId] ?? 0,
+      bundleBlocksCoupon: !settled.error && (settled.shares[item.variantId] ?? 0) > 0 && !settings.stackCoupon,
+    })),
   };
 }
 
@@ -97,6 +135,7 @@ export function serializeCart(
     quantity: i.quantity,
     stock: i.variant.stock,
     forSale: variantIsForSale(i.variant.product),
+    bundleId: i.bundleId,
   }));
   const count = items.reduce((s, i) => s + i.quantity, 0);
   const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
@@ -127,6 +166,9 @@ export async function addToCart(opts: {
   const nextQty = (existing?.quantity ?? 0) + opts.quantity;
   if (nextQty > available) {
     throw new ApiError(`Chỉ còn ${available} sản phẩm`, 400);
+  }
+  if (existing?.bundleId) {
+    throw new ApiError("Món này đang nằm trong combo. Hãy bỏ combo trước khi thêm riêng.", 400);
   }
 
   if (existing) {
@@ -196,6 +238,7 @@ export async function mergeGuestCartIntoUser(
             cartId: userCart.id,
             variantId: item.variantId,
             quantity: qty,
+            bundleId: item.bundleId,
           },
         });
       }

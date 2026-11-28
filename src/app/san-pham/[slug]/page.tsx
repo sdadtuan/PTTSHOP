@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ProductDetailClient } from "@/components/product/product-detail-client";
+import { BundleOffer } from "@/components/product/bundle-offer";
 import { RecommendationBlock } from "@/components/recommendations/block";
 import { ProductReviews } from "@/components/product/product-reviews";
 import { AnalyticsOnce } from "@/components/legal/measurement";
@@ -150,6 +151,8 @@ export default async function ProductDetailPage({ params }: Props) {
       </nav>
 
       <ProductDetailClient product={productView} shippingPolicyJson={shippingRow?.shippingPolicyJson ?? null} />
+
+      <BundleOffer productId={product.id} />
 
       <ProductReviews productId={product.id} />
 

@@ -25,6 +25,9 @@ export type CartLine = {
   image: string;
   quantity: number;
   forSale?: boolean;
+  bundleId?: string | null;
+  bundleDiscountShare?: number;
+  bundleBlocksCoupon?: boolean;
 };
 
 type CartContextValue = {
@@ -34,8 +37,12 @@ type CartContextValue = {
   loading: boolean;
   refresh: () => Promise<void>;
   addItem: (
-    item: Omit<CartLine, "quantity">,
+    item: Omit<CartLine, "quantity" | "bundleId" | "bundleDiscountShare" | "bundleBlocksCoupon">,
     quantity?: number,
+  ) => Promise<{ ok: true } | { ok: false; error: string }>;
+  addBundle: (
+    bundleId: string,
+    selections: { productId: string; variantId: string }[],
   ) => Promise<{ ok: true } | { ok: false; error: string }>;
   removeItem: (variantId: string) => void;
   updateQuantity: (variantId: string, quantity: number) => void;
@@ -123,6 +130,28 @@ export function CartProvider({ children }: { children: ReactNode }) {
       subtotal,
       loading,
       refresh,
+      addBundle: (bundleId, selections) => {
+        return (async () => {
+          try {
+            const res = await fetch("/api/cart/bundles", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "same-origin",
+              body: JSON.stringify({ bundleId, selections }),
+            });
+            const data = (await res.json().catch(() => null)) as { error?: unknown } | null;
+            await refresh();
+            if (!res.ok) {
+              const error = typeof data?.error === "string" ? data.error : "Không thêm được combo";
+              return { ok: false as const, error };
+            }
+            return { ok: true as const };
+          } catch {
+            await refresh();
+            return { ok: false as const, error: "Không thêm được combo" };
+          }
+        })();
+      },
       addItem: (item, quantity = 1) => {
         startTransition(() => {
           setItems((prev) => {

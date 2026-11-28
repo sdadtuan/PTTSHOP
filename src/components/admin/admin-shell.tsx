@@ -60,6 +60,7 @@ const nav = [
   { href: "/admin/goi-y", label: "Gợi ý", icon: Sparkles },
   { href: "/admin/lookbook", label: "Lookbook", icon: ImageIcon },
   { href: "/admin/phong-cach", label: "Quiz", icon: Sparkles },
+  { href: "/admin/combo", label: "Combo", icon: BadgeDollarSign },
   { href: "/admin/nhap-san-pham", label: "Nhập sản phẩm", icon: Package },
   {
     href: "/admin/giao-dien",
