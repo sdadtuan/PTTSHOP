@@ -217,6 +217,33 @@ model Look {
   updatedAt   DateTime   @updatedAt
 }
 
+/// Quiz phong cách. Tắt mặc định. Không chứa tuổi hay cân nặng.
+model QuizSettings {
+  id      String  @id @default("default")
+  enabled Boolean @default(false)
+}
+
+model QuizQuestion {
+  id       String       @id @default(cuid())
+  prompt   String
+  position Int          @default(0)
+  isActive Boolean      @default(true)
+  options  QuizOption[]
+}
+
+model QuizOption {
+  id           String       @id @default(cuid())
+  questionId   String
+  question     QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  label        String
+  position     Int          @default(0)
+  categorySlug String?
+  gender       String?
+  priceMax     Int?
+
+  @@index([questionId])
+}
+
 model LookItem {
   id        String  @id @default(cuid())
   lookId    String
