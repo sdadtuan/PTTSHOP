@@ -11,6 +11,8 @@ import {
   type ReviewsSectionContent,
   type SiteSettingsData,
 } from "@/lib/cms/types";
+import { lookbookNav } from "@/lib/looks";
+import { prisma } from "@/lib/prisma";
 import { getStorefrontUi } from "@/lib/storefront/ui-copy";
 
 /** Header set by middleware for `/?cmsPreview=draft` requests from an ADMIN session. */
@@ -62,17 +64,27 @@ export type StorefrontLayoutSnapshot = {
   ui: Awaited<ReturnType<typeof getStorefrontUi>>;
 };
 
+async function publishedLookCount() {
+  try {
+    return await prisma.look.count({ where: { isPublished: true } });
+  } catch {
+    return 0;
+  }
+}
+
 export async function getStorefrontLayoutForRequest(): Promise<StorefrontLayoutSnapshot> {
   try {
-    const [data, ui] = await Promise.all([
+    const [data, ui, looks] = await Promise.all([
       viewForMode(await resolveHomepageMode()),
       getStorefrontUi("published"),
+      publishedLookCount(),
     ]);
+    const navigation = (data.sections.navigation?.content ??
+      defaultSectionContent("navigation")) as NavigationContent;
     return {
       settings: data.settings,
       ui,
-      navigation: (data.sections.navigation?.content ??
-        defaultSectionContent("navigation")) as NavigationContent,
+      navigation: { ...navigation, primaryNav: lookbookNav(navigation.primaryNav, looks) },
       footerLinks: (data.sections.footer_links?.content ??
         defaultSectionContent("footer_links")) as FooterLinksContent,
       floatingContact: (data.sections.floating_contact?.content ??

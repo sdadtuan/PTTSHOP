@@ -158,6 +158,7 @@ model Product {
   reviews      Review[]
   relationsFrom ProductRelation[] @relation("RelationFrom")
   relationsTo   ProductRelation[] @relation("RelationTo")
+  lookItems     LookItem[]
   isFeatured   Boolean             @default(false)
   isNew        Boolean             @default(false)
   isBestSeller Boolean             @default(false)
@@ -200,6 +201,31 @@ model ProductRelation {
 model RecommendationSettings {
   id                  String @id @default("default")
   bestsellerMinOrders Int?
+}
+
+/// Lookbook. Nháp không public. Không seed look mẫu.
+model Look {
+  id          String     @id @default(cuid())
+  title       String
+  slug        String     @unique
+  description String?
+  imageUrl    String?
+  isPublished Boolean    @default(false)
+  sortOrder   Int        @default(0)
+  items       LookItem[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model LookItem {
+  id        String  @id @default(cuid())
+  lookId    String
+  look      Look    @relation(fields: [lookId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  position  Int     @default(0)
+
+  @@index([lookId])
 }
 
 model ProductImage {
