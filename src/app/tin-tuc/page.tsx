@@ -9,6 +9,9 @@ export async function generateMetadata() {
   return {
     title: publicCopy(page?.title, "Tin tức"),
     description: publicCopy(page?.description, "") || undefined,
+    alternates: { canonical: "/tin-tuc" },
+    openGraph: { title: publicCopy(page?.title, "Tin tức"), url: "/tin-tuc", type: "website" },
+    twitter: { card: "summary", title: publicCopy(page?.title, "Tin tức") },
   };
 }
 

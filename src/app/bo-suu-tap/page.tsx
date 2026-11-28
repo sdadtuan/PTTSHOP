@@ -3,8 +3,17 @@ import Link from "next/link";
 import { publicCatalogWhere } from "@/lib/catalog-visibility";
 import { prisma } from "@/lib/prisma";
 import { getStorefrontUi } from "@/lib/storefront/ui-copy";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Bộ sưu tập",
+  description: "Các bộ sưu tập đang bán tại PTT Shop.",
+  alternates: { canonical: "/bo-suu-tap" },
+  openGraph: { title: "Bộ sưu tập", url: "/bo-suu-tap", type: "website" },
+  twitter: { card: "summary", title: "Bộ sưu tập" },
+};
 
 export default async function CollectionsPage() {
   const colUi = (await getStorefrontUi()).collections;

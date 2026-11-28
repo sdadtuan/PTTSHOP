@@ -17,7 +17,7 @@ import { getShopProfile } from "@/lib/shop/load";
 import { DEFAULT_SITE_SETTINGS } from "@/lib/cms/types";
 import { displayBrandName } from "@/lib/public-brand";
 import { CONSENT_DEFAULT_SCRIPT } from "@/lib/tracking";
-import { jsonLdScript, organizationJsonLd, siteBaseUrl } from "@/lib/seo";
+import { jsonLdScript, organizationJsonLd, siteBaseUrl, websiteJsonLd } from "@/lib/seo";
 import Script from "next/script";
 import "./globals.css";
 
@@ -93,7 +93,16 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: jsonLdScript(organizationJsonLd({ name: brand, url: siteBaseUrl() })),
+            __html: jsonLdScript([
+              organizationJsonLd({
+                name: brand,
+                url: siteBaseUrl(),
+                telephone: shopProfile.hotline,
+                email: shopProfile.email,
+                address: shopProfile.address,
+              }),
+              websiteJsonLd({ name: brand, url: siteBaseUrl() }),
+            ]),
           }}
         />
         <Providers>

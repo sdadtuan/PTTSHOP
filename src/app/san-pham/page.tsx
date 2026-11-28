@@ -11,6 +11,8 @@ import { nearSuggestions, searchCatalog } from "@/lib/search/query";
 import { cn } from "@/lib/utils";
 import type { ProductSort } from "@/lib/validation";
 import { getStorefrontUi } from "@/lib/storefront/ui-copy";
+import { listingRobots } from "@/lib/seo";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +53,38 @@ function buildQuery(params: Record<string, string | undefined>) {
   }
   const q = sp.toString();
   return q ? `/san-pham?${q}` : "/san-pham";
+}
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}): Promise<Metadata> {
+  const params = await searchParams;
+  const robots = listingRobots(params);
+  const category = params.category
+    ? await prisma.category.findUnique({ where: { slug: params.category }, select: { name: true } })
+    : null;
+  const title = params.q?.trim()
+    ? `Tìm ${params.q.trim()}`
+    : category?.name
+      ? category.name
+      : "Sản phẩm";
+  const description = params.q?.trim()
+    ? `Kết quả tìm ${params.q.trim()} tại PTT Shop.`
+    : category?.name
+      ? `${category.name} đang bán tại PTT Shop.`
+      : "Danh sách sản phẩm đang bán tại PTT Shop.";
+  const canonical = robots.canonical
+    || (params.category ? `/san-pham?category=${params.category}` : "/san-pham");
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    robots: { index: robots.index, follow: true },
+    openGraph: { title, description, url: canonical, type: "website" },
+    twitter: { card: "summary", title, description },
+  };
 }
 
 export default async function ProductsPage({
@@ -303,8 +337,8 @@ export default async function ProductsPage({
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 md:gap-6">
-          {products.map((p) => (
-            <ProductCard key={p.id} product={p} />
+          {products.map((p, index) => (
+            <ProductCard key={p.id} product={p} priority={index < 2} />
           ))}
         </div>
       )}

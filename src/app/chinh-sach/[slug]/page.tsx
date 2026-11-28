@@ -10,7 +10,13 @@ type Props = { params: Promise<{ slug: string }> };
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const page = await getStorefrontPageBySlug(`chinh-sach/${slug}`);
-  return { title: publicCopy(page?.title, "Chính sách") };
+  return {
+    title: publicCopy(page?.title, "Chính sách"),
+    description: publicCopy(page?.description, "") || undefined,
+    alternates: { canonical: `/chinh-sach/${slug}` },
+    openGraph: { title: publicCopy(page?.title, "Chính sách"), url: `/chinh-sach/${slug}`, type: "website" },
+    twitter: { card: "summary", title: publicCopy(page?.title, "Chính sách") },
+  };
 }
 
 export default async function PolicyPage({ params }: Props) {
