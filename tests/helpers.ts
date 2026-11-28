@@ -53,6 +53,8 @@ export async function cleanDb(prisma: PrismaClient) {
   await prisma.cartItem.deleteMany();
   await prisma.cart.deleteMany();
   await prisma.wishlistItem.deleteMany();
+  await prisma.productRelation.deleteMany();
+  await prisma.recommendationSettings.deleteMany();
   await prisma.productCollection.deleteMany();
   await prisma.productVariant.deleteMany();
   await prisma.productImage.deleteMany();

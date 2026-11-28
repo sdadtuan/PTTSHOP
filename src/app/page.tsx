@@ -16,6 +16,7 @@ import { HomeStyleTabs } from "@/components/home/home-style-tabs";
 import { PhoiMauType } from "@/components/home/phoi-mau-type";
 import { ProductImagePlaceholder } from "@/components/product/product-image-placeholder";
 import { ProductCard } from "@/components/product/product-card";
+import { RecommendationBlock } from "@/components/recommendations/block";
 import { FRAME_ASPECT, GAPS, OBJECT_POSITION } from "@/config/home-frame-specs";
 import { homeImages } from "@/config/home-images";
 import { TYPE_SCALE } from "@/config/home-type-scale";
@@ -767,6 +768,7 @@ export default async function HomePage() {
       {orderedKeys.map((k) => (
         <Fragment key={k}>{blocks[k] ?? null}</Fragment>
       ))}
+      <RecommendationBlock placement="home" />
     </div>
   );
 }
