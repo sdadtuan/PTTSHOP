@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import QRCode from "qrcode";
@@ -111,7 +112,7 @@ export default async function OrderSuccessPage({ searchParams }: Props) {
       {vietqrPng && row ? (
         <div className="mt-8 text-center">
           {/* EMV Napas 247: số tiền ở tag 54, nội dung đối soát ở tag 62-08. */}
-          <img src={vietqrPng} alt="Mã QR VietQR" width={280} height={280} className="mx-auto" />
+          <Image src={vietqrPng} alt="Mã QR VietQR" width={280} height={280} unoptimized className="mx-auto" />
           <p className="mt-3 text-sm text-neutral-700">
             Chuyển {formatVnd(row.total)}. Nội dung chuyển khoản: {row.orderNumber}.
           </p>

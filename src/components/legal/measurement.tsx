@@ -129,9 +129,8 @@ export async function trackStoreEvent(name: string, params: Record<string, unkno
 
 export function Measurement({ ids }: { ids: MeasurementIds }) {
   const pathname = usePathname();
-  if (typeof window !== "undefined") window.__pttMeasurementIds = ids;
   useEffect(() => {
-    window.__pttMeasurementIds = ids;
+    setMeasurementIds(ids);
     if (pathname.startsWith("/admin")) return;
     void ensureTrackers();
     const onConsent = () => {

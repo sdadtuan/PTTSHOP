@@ -28,7 +28,16 @@ export function ProductReviews({ productId }: { productId: string }) {
   }
 
   useEffect(() => {
-    void load();
+    const controller = new AbortController();
+    fetch(`/api/reviews?productId=${productId}`, { signal: controller.signal })
+      .then(async (res) => {
+        if (!res.ok) return;
+        const data = await res.json();
+        setReviews(data.reviews || []);
+        setEligibleOrderId(data.eligibleOrderId || null);
+      })
+      .catch(() => {});
+    return () => controller.abort();
   }, [productId]);
 
   async function onSubmit(e: FormEvent) {
