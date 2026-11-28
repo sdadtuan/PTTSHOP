@@ -542,6 +542,30 @@ model Experiment {
   trafficPercent Int     @default(50)
 }
 
+model MessageSettings {
+  id                   String  @id @default("default")
+  znsEnabled           Boolean @default(false)
+  cartReminderEnabled  Boolean @default(false)
+  reminderAfterHours   Int?
+  reminderMaxTimes     Int?
+}
+
+model NotificationLog {
+  id        String   @id @default(cuid())
+  orderId   String?
+  cartId    String?
+  channel   String
+  template  String
+  status    String
+  phoneMask String?
+  emailMask String?
+  detail    String?
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@index([cartId])
+}
+
 model PaymentTransaction {
   id            String   @id @default(cuid())
   orderId       String
